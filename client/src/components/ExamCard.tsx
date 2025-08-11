@@ -37,7 +37,7 @@ export default function ExamCard({ category, progress, onStart, badge, index }: 
       whileHover={{ y: -4 }}
       data-testid={`exam-card-${category.slug}`}
     >
-      <Card className="bg-white shadow-sm card-hover cursor-pointer h-full">
+      <Card className="bg-white dark:bg-gray-800 shadow-sm card-hover cursor-pointer h-full border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <motion.div 
@@ -59,13 +59,13 @@ export default function ExamCard({ category, progress, onStart, badge, index }: 
             )}
           </div>
           
-          <h4 className="text-lg font-bold text-text-dark mb-2">{category.name}</h4>
-          <p className="text-gray-600 text-sm mb-4">{category.description}</p>
+          <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{category.name}</h4>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{category.description}</p>
           
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">İlerleme</span>
-              <span className="font-medium text-text-dark" data-testid={`progress-${category.slug}`}>
+              <span className="text-gray-600 dark:text-gray-400">İlerleme</span>
+              <span className="font-medium text-gray-900 dark:text-white" data-testid={`progress-${category.slug}`}>
                 {progress}%
               </span>
             </div>

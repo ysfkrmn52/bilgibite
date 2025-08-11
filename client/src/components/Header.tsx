@@ -35,21 +35,21 @@ export default function Header({ user }: HeaderProps) {
             >
               <GraduationCap className="text-white text-lg" />
             </motion.div>
-            <h1 className="text-2xl font-bold text-text-dark dark:text-white">BilgiBite</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">BilgiBite</h1>
           </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-home">
+            <Link href="/" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-home">
               Ana Sayfa
             </Link>
-            <a href="#exams" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-exams">
+            <a href="#exams" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-exams">
               Sınavlar
             </a>
-            <a href="#stats" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-stats">
+            <a href="#stats" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-stats">
               İstatistikler
             </a>
-            <a href="#profile" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-profile">
+            <a href="#profile" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-profile">
               Profil
             </a>
           </nav>
@@ -72,7 +72,7 @@ export default function Header({ user }: HeaderProps) {
                 data-testid="streak-counter"
               >
                 <Flame className="text-accent streak-fire w-4 h-4" />
-                <span className="text-accent font-bold text-sm">{user.streakDays}</span>
+                <span className="text-accent font-bold text-sm dark:text-accent-dark">{user.streakDays}</span>
                 <span className="text-accent/80 text-xs">gün</span>
               </motion.div>
             )}
@@ -117,7 +117,7 @@ export default function Header({ user }: HeaderProps) {
             <nav className="flex flex-col space-y-3">
               <Link 
                 href="/" 
-                className="text-text-dark hover:text-primary transition-colors font-medium py-2" 
+                className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium py-2" 
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="mobile-nav-home"
               >
@@ -125,7 +125,7 @@ export default function Header({ user }: HeaderProps) {
               </Link>
               <a 
                 href="#exams" 
-                className="text-text-dark hover:text-primary transition-colors font-medium py-2"
+                className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="mobile-nav-exams"
               >
@@ -133,7 +133,7 @@ export default function Header({ user }: HeaderProps) {
               </a>
               <a 
                 href="#stats" 
-                className="text-text-dark hover:text-primary transition-colors font-medium py-2"
+                className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="mobile-nav-stats"
               >
@@ -141,7 +141,7 @@ export default function Header({ user }: HeaderProps) {
               </a>
               <a 
                 href="#profile" 
-                className="text-text-dark hover:text-primary transition-colors font-medium py-2"
+                className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="mobile-nav-profile"
               >

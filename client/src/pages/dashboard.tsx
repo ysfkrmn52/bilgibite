@@ -189,7 +189,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          <h3 className="text-xl font-bold text-text-dark mb-4" id="exams">Sınav Kategorileri</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4" id="exams">Sınav Kategorileri</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {categories.map((category, index) => (
               <ExamCard

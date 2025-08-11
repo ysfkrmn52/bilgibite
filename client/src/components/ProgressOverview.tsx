@@ -47,8 +47,8 @@ const statItems = [
 export default function ProgressOverview({ stats }: ProgressOverviewProps) {
   return (
     <section className="mb-8">
-      <h3 className="text-xl font-bold text-text-dark mb-4">Haftalık İlerleme</h3>
-      <Card className="bg-white shadow-sm card-hover">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Haftalık İlerleme</h3>
+      <Card className="bg-white dark:bg-gray-800 shadow-sm card-hover border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statItems.map((item, index) => {
@@ -72,14 +72,14 @@ export default function ProgressOverview({ stats }: ProgressOverviewProps) {
                     <IconComponent className={`${item.iconColor} text-xl`} />
                   </motion.div>
                   <motion.div 
-                    className="text-2xl font-bold text-text-dark"
+                    className="text-2xl font-bold text-gray-900 dark:text-white"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.1 + 0.2 }}
                   >
                     {displayValue}
                   </motion.div>
-                  <div className="text-sm text-gray-600">{item.label}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{item.label}</div>
                 </motion.div>
               );
             })}

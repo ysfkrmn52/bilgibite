@@ -37,8 +37,8 @@ const subtextColorVariants = {
 export default function Achievements({ achievements }: AchievementsProps) {
   return (
     <section className="mb-8">
-      <h3 className="text-xl font-bold text-text-dark mb-4">Son Başarılar</h3>
-      <Card className="bg-white shadow-sm">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Son Başarılar</h3>
+      <Card className="bg-white dark:bg-gray-800 shadow-sm border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {achievements.map((achievement, index) => {
