@@ -12,7 +12,8 @@ BilgiBite is a modern Turkish quiz application built with a full-stack architect
 
 # User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language in Turkish.
+Language: Turkish (user requested Turkish responses)
 
 # System Architecture
 
