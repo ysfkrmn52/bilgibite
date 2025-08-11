@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, PlayCircle } from "lucide-react";
 import Header from "@/components/Header";
 import ExamCard from "@/components/ExamCard";
 import ProgressOverview from "@/components/ProgressOverview";
 import Achievements from "@/components/Achievements";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { CategorySelection } from "@/components/quiz/CategorySelection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExamCategory, UserProgress } from "@shared/schema";
@@ -17,6 +18,7 @@ import { MotionDiv, containerVariants, itemVariants } from "@/components/Animati
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const [showCategorySelection, setShowCategorySelection] = useState(false);
 
   // Mock user data
   const mockUser = {
@@ -189,7 +191,16 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4" id="exams">Sınav Kategorileri</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white" id="exams">Sınav Kategorileri</h3>
+            <Button
+              onClick={() => setShowCategorySelection(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Duolingo Quiz
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {categories.map((category, index) => (
               <ExamCard
@@ -236,6 +247,34 @@ export default function Dashboard() {
           <Plus className="text-xl" />
         </Button>
       </motion.div>
+
+      {/* Category Selection Modal */}
+      {showCategorySelection && (
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Duolingo Style Quiz</h2>
+            <Button
+              variant="ghost"
+              onClick={() => setShowCategorySelection(false)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <Plus className="w-5 h-5 transform rotate-45" />
+            </Button>
+          </div>
+          
+          <CategorySelection
+            categories={categories}
+            onSelectCategory={(categoryId) => {
+              setShowCategorySelection(false);
+              setLocation(`/quiz/${categoryId}`);
+            }}
+            userProgress={categories.reduce((acc, cat) => ({
+              ...acc,
+              [cat.id]: getProgressForCategory(cat.id)
+            }), {})}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import QuizInterface from "@/components/QuizInterface";
-import ResultModal from "@/components/ResultModal";
+import { DuolingoQuizInterface } from "@/components/quiz/DuolingoQuizInterface";
+import { QuizResults } from "@/components/quiz/QuizResults";
 import { Question, QuizSession } from "@shared/schema";
 import { MOCK_USER_ID } from "@/lib/quiz-data";
+import { convertToQuizEngineQuestion } from "@/lib/quiz-engine";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,12 +19,7 @@ export default function Quiz() {
   const queryClient = useQueryClient();
   const [showResults, setShowResults] = useState(false);
   const [quizSession, setQuizSession] = useState<QuizSession | null>(null);
-  const [quizResults, setQuizResults] = useState({
-    correctAnswers: 0,
-    totalQuestions: 0,
-    pointsEarned: 0,
-    timeSpent: 0
-  });
+  const [quizMetrics, setQuizMetrics] = useState<any>(null);
 
   // Get category ID from URL
   const categoryId = window.location.pathname.split('/quiz/')[1];
@@ -99,19 +95,8 @@ export default function Quiz() {
     setLocation("/");
   };
 
-  const handleQuizComplete = (score: number, timeSpent: number) => {
-    // Calculate results (this would be based on actual quiz state)
-    const correctAnswers = Math.floor(score / 10); // Assuming 10 points per correct answer
-    const totalQuestions = questions.length;
-    
-    const results = {
-      correctAnswers,
-      totalQuestions,
-      pointsEarned: score,
-      timeSpent
-    };
-
-    setQuizResults(results);
+  const handleQuizComplete = (metrics: any) => {
+    setQuizMetrics(metrics);
     setShowResults(true);
 
     // Update quiz session
@@ -119,10 +104,10 @@ export default function Quiz() {
       updateSessionMutation.mutate({
         sessionId: quizSession.id,
         updates: {
-          questionsAnswered: totalQuestions,
-          correctAnswers: correctAnswers,
-          pointsEarned: score,
-          timeSpent: timeSpent,
+          questionsAnswered: metrics.questionsCompleted,
+          correctAnswers: Math.round(metrics.questionsCompleted * metrics.accuracy / 100),
+          pointsEarned: metrics.totalScore,
+          timeSpent: Math.floor(metrics.totalTime),
           isCompleted: true,
         },
       });
@@ -131,10 +116,10 @@ export default function Quiz() {
     // Update user progress
     updateProgressMutation.mutate({
       examCategoryId: categoryId,
-      questionsAnswered: totalQuestions,
-      correctAnswers: correctAnswers,
-      totalPoints: score,
-      studyTimeMinutes: Math.floor(timeSpent / 60),
+      questionsAnswered: metrics.questionsCompleted,
+      correctAnswers: Math.round(metrics.questionsCompleted * metrics.accuracy / 100),
+      totalPoints: metrics.totalScore,
+      studyTimeMinutes: Math.floor(metrics.totalTime / 60),
     });
   };
 
@@ -187,21 +172,26 @@ export default function Quiz() {
     );
   }
 
+  // Convert questions to quiz engine format
+  const quizEngineQuestions = questions.map(convertToQuizEngineQuestion);
+
   return (
     <>
-      <QuizInterface
-        questions={questions}
+      <DuolingoQuizInterface
+        questions={quizEngineQuestions}
         onExit={handleQuizExit}
         onComplete={handleQuizComplete}
       />
       
-      <ResultModal
-        isOpen={showResults}
-        onClose={() => setShowResults(false)}
-        result={quizResults}
-        onStartNewQuiz={handleStartNewQuiz}
-        onBackToDashboard={handleBackToDashboard}
-      />
+      {quizMetrics && (
+        <QuizResults
+          isOpen={showResults}
+          onClose={() => setShowResults(false)}
+          metrics={quizMetrics}
+          onStartNewQuiz={handleStartNewQuiz}
+          onBackToDashboard={handleBackToDashboard}
+        />
+      )}
     </>
   );
 }
