@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import FirebaseDebug from './FirebaseDebug';
+import { logFirebaseConfig } from '@/utils/firebase-debug';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir email adresi girin'),
@@ -56,10 +58,20 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
     try {
       setError('');
       setIsLoading(true);
+      
+      // Debug Firebase configuration
+      logFirebaseConfig();
+      
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
-      setError(getErrorMessage(err.code));
+      console.error('Google login error:', err);
+      console.error('Error details:', {
+        code: err.code,
+        message: err.message,
+        customData: err.customData
+      });
+      setError(err.message || getErrorMessage(err.code || 'auth/unknown'));
     } finally {
       setIsLoading(false);
     }
@@ -236,6 +248,8 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
           </div>
         </CardContent>
       </Card>
+      
+      <FirebaseDebug />
     </motion.div>
   );
 }

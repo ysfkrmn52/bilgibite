@@ -75,7 +75,8 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
-      setError(getErrorMessage(err.code));
+      console.error('Google signup error:', err);
+      setError(err.message || getErrorMessage(err.code || 'auth/unknown'));
     } finally {
       setIsLoading(false);
     }

@@ -50,7 +50,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function loginWithGoogle() {
-    await signInWithPopup(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      // Handle specific Firebase Auth errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Google giriş penceresi kapatıldı');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup engellenmiş. Lütfen tarayıcı ayarlarınızı kontrol edin');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        throw new Error('Domain yetkilendirilmemiş. Firebase ayarlarını kontrol edin');
+      } else if (error.code === 'auth/configuration-not-found') {
+        throw new Error('Firebase ayarları eksik. Lütfen Firebase Console\'da Google Authentication\'ı etkinleştirin');
+      }
+      throw error;
+    }
   }
 
   async function logout() {
@@ -64,7 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       setCurrentUser(user);
       setLoading(false);
     });
