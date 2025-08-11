@@ -175,7 +175,7 @@ export default function QuizInterface({ questions, onExit, onComplete }: QuizInt
 
                 {/* Quiz Options */}
                 <div className="space-y-3">
-                  {currentQuestion.options.map((option: any, index: number) => (
+                  {(currentQuestion.options as Array<{text: string, letter: string}>).map((option, index: number) => (
                     <motion.button
                       key={index}
                       className={`w-full p-4 text-left rounded-xl border-2 border-gray-200 quiz-option ${getOptionClass(index)}`}

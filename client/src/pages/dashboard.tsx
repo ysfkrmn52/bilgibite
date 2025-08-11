@@ -7,11 +7,13 @@ import Header from "@/components/Header";
 import ExamCard from "@/components/ExamCard";
 import ProgressOverview from "@/components/ProgressOverview";
 import Achievements from "@/components/Achievements";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExamCategory, UserProgress } from "@shared/schema";
 import { Achievement } from "@/lib/types";
 import { MOCK_USER_ID, calculateAccuracy } from "@/lib/quiz-data";
+import { MotionDiv, containerVariants, itemVariants } from "@/components/AnimationWrappers";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -109,25 +111,17 @@ export default function Dashboard() {
 
   if (categoriesLoading || progressLoading) {
     return (
-      <div className="min-h-screen bg-bg-soft">
+      <div className="min-h-screen bg-bg-soft dark:bg-gray-900">
         <Header user={mockUser} />
-        <div className="container mx-auto px-4 py-6">
-          <div className="animate-pulse space-y-8">
-            <div className="h-32 bg-gray-300 rounded-2xl"></div>
-            <div className="h-48 bg-gray-300 rounded-2xl"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-64 bg-gray-300 rounded-2xl"></div>
-              ))}
-            </div>
-          </div>
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
+          <LoadingSpinner size="lg" text="Quiz verileri yükleniyor..." />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-bg-soft">
+    <div className="min-h-screen bg-bg-soft dark:bg-gray-900">
       <Header user={mockUser} />
       
       <main className="container mx-auto px-4 py-6">

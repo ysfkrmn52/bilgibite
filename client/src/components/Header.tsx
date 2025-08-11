@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Menu, X, GraduationCap, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/ui/mode-toggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 interface HeaderProps {
   user?: {
@@ -21,7 +23,7 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -33,24 +35,30 @@ export default function Header({ user }: HeaderProps) {
             >
               <GraduationCap className="text-white text-lg" />
             </motion.div>
-            <h1 className="text-2xl font-bold text-text-dark">BilgiBite</h1>
+            <h1 className="text-2xl font-bold text-text-dark dark:text-white">BilgiBite</h1>
           </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-text-dark hover:text-primary transition-colors font-medium" data-testid="nav-home">
+            <Link href="/" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-home">
               Ana Sayfa
             </Link>
-            <a href="#exams" className="text-text-dark hover:text-primary transition-colors font-medium" data-testid="nav-exams">
+            <a href="#exams" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-exams">
               Sınavlar
             </a>
-            <a href="#stats" className="text-text-dark hover:text-primary transition-colors font-medium" data-testid="nav-stats">
+            <a href="#stats" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-stats">
               İstatistikler
             </a>
-            <a href="#profile" className="text-text-dark hover:text-primary transition-colors font-medium" data-testid="nav-profile">
+            <a href="#profile" className="text-text-dark dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-profile">
               Profil
             </a>
           </nav>
+
+          {/* Theme & Language Controls */}
+          <div className="hidden md:flex items-center space-x-2 mr-4">
+            <LanguageToggle />
+            <ModeToggle />
+          </div>
 
           {/* User Profile & Stats */}
           <div className="flex items-center space-x-4">

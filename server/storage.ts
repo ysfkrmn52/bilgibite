@@ -267,8 +267,13 @@ export class MemStorage implements IStorage {
     } else {
       const id = randomUUID();
       const newProgress: UserProgress = {
-        ...progress,
         id,
+        userId: progress.userId,
+        examCategoryId: progress.examCategoryId,
+        questionsAnswered: progress.questionsAnswered || 0,
+        correctAnswers: progress.correctAnswers || 0,
+        totalPoints: progress.totalPoints || 0,
+        studyTimeMinutes: progress.studyTimeMinutes || 0,
         lastStudyDate: new Date()
       };
       this.userProgress.set(id, newProgress);
@@ -284,8 +289,15 @@ export class MemStorage implements IStorage {
   async createQuizSession(session: InsertQuizSession): Promise<QuizSession> {
     const id = randomUUID();
     const newSession: QuizSession = {
-      ...session,
       id,
+      userId: session.userId,
+      examCategoryId: session.examCategoryId,
+      questionsAnswered: session.questionsAnswered || 0,
+      correctAnswers: session.correctAnswers || 0,
+      totalQuestions: session.totalQuestions,
+      pointsEarned: session.pointsEarned || 0,
+      timeSpent: session.timeSpent || 0,
+      isCompleted: session.isCompleted || false,
       createdAt: new Date(),
       completedAt: null
     };
