@@ -77,6 +77,36 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
     }
   };
 
+  const handleFacebookLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      const { signInWithPopup } = await import('firebase/auth');
+      const { auth } = await import('@/lib/firebase');
+      const { facebookProvider } = await import('@/lib/firebase');
+      
+      const result = await signInWithPopup(auth, facebookProvider);
+      onSuccess?.();
+    } catch (error: any) {
+      let errorMessage = 'Facebook ile giriş başarısız oldu';
+      
+      if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Pop-up engellendi. Lütfen pop-up engelleyicinizi devre dışı bırakın.';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = 'Giriş işlemi iptal edildi.';
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Giriş penceresi kapatıldı.';
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = 'Bu email adresi farklı bir yöntemle kayıtlı.';
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getErrorMessage = (errorCode: string) => {
     switch (errorCode) {
       case 'auth/user-not-found':
@@ -224,9 +254,9 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
             <Button
               type="button"
               variant="outline"
+              onClick={handleFacebookLogin}
               className="flex items-center justify-center space-x-2"
               data-testid="button-facebook-login"
-              disabled
             >
               <FaFacebook className="w-4 h-4 text-blue-600" />
               <span>Facebook</span>

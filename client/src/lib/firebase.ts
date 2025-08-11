@@ -24,7 +24,9 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Facebook Auth Provider setup would go here
-// export const facebookProvider = new FacebookAuthProvider();
+// Facebook Auth Provider setup
+import { FacebookAuthProvider } from "firebase/auth";
+export const facebookProvider = new FacebookAuthProvider();
+facebookProvider.addScope('email');
 
 export default app;

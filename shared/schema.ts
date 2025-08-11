@@ -8,10 +8,16 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firebaseUid: text("firebase_uid").unique(),
   level: integer("level").notNull().default(1),
   totalPoints: integer("total_points").notNull().default(0),
   streakDays: integer("streak_days").notNull().default(0),
   lastActiveDate: timestamp("last_active_date"),
+  gems: integer("gems").notNull().default(0),
+  xp: integer("xp").notNull().default(0),
+  lives: integer("lives").notNull().default(5),
+  maxLives: integer("max_lives").notNull().default(5),
+  livesLastRefilled: timestamp("lives_last_refilled").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -78,6 +84,71 @@ export const userAchievements = pgTable("user_achievements", {
   earnedAt: timestamp("earned_at").defaultNow(),
 });
 
+// Daily Challenges Table
+export const dailyChallenges = pgTable("daily_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // "quiz_questions", "streak_maintain", "category_master", etc.
+  requirement: jsonb("requirement").notNull(), // Requirements to complete
+  rewards: jsonb("rewards").notNull(), // XP, gems, lives rewards
+  validDate: timestamp("valid_date").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+// User Daily Challenge Progress
+export const userDailyChallenges = pgTable("user_daily_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  challengeId: varchar("challenge_id").notNull(),
+  progress: integer("progress").notNull().default(0),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  claimedAt: timestamp("claimed_at"),
+});
+
+// Store Items Table
+export const storeItems = pgTable("store_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // "life_refill", "streak_freeze", "xp_boost", "theme"
+  cost: integer("cost").notNull(),
+  icon: text("icon").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  metadata: jsonb("metadata"), // Additional item properties
+});
+
+// User Store Purchases
+export const userStorePurchases = pgTable("user_store_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  itemId: varchar("item_id").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  totalCost: integer("total_cost").notNull(),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
+// User Inventory (for items that stack or have quantities)
+export const userInventory = pgTable("user_inventory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  itemId: varchar("item_id").notNull(),
+  quantity: integer("quantity").notNull().default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Leaderboard Entries
+export const leaderboard = pgTable("leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(), // "weekly", "monthly", "all_time"
+  period: text("period").notNull(), // "2025-W05", "2025-01", "all_time"
+  xp: integer("xp").notNull().default(0),
+  rank: integer("rank").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -97,6 +168,14 @@ export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,
 });
 
+export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).omit({
+  id: true,
+});
+
+export const insertStoreItemSchema = createInsertSchema(storeItems).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -109,3 +188,9 @@ export type QuizSession = typeof quizSessions.$inferSelect;
 export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
+export type DailyChallenge = typeof dailyChallenges.$inferSelect;
+export type UserDailyChallenge = typeof userDailyChallenges.$inferSelect;
+export type StoreItem = typeof storeItems.$inferSelect;
+export type UserStorePurchase = typeof userStorePurchases.$inferSelect;
+export type UserInventory = typeof userInventory.$inferSelect;
+export type Leaderboard = typeof leaderboard.$inferSelect;

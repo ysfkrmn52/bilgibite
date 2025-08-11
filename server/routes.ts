@@ -7,6 +7,14 @@ import {
   insertUserProgressSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import {
+  getUserGamificationStats,
+  getLeaderboard,
+  getStoreItems,
+  purchaseStoreItem,
+  completeDailyChallenge,
+  updateUserXP
+} from "./gamification";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -187,6 +195,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+  // Gamification routes
+  app.get("/api/users/:userId/gamification", getUserGamificationStats);
+  app.post("/api/users/:userId/xp", updateUserXP);
+  app.post("/api/users/:userId/challenges/complete", completeDailyChallenge);
+  app.post("/api/users/:userId/store/purchase", purchaseStoreItem);
+  app.get("/api/leaderboard", getLeaderboard);
+  app.get("/api/store", getStoreItems);
 
   const httpServer = createServer(app);
   return httpServer;
