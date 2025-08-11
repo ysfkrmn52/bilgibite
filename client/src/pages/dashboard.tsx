@@ -11,6 +11,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { CategorySelection } from "@/components/quiz/CategorySelection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ExamCategory, UserProgress } from "@shared/schema";
 import { Achievement } from "@/lib/types";
 import { MOCK_USER_ID, calculateAccuracy } from "@/lib/quiz-data";
@@ -212,6 +213,35 @@ export default function Dashboard() {
                 index={index}
               />
             ))}
+            
+            {/* Gamification Hub Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 + (categories.length * 0.1), duration: 0.5 }}
+            >
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-purple-200 hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950"
+                onClick={() => setLocation('/gamification')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-3xl group-hover:scale-110 transition-transform">
+                      🏆
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-2">
+                    Gamification Hub
+                  </h3>
+                  <p className="text-purple-600 dark:text-purple-400 text-sm mb-4">
+                    XP, başarılar, liderlik tablosu ve daha fazlası!
+                  </p>
+                  <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                    Yeni Özellik!
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.section>
 
