@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import AuthPage from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import Quiz from "@/pages/quiz";
+import Gamification from "@/pages/gamification";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={AuthPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/quiz/:categoryId" component={Quiz} />
+      <Route path="/gamification" component={Gamification} />
       <Route component={NotFound} />
     </Switch>
   );
