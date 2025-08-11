@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { AuthProvider } from "@/contexts/AuthContext";
+import AuthPage from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import Quiz from "@/pages/quiz";
 import NotFound from "@/pages/not-found";
@@ -11,7 +13,8 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/" component={AuthPage} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/quiz/:categoryId" component={Quiz} />
       <Route component={NotFound} />
     </Switch>
@@ -22,9 +25,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AuthProvider>
+          <Router />
+        </AuthProvider>
         <Toaster />
         <PWAInstallPrompt />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );

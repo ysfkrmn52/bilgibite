@@ -1,41 +1,46 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 interface LoadingSpinnerProps {
-  size?: "sm" | "md" | "lg";
-  color?: string;
+  size?: 'sm' | 'md' | 'lg';
   text?: string;
+  className?: string;
 }
 
-const sizeClasses = {
-  sm: "h-6 w-6",
-  md: "h-12 w-12",
-  lg: "h-16 w-16"
-};
-
 export default function LoadingSpinner({ 
-  size = "md", 
-  color = "border-primary", 
-  text 
+  size = 'md', 
+  text,
+  className = '' 
 }: LoadingSpinnerProps) {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12'
+  };
+
+  const textSizeClasses = {
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg'
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
+    <div className={`flex flex-col items-center justify-center space-y-3 ${className}`}>
       <motion.div
-        className={`${sizeClasses[size]} border-2 ${color} border-t-transparent rounded-full`}
+        className={`${sizeClasses[size]} border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full`}
         animate={{ rotate: 360 }}
         transition={{
           duration: 1,
           repeat: Infinity,
           ease: "linear"
         }}
-        data-testid="loading-spinner"
       />
+      
       {text && (
         <motion.p
-          className="text-text-dark dark:text-white text-sm font-medium"
+          className={`${textSizeClasses[size]} text-gray-600 dark:text-gray-400 font-medium`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          data-testid="loading-text"
+          transition={{ delay: 0.2 }}
         >
           {text}
         </motion.p>
