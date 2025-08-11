@@ -118,7 +118,7 @@ export class QuizEngine {
     const feedback: QuizFeedback = {
       isCorrect,
       message: isCorrect ? this.getSuccessMessage() : this.getFailureMessage(),
-      explanation: currentQuestion.explanation,
+      explanation: currentQuestion.explanation || undefined,
       xpGained,
       streakCount: this.state.streak,
       heartsLost: heartsLost > 0 ? heartsLost : undefined,
