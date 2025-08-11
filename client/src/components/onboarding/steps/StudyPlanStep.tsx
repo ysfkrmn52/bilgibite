@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,11 +14,20 @@ interface StudyPlanStepProps {
 }
 
 export default function StudyPlanStep({ userData, updateUserData, onNext }: StudyPlanStepProps) {
+  const [generatedPlan, setGeneratedPlan] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (userData && !generatedPlan) {
+      const plan = generateStudyPlan();
+      setGeneratedPlan(plan);
+    }
+  }, [userData, generatedPlan]);
+
   const generateStudyPlan = () => {
     const { goals, studyTime, difficulty, assessmentResults } = userData;
     
     // Çalışma planı oluştur
-    const studyPlan = {
+    const planData = {
       weeklyGoal: getWeeklyGoal(studyTime),
       dailyTarget: getDailyTarget(studyTime),
       difficulty: difficulty,
@@ -26,8 +36,8 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
       schedule: generateWeeklySchedule(studyTime)
     };
 
-    updateUserData({ studyPlan });
-    return studyPlan;
+    updateUserData({ studyPlan: planData });
+    return planData;
   };
 
   const getWeeklyGoal = (studyTime: string) => {
@@ -66,8 +76,8 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
       'general': ['Genel Kültür', 'Matematik', 'Türkçe', 'Fen Bilimleri']
     };
     
-    const allSubjects = goals.flatMap(goal => subjectMap[goal] || []);
-    return [...new Set(allSubjects)]; // Duplicates'i kaldır
+    const allSubjects = goals.flatMap((goal: string) => subjectMap[goal] || []);
+    return Array.from(new Set(allSubjects)); // Duplicates'i kaldır
   };
 
   const generateWeeklySchedule = (studyTime: string) => {
@@ -75,14 +85,21 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
     const timePerDay = studyTime === 'flexible' ? '20-40 dk' : 
                       studyTime.replace('min', ' dk').replace('60', '1 saat');
     
-    return days.map(day => ({
+    return days.map((day: string) => ({
       day,
       duration: timePerDay,
       recommended: day !== 'Pazar' // Pazar dinlenme günü
     }));
   };
 
-  const studyPlan = generateStudyPlan();
+  // Planı state'ten al veya default değerler kullan
+  const currentPlan = generatedPlan || {
+    dailyTarget: 20,
+    weeklyGoal: 140,
+    estimatedCompletion: 12,
+    subjects: ['Matematik', 'Türkçe'],
+    schedule: []
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -118,7 +135,7 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {studyPlan.dailyTarget}
+                    {currentPlan.dailyTarget}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     Günlük Soru
@@ -127,7 +144,7 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
                 
                 <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {studyPlan.weeklyGoal}
+                    {currentPlan.weeklyGoal}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     Haftalık Dakika
@@ -137,30 +154,33 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Tahmini Tamamlanma
-                  </span>
-                  <Badge variant="outline">
-                    {studyPlan.estimatedCompletion} hafta
+                  <span>Tahmini Tamamlama</span>
+                  <Badge variant="secondary">
+                    {currentPlan.estimatedCompletion} hafta
                   </Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Zorluk Seviyesi
-                  </span>
-                  <Badge variant={studyPlan.difficulty === 'hard' ? 'destructive' : 
-                               studyPlan.difficulty === 'easy' ? 'secondary' : 'default'}>
-                    {studyPlan.difficulty === 'hard' ? 'Zor' :
-                     studyPlan.difficulty === 'easy' ? 'Kolay' : 'Orta'}
+                  <span>Zorluk Seviyesi</span>
+                  <Badge variant="outline">
+                    {userData?.difficulty === 'easy' ? 'Kolay' : 
+                     userData?.difficulty === 'hard' ? 'Zor' : 'Orta'}
                   </Badge>
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">İlerleme</span>
+                  <span className="text-sm text-gray-500">0%</span>
+                </div>
+                <Progress value={0} className="h-2" />
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Çalışılacak Konular */}
+        {/* Konular */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -170,31 +190,28 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Trophy className="w-5 h-5 text-primary" />
-                <span>Çalışılacak Konular</span>
+                <span>Çalışma Konuları</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {studyPlan.subjects.map((subject, index) => (
-                  <motion.div
-                    key={subject}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                  >
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {subject}
-                    </span>
-                  </motion.div>
+                {currentPlan.subjects.map((subject: string, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <CheckCircle className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium">{subject}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      Başlamadı
+                    </Badge>
+                  </div>
                 ))}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Haftalık Takvim */}
+        {/* Haftalık Program */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -205,37 +222,28 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Calendar className="w-5 h-5 text-primary" />
-                <span>Haftalık Çalışma Takvimi</span>
+                <span>Haftalık Çalışma Programı</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
-                {studyPlan.schedule.map((day, index) => (
-                  <motion.div
-                    key={day.day}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * index }}
-                    className={`p-4 rounded-lg text-center border-2 ${
-                      day.recommended
-                        ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800'
-                        : 'border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700'
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+                {currentPlan.schedule.map((day: any, index: number) => (
+                  <div 
+                    key={index}
+                    className={`p-3 rounded-lg text-center ${
+                      day.recommended 
+                        ? 'bg-primary/10 border border-primary/20' 
+                        : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
                     }`}
                   >
-                    <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                      {day.day}
-                    </div>
+                    <div className="font-medium text-sm">{day.day}</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      {day.recommended ? (
-                        <>
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {day.duration}
-                        </>
-                      ) : (
-                        'Dinlenme'
-                      )}
+                      {day.recommended ? day.duration : 'Dinlenme'}
                     </div>
-                  </motion.div>
+                    {day.recommended && (
+                      <Clock className="w-3 h-3 mx-auto mt-1 text-primary" />
+                    )}
+                  </div>
                 ))}
               </div>
             </CardContent>
@@ -244,26 +252,24 @@ export default function StudyPlanStep({ userData, updateUserData, onNext }: Stud
       </div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-center space-y-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="text-center"
       >
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            💡 <strong>İpucu:</strong> Bu plan senin tercihlerine göre hazırlandı. 
-            İstediğin zaman ayarlarını değiştirebilirsin!
-          </p>
-        </div>
-        
-        <Button
+        <Button 
           onClick={onNext}
-          size="lg"
-          className="bg-gradient-to-r from-primary to-secondary text-white px-8"
-          data-testid="button-approve-plan"
+          size="lg" 
+          className="w-full sm:w-auto px-8"
+          data-testid="button-continue"
         >
-          Planı Onayla ve Devam Et
+          Planımı Onayla ve Devam Et
+          <Target className="w-4 h-4 ml-2" />
         </Button>
+        
+        <p className="text-sm text-gray-500 mt-3">
+          Bu planı daha sonra ayarlar kısmından değiştirebilirsin
+        </p>
       </motion.div>
     </div>
   );
