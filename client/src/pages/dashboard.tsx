@@ -214,11 +214,40 @@ export default function Dashboard() {
               />
             ))}
             
-            {/* Gamification Hub Card */}
+            {/* AI Learning Hub Card */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 + (categories.length * 0.1), duration: 0.5 }}
+            >
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-blue-200 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950"
+                onClick={() => setLocation('/ai-learning')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-3xl group-hover:scale-110 transition-transform">
+                      🧠
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">
+                    AI Öğrenme Merkezi
+                  </h3>
+                  <p className="text-blue-600 dark:text-blue-400 text-sm mb-4">
+                    AI öğretmen, kişisel analiz, akıllı soru üretimi!
+                  </p>
+                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    AI Destekli!
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Gamification Hub Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + (categories.length * 0.1), duration: 0.5 }}
             >
               <Card 
                 className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-purple-200 hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950"

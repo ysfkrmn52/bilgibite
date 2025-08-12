@@ -204,6 +204,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/leaderboard", getLeaderboard);
   app.get("/api/store", getStoreItems);
 
+  // AI Routes
+  const { 
+    generateAIQuestions,
+    analyzePerformance,
+    generatePersonalizedStudyPlan,
+    askAITutor,
+    adjustDifficulty,
+    getSmartReviewSchedule
+  } = await import("./ai-routes");
+  
+  app.post("/api/ai/users/:userId/questions", generateAIQuestions);
+  app.get("/api/ai/users/:userId/performance", analyzePerformance);
+  app.post("/api/ai/users/:userId/study-plan", generatePersonalizedStudyPlan);
+  app.post("/api/ai/users/:userId/tutor", askAITutor);
+  app.get("/api/ai/users/:userId/difficulty", adjustDifficulty);
+  app.get("/api/ai/users/:userId/review-schedule", getSmartReviewSchedule);
+
   const httpServer = createServer(app);
   return httpServer;
 }
