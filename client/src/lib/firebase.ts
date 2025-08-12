@@ -28,5 +28,9 @@ googleProvider.setCustomParameters({
 import { FacebookAuthProvider } from "firebase/auth";
 export const facebookProvider = new FacebookAuthProvider();
 facebookProvider.addScope('email');
+facebookProvider.addScope('public_profile');
+facebookProvider.setCustomParameters({
+  'display': 'popup'
+});
 
 export default app;
