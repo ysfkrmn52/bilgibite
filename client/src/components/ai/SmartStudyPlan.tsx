@@ -62,11 +62,19 @@ export default function SmartStudyPlan({
       });
 
       const data = await response.json();
-      setStudyPlan(data.studyPlan);
-      toast({
-        title: "Çalışma planı oluşturuldu!",
-        description: "AI tarafından kişiselleştirilmiş çalışma planınız hazır."
-      });
+      console.log('Study plan API response:', data);
+      
+      if (data.success) {
+        // AI response might have different structure - handle various formats
+        const plan = data.plan || data.studyPlan || data.weeklyPlan || data;
+        setStudyPlan(plan);
+        toast({
+          title: "Çalışma planı oluşturuldu!",
+          description: "AI tarafından kişiselleştirilmiş çalışma planınız hazır."
+        });
+      } else {
+        throw new Error(data.error || 'Plan oluşturulamadı');
+      }
     } catch (error) {
       console.error('Study Plan Generation Error:', error);
       toast({

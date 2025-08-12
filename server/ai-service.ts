@@ -90,7 +90,7 @@ JSON formatında döndür:
 
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
-      max_tokens: 4000,
+      max_tokens: 2500, // Reduced for faster response
       messages: [{ role: 'user', content: prompt }],
     });
 
@@ -300,22 +300,33 @@ JSON formatında döndür:
 
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
-      max_tokens: 3000,
+      max_tokens: 2000, // Reduced for faster response
       messages: [{ role: 'user', content: prompt }],
     });
 
-    // Direct parsing
+    // Direct parsing for study plan
     const content = response.content[0];
     if (content.type === 'text') {
       let text = content.text;
+      console.log('Raw study plan response:', text.substring(0, 300) + '...');
+      
       text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      // Find the largest JSON object in the text
+      const jsonMatches = text.match(/\{[\s\S]*\}/g);
+      if (jsonMatches && jsonMatches.length > 0) {
+        // Get the longest match (most complete JSON)
+        const longestMatch = jsonMatches.reduce((longest, current) => 
+          current.length > longest.length ? current : longest
+        );
+        
         try {
-          return JSON.parse(jsonMatch[0]);
+          const parsed = JSON.parse(longestMatch);
+          console.log('Successfully parsed study plan response');
+          return parsed;
         } catch (error) {
           console.error('JSON Parse Error for study plan:', error);
+          console.error('Failed to parse:', longestMatch.substring(0, 200));
         }
       }
     }
@@ -378,7 +389,7 @@ JSON formatında döndür:
 
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
-      max_tokens: 1500,
+      max_tokens: 1000, // Reduced for faster response
       messages: [{ role: 'user', content: prompt }],
     });
 

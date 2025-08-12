@@ -1,7 +1,7 @@
 // AI-Powered Learning Dashboard Page
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, MessageSquare, BarChart3, Calendar, BookOpen, Wand2, Home } from 'lucide-react';
+import { Brain, MessageSquare, BarChart3, Calendar, BookOpen, Wand2, Home, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ const mockUserId = "mock-user-123";
 export default function AILearningPage() {
   const [activeTab, setActiveTab] = useState('insights');
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: string}>({});
 
@@ -33,8 +34,7 @@ export default function AILearningPage() {
 
   const handleQuestionsGenerated = (questions: any[]) => {
     setGeneratedQuestions(questions);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers({});
+    // Could navigate to quiz page with generated questions
   };
 
   const containerVariants = {
@@ -84,7 +84,7 @@ export default function AILearningPage() {
               </p>
             </div>
             
-            <div className="w-24"></div>
+            <div className="w-24"></div> {/* Spacer for centering */}
           </div>
         </motion.div>
 
@@ -133,6 +133,7 @@ export default function AILearningPage() {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 lg:grid-cols-3 gap-6"
               >
+                {/* Main Chat */}
                 <div className="lg:col-span-2">
                   <AITutorChat 
                     userId={mockUserId}
@@ -141,6 +142,8 @@ export default function AILearningPage() {
                     className="h-[600px]"
                   />
                 </div>
+                
+                {/* Difficulty Indicator */}
                 <div>
                   <AdaptiveDifficultyIndicator userId={mockUserId} />
                 </div>
@@ -171,6 +174,7 @@ export default function AILearningPage() {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               >
+                {/* Question Generator */}
                 <AIQuestionGenerator
                   userId={mockUserId}
                   examCategories={examCategories}
@@ -278,17 +282,19 @@ export default function AILearningPage() {
                             )}
 
                             {/* Question Type Info */}
-                            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
-                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
-                                {generatedQuestions[currentQuestionIndex].difficulty || 'Orta'}
-                              </span>
-                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full">
-                                {generatedQuestions[currentQuestionIndex].topic || 'Genel'}
-                              </span>
-                              <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full">
-                                Çoktan Seçmeli
-                              </span>
-                            </div>
+                            {generatedQuestions[currentQuestionIndex] && (
+                              <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
+                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
+                                  {generatedQuestions[currentQuestionIndex].difficulty || 'Orta'}
+                                </span>
+                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full">
+                                  {generatedQuestions[currentQuestionIndex].topic || 'Genel'}
+                                </span>
+                                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full">
+                                  Çoktan Seçmeli
+                                </span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -341,18 +347,18 @@ export default function AILearningPage() {
                       <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                         Zorluk Seviyeleri
                       </h4>
-                      <div className="grid grid-cols-1 gap-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-700 dark:text-green-300">🟢 Başlangıç</span>
-                          <span className="text-gray-600 dark:text-gray-400">60-70% başarı</span>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span>Başlangıç: Temel kavramlar</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-yellow-700 dark:text-yellow-300">🟡 Orta</span>
-                          <span className="text-gray-600 dark:text-gray-400">70-85% başarı</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                          <span>Orta: Uygulama soruları</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-red-700 dark:text-red-300">🔴 İleri</span>
-                          <span className="text-gray-600 dark:text-gray-400">85%+ başarı</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          <span>İleri: Karmaşık problemler</span>
                         </div>
                       </div>
                     </div>
@@ -361,6 +367,51 @@ export default function AILearningPage() {
               </motion.div>
             </TabsContent>
           </Tabs>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div variants={itemVariants} className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Hızlı Erişim</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('tutor')}
+                  className="h-16 flex flex-col space-y-2"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="text-xs">AI Öğretmen</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('generator')}
+                  className="h-16 flex flex-col space-y-2"
+                >
+                  <Wand2 className="w-5 h-5" />
+                  <span className="text-xs">Soru Üret</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('insights')}
+                  className="h-16 flex flex-col space-y-2"
+                >
+                  <BarChart3 className="w-5 h-5" />
+                  <span className="text-xs">Analiz</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('plan')}
+                  className="h-16 flex flex-col space-y-2"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-xs">Plan</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </motion.div>
