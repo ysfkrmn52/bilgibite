@@ -1,7 +1,7 @@
 // AI-Powered Learning Dashboard Page
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, MessageSquare, BarChart3, Calendar, BookOpen, Wand2, Home, ArrowLeft } from 'lucide-react';
+import { Brain, MessageSquare, BarChart3, Calendar, BookOpen, Wand2, Home, Save, Database, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import SmartStudyPlan from '@/components/ai/SmartStudyPlan';
 import AdaptiveDifficultyIndicator from '@/components/ai/AdaptiveDifficultyIndicator';
 import AIQuestionGenerator from '@/components/ai/AIQuestionGenerator';
 import { useQuery } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from 'wouter';
 
 const mockUserId = "mock-user-123";
@@ -18,9 +20,45 @@ const mockUserId = "mock-user-123";
 export default function AILearningPage() {
   const [activeTab, setActiveTab] = useState('insights');
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
-  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: string}>({});
+  
+  // AI Persistence Data - Saklı verileri göstermek için
+  const { data: storedQuestions = [] } = useQuery({
+    queryKey: ['/api/ai/users', mockUserId, 'stored-questions'],
+    queryFn: async () => {
+      const response = await fetch(`/api/ai/users/${mockUserId}/stored-questions`);
+      const data = await response.json();
+      return data.questions || [];
+    }
+  });
+
+  const { data: storedStudyPlan } = useQuery({
+    queryKey: ['/api/ai/users', mockUserId, 'stored-study-plan'],
+    queryFn: async () => {
+      const response = await fetch(`/api/ai/users/${mockUserId}/stored-study-plan`);
+      const data = await response.json();
+      return data.studyPlan;
+    }
+  });
+
+  const { data: chatHistory = [] } = useQuery({
+    queryKey: ['/api/ai/users', mockUserId, 'chat-history'],
+    queryFn: async () => {
+      const response = await fetch(`/api/ai/users/${mockUserId}/chat-history`);
+      const data = await response.json();
+      return data.messages || [];
+    }
+  });
+
+  const { data: storageStats } = useQuery({
+    queryKey: ['/api/ai/storage-stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/ai/storage-stats');
+      const data = await response.json();
+      return data.stats || {};
+    }
+  });
 
   // Fetch exam categories for AI question generator
   const { data: examCategories = [] } = useQuery({
@@ -34,7 +72,8 @@ export default function AILearningPage() {
 
   const handleQuestionsGenerated = (questions: any[]) => {
     setGeneratedQuestions(questions);
-    // Could navigate to quiz page with generated questions
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
   };
 
   const containerVariants = {
@@ -60,11 +99,82 @@ export default function AILearningPage() {
       animate="visible"
     >
       <div className="container mx-auto px-4 py-8">
-        {/* Header with Navigation */}
+        {/* Header with Navigation & Persistence Stats */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <Link to="/">
-              <Button variant="outline" size="sm" className="flex items-center space-x-2">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                AI Öğrenme Merkezi
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Yapay zeka destekli kişisel öğrenme deneyimi
+              </p>
+            </div>
+            
+            {/* AI Data Persistence Dashboard */}
+            <TooltipProvider>
+              <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-2">
+                      <Save className="h-4 w-4 text-green-600" />
+                      <Badge variant="secondary" className="text-xs">
+                        {storedQuestions.length} Soru
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Kaydedilmiş AI soruları</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <Badge variant="secondary" className="text-xs">
+                        {storedStudyPlan ? "Aktif Plan" : "Plan Yok"}
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Çalışma planı durumu</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-purple-600" />
+                      <Badge variant="secondary" className="text-xs">
+                        {chatHistory.length} Mesaj
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>AI tutor sohbet geçmişi</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-orange-600" />
+                      <Badge variant="outline" className="text-xs">
+                        Otomatik Kayıt
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Tüm AI verileri otomatik kaydediliyor</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          </div>
+          
+          <Link to="/">
+            <Button variant="outline" size="sm" className="flex items-center space-x-2">
                 <Home className="w-4 h-4" />
                 <span>Ana Sayfa</span>
               </Button>
@@ -84,7 +194,7 @@ export default function AILearningPage() {
               </p>
             </div>
             
-            <div className="w-24"></div> {/* Spacer for centering */}
+            <div className="w-24"></div>
           </div>
         </motion.div>
 
@@ -133,7 +243,6 @@ export default function AILearningPage() {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 lg:grid-cols-3 gap-6"
               >
-                {/* Main Chat */}
                 <div className="lg:col-span-2">
                   <AITutorChat 
                     userId={mockUserId}
@@ -142,8 +251,6 @@ export default function AILearningPage() {
                     className="h-[600px]"
                   />
                 </div>
-                
-                {/* Difficulty Indicator */}
                 <div>
                   <AdaptiveDifficultyIndicator userId={mockUserId} />
                 </div>
@@ -174,7 +281,6 @@ export default function AILearningPage() {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               >
-                {/* Question Generator */}
                 <AIQuestionGenerator
                   userId={mockUserId}
                   examCategories={examCategories}
@@ -282,19 +388,17 @@ export default function AILearningPage() {
                             )}
 
                             {/* Question Type Info */}
-                            {generatedQuestions[currentQuestionIndex] && (
-                              <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
-                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
-                                  {generatedQuestions[currentQuestionIndex].difficulty || 'Orta'}
-                                </span>
-                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full">
-                                  {generatedQuestions[currentQuestionIndex].topic || 'Genel'}
-                                </span>
-                                <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full">
-                                  Çoktan Seçmeli
-                                </span>
-                              </div>
-                            )}
+                            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
+                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
+                                {generatedQuestions[currentQuestionIndex].difficulty || 'Orta'}
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full">
+                                {generatedQuestions[currentQuestionIndex].topic || 'Genel'}
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full">
+                                Çoktan Seçmeli
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -347,18 +451,18 @@ export default function AILearningPage() {
                       <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                         Zorluk Seviyeleri
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <span>Başlangıç: Temel kavramlar</span>
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-700 dark:text-green-300">🟢 Başlangıç</span>
+                          <span className="text-gray-600 dark:text-gray-400">60-70% başarı</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <span>Orta: Uygulama soruları</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-yellow-700 dark:text-yellow-300">🟡 Orta</span>
+                          <span className="text-gray-600 dark:text-gray-400">70-85% başarı</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span>İleri: Karmaşık problemler</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-red-700 dark:text-red-300">🔴 İleri</span>
+                          <span className="text-gray-600 dark:text-gray-400">85%+ başarı</span>
                         </div>
                       </div>
                     </div>
@@ -367,51 +471,6 @@ export default function AILearningPage() {
               </motion.div>
             </TabsContent>
           </Tabs>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants} className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hızlı Erişim</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('tutor')}
-                  className="h-16 flex flex-col space-y-2"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  <span className="text-xs">AI Öğretmen</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('generator')}
-                  className="h-16 flex flex-col space-y-2"
-                >
-                  <Wand2 className="w-5 h-5" />
-                  <span className="text-xs">Soru Üret</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('insights')}
-                  className="h-16 flex flex-col space-y-2"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  <span className="text-xs">Analiz</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('plan')}
-                  className="h-16 flex flex-col space-y-2"
-                >
-                  <Calendar className="w-5 h-5" />
-                  <span className="text-xs">Plan</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </motion.div>
       </div>
     </motion.div>

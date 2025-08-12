@@ -214,12 +214,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     getSmartReviewSchedule
   } = await import("./ai-routes");
   
+  // AI Persistence Routes
+  const {
+    getStoredQuestions,
+    getStoredStudyPlan,
+    getChatHistory,
+    getStoredPerformance,
+    clearUserData,
+    getStorageStats
+  } = await import("./ai-persistence-routes");
+  
   app.post("/api/ai/users/:userId/questions", generateAIQuestions);
   app.get("/api/ai/users/:userId/performance", analyzePerformance);
   app.post("/api/ai/users/:userId/study-plan", generatePersonalizedStudyPlan);
   app.post("/api/ai/users/:userId/tutor", askAITutor);
   app.get("/api/ai/users/:userId/difficulty", adjustDifficulty);
   app.get("/api/ai/users/:userId/review-schedule", getSmartReviewSchedule);
+  
+  // AI Data Persistence Endpoints
+  app.get("/api/ai/users/:userId/stored-questions", getStoredQuestions);
+  app.get("/api/ai/users/:userId/stored-study-plan", getStoredStudyPlan);
+  app.get("/api/ai/users/:userId/chat-history", getChatHistory);
+  app.get("/api/ai/users/:userId/stored-performance", getStoredPerformance);
+  app.delete("/api/ai/users/:userId/clear-data", clearUserData);
+  app.get("/api/ai/storage-stats", getStorageStats);
 
   const httpServer = createServer(app);
   return httpServer;

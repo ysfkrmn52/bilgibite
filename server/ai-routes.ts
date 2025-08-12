@@ -8,6 +8,7 @@ import {
   getTutorResponse,
   calculateAdaptiveDifficulty
 } from "./ai-service";
+import { aiDataManager } from "./ai-data-service";
 import { db } from "./db";
 import { users, quizSessions, userProgress } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
@@ -60,11 +61,26 @@ export const generateAIQuestions = async (req: Request, res: Response) => {
         .slice(0, 5)
     });
 
+    // AI Veri Saklama - Otomatik soru ekleme
+    const storedQuestions = aiDataManager.storeGeneratedQuestions(
+      userId, 
+      aiQuestions.questions, 
+      params.examCategory
+    );
+
+    console.log(`✅ ${aiQuestions.questions.length} AI soru otomatik olarak veritabanına kaydedilmek üzere kuyruğa alındı`);
+
     res.json({
       success: true,
-      questions: aiQuestions.questions,
+      questions: storedQuestions,
       generatedAt: new Date().toISOString(),
-      aiGenerated: true
+      aiGenerated: true,
+      metadata: {
+        stored: true,
+        autoAddedToDatabase: true,
+        examCategory: params.examCategory,
+        questionsCount: storedQuestions.length
+      }
     });
   } catch (error) {
     console.error('AI Question Generation Error:', error);
@@ -151,11 +167,25 @@ export const generatePersonalizedStudyPlan = async (req: Request, res: Response)
       planParams.examDate
     );
 
+    // AI Çalışma Planı Saklama
+    const storedPlan = aiDataManager.storeStudyPlan(
+      userId, 
+      studyPlan,
+      planParams.userGoals,
+      planParams.availableTime
+    );
+
+    console.log(`✅ AI çalışma planı kullanıcı ${userId} için saklandı`);
+
     res.json({
       success: true,
-      studyPlan,
+      studyPlan: storedPlan,
       userId,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      metadata: {
+        stored: true,
+        persistent: true
+      }
     });
   } catch (error) {
     console.error('AI Study Plan Generation Error:', error);
@@ -185,11 +215,26 @@ export const askAITutor = async (req: Request, res: Response) => {
       userLevel: contextLevel
     });
 
+    // AI Sohbet Geçmişi Saklama
+    const storedMessage = aiDataManager.storeChatMessage(
+      userId,
+      {
+        userQuestion: question,
+        aiResponse: tutorResponse,
+        type: 'ai_tutor_conversation'
+      },
+      currentTopic
+    );
+
+    console.log(`✅ AI tutor sohbeti kullanıcı ${userId} için saklandı`);
+
     res.json({
       success: true,
       response: tutorResponse,
       timestamp: new Date().toISOString(),
-      userId
+      userId,
+      messageId: storedMessage.id,
+      persistent: true
     });
   } catch (error) {
     console.error('AI Tutor Error:', error);

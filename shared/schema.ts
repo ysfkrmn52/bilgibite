@@ -68,6 +68,48 @@ export const quizSessions = pgTable("quiz_sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// AI Generated Questions - otomatik soru eklemek için
+export const aiGeneratedQuestions = pgTable("ai_generated_questions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  examCategoryId: varchar("exam_category_id").notNull(),
+  questionText: text("question_text").notNull(),
+  options: jsonb("options").notNull(), // AI ürettiği seçenekler
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation"),
+  difficulty: text("difficulty").notNull().default('intermediate'),
+  topic: text("topic"),
+  isApproved: boolean("is_approved").notNull().default(false), // Manuel onay için
+  isAddedToMainPool: boolean("is_added_to_main_pool").notNull().default(false),
+  generatedAt: timestamp("generated_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: varchar("approved_by"),
+});
+
+// AI Study Plans - çalışma planlarını saklama
+export const aiStudyPlans = pgTable("ai_study_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  planData: jsonb("plan_data").notNull(), // Tüm plan detayları
+  userGoals: jsonb("user_goals").notNull(),
+  availableTime: integer("available_time").notNull(),
+  currentLevel: integer("current_level").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastAccessed: timestamp("last_accessed").defaultNow(),
+});
+
+// AI Chat Sessions - sohbet geçmişini tutma
+export const aiChatSessions = pgTable("ai_chat_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  sessionData: jsonb("session_data").notNull(), // Mesajlar array
+  currentTopic: text("current_topic"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+});
+
 export const achievements = pgTable("achievements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -187,6 +229,16 @@ export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type QuizSession = typeof quizSessions.$inferSelect;
 export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
+
+// AI Tables Types
+export type InsertAIGeneratedQuestion = typeof aiGeneratedQuestions.$inferInsert;
+export type AIGeneratedQuestion = typeof aiGeneratedQuestions.$inferSelect;
+
+export type InsertAIStudyPlan = typeof aiStudyPlans.$inferInsert;
+export type AIStudyPlan = typeof aiStudyPlans.$inferSelect;
+
+export type InsertAIChatSession = typeof aiChatSessions.$inferInsert;
+export type AIChatSession = typeof aiChatSessions.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type DailyChallenge = typeof dailyChallenges.$inferSelect;
 export type UserDailyChallenge = typeof userDailyChallenges.$inferSelect;
