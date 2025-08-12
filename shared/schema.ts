@@ -191,6 +191,208 @@ export const leaderboard = pgTable("leaderboard", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// SOCIAL LEARNING SYSTEM TABLES
+
+// Friends System
+export const friendships = pgTable("friendships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull(), // Who sent the friend request
+  addresseeId: varchar("addressee_id").notNull(), // Who received the request
+  status: text("status").notNull().default('pending'), // 'pending', 'accepted', 'blocked'
+  createdAt: timestamp("created_at").defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+});
+
+// Social Challenges (Friend vs Friend)
+export const socialChallenges = pgTable("social_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengerId: varchar("challenger_id").notNull(),
+  challengedId: varchar("challenged_id").notNull(),
+  challengeType: text("challenge_type").notNull(), // 'quiz_duel', 'streak_battle', 'category_race'
+  categoryId: varchar("category_id"),
+  targetScore: integer("target_score"),
+  duration: integer("duration").notNull().default(24), // hours
+  status: text("status").notNull().default('pending'), // 'pending', 'active', 'completed', 'cancelled'
+  challengerScore: integer("challenger_score").default(0),
+  challengedScore: integer("challenged_score").default(0),
+  winnerId: varchar("winner_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  metadata: jsonb("metadata"), // Additional challenge data
+});
+
+// Study Groups/Clubs
+export const studyGroups = pgTable("study_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  ownerId: varchar("owner_id").notNull(),
+  categoryId: varchar("category_id"), // Main focus category
+  type: text("type").notNull().default('public'), // 'public', 'private', 'school'
+  maxMembers: integer("max_members").default(50),
+  currentMembers: integer("current_members").default(1),
+  weeklyGoal: integer("weekly_goal").default(500), // XP goal
+  currentWeekXP: integer("current_week_xp").default(0),
+  level: integer("level").default(1), // Group level based on collective achievement
+  avatar: text("avatar"),
+  banner: text("banner"),
+  tags: jsonb("tags"), // Study topics, school name, etc.
+  settings: jsonb("settings"), // Privacy, join requirements, etc.
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Study Group Memberships
+export const studyGroupMembers = pgTable("study_group_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  role: text("role").notNull().default('member'), // 'owner', 'admin', 'member'
+  weeklyXP: integer("weekly_xp").default(0),
+  totalXP: integer("total_xp").default(0),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastActive: timestamp("last_active").defaultNow(),
+});
+
+// Weekly Leagues (Duolingo-style)
+export const leagues = pgTable("leagues", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // "Bronze", "Silver", "Gold", "Platinum", "Diamond"
+  level: integer("level").notNull(), // 1-10 (Bronze=1, Diamond=10)
+  minXP: integer("min_xp").notNull(), // Minimum XP to enter this league
+  maxParticipants: integer("max_participants").default(30),
+  weekPeriod: text("week_period").notNull(), // "2025-W05"
+  promotionCount: integer("promotion_count").default(5), // Top 5 get promoted
+  relegationCount: integer("relegation_count").default(5), // Bottom 5 get demoted
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+// League Participants
+export const leagueParticipants = pgTable("league_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leagueId: varchar("league_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  weekPeriod: text("week_period").notNull(),
+  weeklyXP: integer("weekly_xp").default(0),
+  currentRank: integer("current_rank").default(30),
+  finalRank: integer("final_rank"), // Final position when week ends
+  status: text("status").default('active'), // 'active', 'promoted', 'relegated', 'maintained'
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Community Forums
+export const forumCategories = pgTable("forum_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  examCategoryId: varchar("exam_category_id"), // Link to exam categories
+  icon: text("icon").notNull(),
+  color: text("color").notNull(),
+  order: integer("order").default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  postCount: integer("post_count").default(0),
+  lastPostAt: timestamp("last_post_at"),
+});
+
+// Forum Topics/Threads
+export const forumTopics = pgTable("forum_topics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  categoryId: varchar("category_id").notNull(),
+  authorId: varchar("author_id").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  type: text("type").default('discussion'), // 'discussion', 'question', 'announcement', 'study_group'
+  isPinned: boolean("is_pinned").default(false),
+  isLocked: boolean("is_locked").default(false),
+  viewCount: integer("view_count").default(0),
+  replyCount: integer("reply_count").default(0),
+  likeCount: integer("like_count").default(0),
+  lastReplyAt: timestamp("last_reply_at"),
+  lastReplyById: varchar("last_reply_by_id"),
+  tags: jsonb("tags"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Forum Replies
+export const forumReplies = pgTable("forum_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topicId: varchar("topic_id").notNull(),
+  authorId: varchar("author_id").notNull(),
+  content: text("content").notNull(),
+  parentReplyId: varchar("parent_reply_id"), // For nested replies
+  likeCount: integer("like_count").default(0),
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Social Activity Feed
+export const socialActivities = pgTable("social_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  activityType: text("activity_type").notNull(), // 'achievement', 'quiz_complete', 'friend_challenge', 'group_join', 'streak_milestone'
+  title: text("title").notNull(),
+  description: text("description"),
+  metadata: jsonb("metadata"), // Additional activity data (scores, achievements, etc.)
+  visibility: text("visibility").default('friends'), // 'public', 'friends', 'private'
+  likeCount: integer("like_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Social Activity Reactions
+export const activityReactions = pgTable("activity_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  activityId: varchar("activity_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  reactionType: text("reaction_type").notNull(), // 'like', 'celebrate', 'support', 'wow'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Direct Messages
+export const directMessages = pgTable("direct_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").notNull(),
+  receiverId: varchar("receiver_id").notNull(),
+  content: text("content").notNull(),
+  messageType: text("message_type").default('text'), // 'text', 'image', 'challenge_invite', 'study_invite'
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  metadata: jsonb("metadata"), // For special message types
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Study Sessions (for groups)
+export const studySessions = pgTable("study_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull(),
+  hostId: varchar("host_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  categoryId: varchar("category_id").notNull(),
+  sessionType: text("session_type").default('study'), // 'study', 'quiz_battle', 'discussion'
+  maxParticipants: integer("max_participants").default(10),
+  currentParticipants: integer("current_participants").default(0),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  duration: integer("duration").default(60), // minutes
+  status: text("status").default('scheduled'), // 'scheduled', 'active', 'completed', 'cancelled'
+  meetingLink: text("meeting_link"), // For video calls
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Study Session Participants
+export const studySessionParticipants = pgTable("study_session_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  participationScore: integer("participation_score").default(0),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -246,3 +448,35 @@ export type StoreItem = typeof storeItems.$inferSelect;
 export type UserStorePurchase = typeof userStorePurchases.$inferSelect;
 export type UserInventory = typeof userInventory.$inferSelect;
 export type Leaderboard = typeof leaderboard.$inferSelect;
+
+// Social Learning Types
+export type Friendship = typeof friendships.$inferSelect;
+export type InsertFriendship = typeof friendships.$inferInsert;
+
+export type SocialChallenge = typeof socialChallenges.$inferSelect;
+export type InsertSocialChallenge = typeof socialChallenges.$inferInsert;
+
+export type StudyGroup = typeof studyGroups.$inferSelect;
+export type InsertStudyGroup = typeof studyGroups.$inferInsert;
+
+export type StudyGroupMember = typeof studyGroupMembers.$inferSelect;
+export type InsertStudyGroupMember = typeof studyGroupMembers.$inferInsert;
+
+export type League = typeof leagues.$inferSelect;
+export type InsertLeague = typeof leagues.$inferInsert;
+
+export type LeagueParticipant = typeof leagueParticipants.$inferSelect;
+export type InsertLeagueParticipant = typeof leagueParticipants.$inferInsert;
+
+export type ForumCategory = typeof forumCategories.$inferSelect;
+export type ForumTopic = typeof forumTopics.$inferSelect;
+export type ForumReply = typeof forumReplies.$inferSelect;
+
+export type SocialActivity = typeof socialActivities.$inferSelect;
+export type ActivityReaction = typeof activityReactions.$inferSelect;
+
+export type DirectMessage = typeof directMessages.$inferSelect;
+export type InsertDirectMessage = typeof directMessages.$inferInsert;
+
+export type StudySession = typeof studySessions.$inferSelect;
+export type StudySessionParticipant = typeof studySessionParticipants.$inferSelect;

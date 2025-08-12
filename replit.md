@@ -35,6 +35,14 @@ BilgiBite is a modern Turkish quiz application built with a full-stack architect
 - ✅ **Automatic Database Integration**: Every AI-generated question automatically queued for database addition
 - ✅ **Persistence Dashboard**: Real-time indicators showing stored questions, study plans, and chat history
 - ✅ **Organic Database Growth**: Question database grows automatically through user AI interactions
+- ✅ **Duolingo-style Social Learning System**: Complete friend system, weekly leagues, study groups, and challenges
+- ✅ **Friend System & Discovery**: Send friend requests, accept connections, discover users with similar levels
+- ✅ **Challenge System**: Head-to-head quiz duels, streak battles, and category races between friends
+- ✅ **Weekly League System**: Bronze to Diamond leagues with promotion/relegation mechanics
+- ✅ **Study Groups & Clubs**: Create and join study groups with collective goals and achievements
+- ✅ **Social Activity Feed**: Friend activities, achievements, and progress updates in social timeline
+- ✅ **Community Forums**: Topic-based discussions, Q&A, and peer tutoring system
+- ✅ **Social API Infrastructure**: Complete backend services for all social features with database integration
 
 # User Preferences
 

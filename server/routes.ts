@@ -239,6 +239,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/ai/users/:userId/clear-data", clearUserData);
   app.get("/api/ai/storage-stats", getStorageStats);
 
+  // Social Learning Routes
+  const {
+    sendFriendRequest,
+    acceptFriendRequest,
+    getUserFriends,
+    discoverUsers,
+    createChallenge,
+    acceptChallenge,
+    getUserChallenges,
+    createStudyGroup,
+    joinStudyGroup,
+    getUserStudyGroups,
+    discoverStudyGroups,
+    getCurrentLeague,
+    getLeagueLeaderboard,
+    getSocialFeed,
+    reactToActivity
+  } = await import("./social-routes");
+  
+  // Friend System
+  app.post("/api/social/users/:userId/friends/request", sendFriendRequest);
+  app.post("/api/social/users/:userId/friends/accept/:requesterId", acceptFriendRequest);
+  app.get("/api/social/users/:userId/friends", getUserFriends);
+  app.get("/api/social/users/:userId/discover", discoverUsers);
+  
+  // Challenge System
+  app.post("/api/social/users/:userId/challenges", createChallenge);
+  app.post("/api/social/users/:userId/challenges/:challengeId/accept", acceptChallenge);
+  app.get("/api/social/users/:userId/challenges", getUserChallenges);
+  
+  // Study Groups
+  app.post("/api/social/users/:userId/groups", createStudyGroup);
+  app.post("/api/social/users/:userId/groups/:groupId/join", joinStudyGroup);
+  app.get("/api/social/users/:userId/groups", getUserStudyGroups);
+  app.get("/api/social/users/:userId/groups/discover", discoverStudyGroups);
+  
+  // League System
+  app.get("/api/social/users/:userId/league/current", getCurrentLeague);
+  app.get("/api/social/leagues/:leagueId/leaderboard", getLeagueLeaderboard);
+  
+  // Social Feed
+  app.get("/api/social/users/:userId/feed", getSocialFeed);
+  app.post("/api/social/users/:userId/activities/:activityId/react", reactToActivity);
+
   const httpServer = createServer(app);
   return httpServer;
 }

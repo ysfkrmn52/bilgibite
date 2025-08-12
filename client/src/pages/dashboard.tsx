@@ -243,11 +243,40 @@ export default function Dashboard() {
               </Card>
             </motion.div>
 
-            {/* Gamification Hub Card */}
+            {/* Social Learning Card */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + (categories.length * 0.1), duration: 0.5 }}
+            >
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-green-200 hover:border-green-400 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950"
+                onClick={() => setLocation('/social')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-white text-3xl group-hover:scale-110 transition-transform">
+                      👥
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
+                    Sosyal Öğrenme
+                  </h3>
+                  <p className="text-green-600 dark:text-green-400 text-sm mb-4">
+                    Arkadaşlarla yarış, liglerde mücadele et!
+                  </p>
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    Yeni!
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Gamification Hub Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 + (categories.length * 0.1), duration: 0.5 }}
             >
               <Card 
                 className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-purple-200 hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950"
