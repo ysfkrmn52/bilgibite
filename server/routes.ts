@@ -283,6 +283,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/social/users/:userId/feed", getSocialFeed);
   app.post("/api/social/users/:userId/activities/:activityId/react", reactToActivity);
 
+  // Analytics Routes
+  const {
+    getDashboardAnalytics,
+    getPerformanceInsights,
+    exportAnalytics,
+    getStudySessionAnalytics,
+    getLearningPatterns
+  } = await import("./analytics-routes");
+  
+  app.get("/api/analytics/dashboard", getDashboardAnalytics);
+  app.get("/api/users/:userId/analytics/dashboard", getDashboardAnalytics);
+  app.get("/api/users/:userId/analytics/insights", getPerformanceInsights);
+  app.get("/api/users/:userId/analytics/sessions", getStudySessionAnalytics);
+  app.get("/api/users/:userId/analytics/patterns", getLearningPatterns);
+  app.post("/api/users/:userId/analytics/export", exportAnalytics);
+
   const httpServer = createServer(app);
   return httpServer;
 }

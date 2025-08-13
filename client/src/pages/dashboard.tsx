@@ -300,6 +300,35 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Analytics Dashboard Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 + (categories.length * 0.1), duration: 0.5 }}
+            >
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-indigo-200 hover:border-indigo-400 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950"
+                onClick={() => setLocation('/analytics')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full flex items-center justify-center text-white text-3xl group-hover:scale-110 transition-transform">
+                      📊
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-indigo-800 dark:text-indigo-200 mb-2">
+                    Analytics Dashboard
+                  </h3>
+                  <p className="text-indigo-600 dark:text-indigo-400 text-sm mb-4">
+                    Detaylı performans analizi ve öğrenme raporları!
+                  </p>
+                  <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                    Comprehensive!
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.section>
 
