@@ -47,7 +47,21 @@ export const getTurkishExamCategories = async (req: Request, res: Response) => {
     
     res.json({
       success: true,
-      categories,
+      categories: categories.map(category => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        type: category.type,
+        description: category.description,
+        icon: category.icon,
+        color: category.color,
+        examDuration: category.examDuration,
+        totalQuestions: category.totalQuestions,
+        passingScore: category.passingScore,
+        officialExamDates: category.officialExamDates,
+        subjects: category.subjects,
+        examFormat: category.examFormat
+      })),
       totalCount: categories.length
     });
   } catch (error: any) {
