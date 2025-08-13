@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+Allow: /dashboard
+Allow: /pricing
+Allow: /turkish-exams
+Allow: /ai-learning
+Allow: /social
+Allow: /analytics
+Allow: /gamification
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+
+# Disallow authentication pages
+Disallow: /auth
+Disallow: /login
+Disallow: /register
+
+# Disallow user-specific content
+Disallow: /quiz/
+Disallow: /user/
+Disallow: /profile/
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://bilgibite.com/sitemap.xml

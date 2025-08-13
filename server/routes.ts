@@ -240,6 +240,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/ai/users/:userId/clear-data", clearUserData);
   app.get("/api/ai/storage-stats", getStorageStats);
 
+  // Error monitoring and health check routes
+  const { registerErrorRoutes } = await import("./error-routes");
+  registerErrorRoutes(app);
+
   // Social Learning Routes
   const {
     sendFriendRequest,
