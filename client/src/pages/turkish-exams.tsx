@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 
 // Types
@@ -438,51 +439,98 @@ const TurkishExams: React.FC = () => {
               ))}
             </div>
 
-            {/* Official Exam Dates */}
+            {/* Official Exam Dates Table */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   2025 Resmi Sınav Tarihleri
                 </CardTitle>
+                <CardDescription>
+                  Tüm Turkish sınav kategorilerinin güncel tarihleri ve durumları
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {categories?.map(category => {
-                    const dateStatus = getExamDateStatus(category.officialExamDates);
-                    const colorClasses = {
-                      'yks-tyt': 'bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
-                      'yks-ayt': 'bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
-                      'kpss-genel': 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200',
-                      'kpss-egitim': 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200', 
-                      'ales': 'bg-purple-50 dark:bg-purple-950 text-purple-800 dark:text-purple-200',
-                      'dgs': 'bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200',
-                      'msu': 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200',
-                      'ehliyet-teorik': 'bg-indigo-50 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200',
-                      'src-belgesi': 'bg-orange-50 dark:bg-orange-950 text-orange-800 dark:text-orange-200'
-                    };
-                    
-                    const statusColors = {
-                      passed: 'text-red-500 dark:text-red-400',
-                      upcoming: dateStatus.status === 'upcoming' && dateStatus.text.includes('gün') ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400',
-                      ongoing: 'text-gray-600 dark:text-gray-400'
-                    };
-
-                    return (
-                      <div key={category.id} className={`p-4 rounded-lg ${colorClasses[category.id] || 'bg-gray-50 dark:bg-gray-800'}`}>
-                        <h3 className="font-semibold mb-2">{category.name}</h3>
-                        <div className={`text-sm font-medium ${statusColors[dateStatus.status]}`}>
-                          {dateStatus.text}
-                        </div>
-                        {dateStatus.status === 'upcoming' && dateStatus.date && (
-                          <p className="text-xs opacity-75 mt-1">{dateStatus.date}</p>
-                        )}
-                        {category.officialExamDates && category.officialExamDates.length > 1 && (
-                          <p className="text-xs opacity-75 mt-1">{category.officialExamDates.length} farklı tarih</p>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60px]">Sınav</TableHead>
+                        <TableHead>Sınav Adı</TableHead>
+                        <TableHead>Tür</TableHead>
+                        <TableHead>Tarih Durumu</TableHead>
+                        <TableHead>Sonraki Tarih</TableHead>
+                        <TableHead className="text-right">Soru Sayısı</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories?.map(category => {
+                        const dateStatus = getExamDateStatus(category.officialExamDates);
+                        
+                        return (
+                          <TableRow key={category.id} className="hover:bg-muted/50">
+                            <TableCell>
+                              <div 
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
+                                style={{ backgroundColor: category.color }}
+                              >
+                                {category.icon}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              <div>
+                                <p className="font-semibold text-gray-900 dark:text-white">
+                                  {category.name.split(' - ')[0]}
+                                </p>
+                                {category.name.includes(' - ') && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {category.name.split(' - ')[1]}
+                                  </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {category.type.toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={
+                                  dateStatus.status === 'passed' ? 'destructive' : 
+                                  dateStatus.status === 'upcoming' ? 'default' : 
+                                  'secondary'
+                                }
+                                className="font-medium"
+                              >
+                                {dateStatus.text}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {dateStatus.status === 'upcoming' && dateStatus.date ? (
+                                <span className="text-sm text-gray-600 dark:text-gray-300">
+                                  {dateStatus.date}
+                                </span>
+                              ) : dateStatus.status === 'ongoing' ? (
+                                <span className="text-sm text-blue-600 dark:text-blue-400">
+                                  Her hafta
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">
+                                  -
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="font-mono text-sm">
+                                {category.totalQuestions}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
