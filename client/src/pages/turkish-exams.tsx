@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   BookOpen, Clock, Target, TrendingUp, Award, Brain, Users, 
   Calendar, Play, Pause, RotateCcw, CheckCircle, AlertCircle,
-  Timer, Zap, Star, Trophy, ChevronRight, BarChart3, FileText
+  Timer, Zap, Star, Trophy, ChevronRight, BarChart3, FileText,
+  Home, ArrowLeft
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,45 @@ const TurkishExams: React.FC = () => {
       `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Calculate time until exam date or show if passed
+  const getExamDateStatus = (examDates: string[] | null) => {
+    if (!examDates || examDates.length === 0) {
+      return { status: 'ongoing', text: 'Sürekli sınav' };
+    }
+
+    const now = new Date();
+    const futureDates = examDates
+      .map(date => new Date(date))
+      .filter(date => date > now)
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    if (futureDates.length === 0) {
+      return { status: 'passed', text: 'Geçti' };
+    }
+
+    const nextDate = futureDates[0];
+    const timeDiff = nextDate.getTime() - now.getTime();
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const months = Math.floor(days / 30);
+    const remainingDays = days % 30;
+
+    let timeText = '';
+    if (months > 0) {
+      timeText = `${months} ay ${remainingDays} gün kaldı`;
+    } else if (days > 0) {
+      timeText = `${days} gün kaldı`;
+    } else {
+      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+      timeText = `${hours} saat kaldı`;
+    }
+
+    return {
+      status: 'upcoming',
+      text: timeText,
+      date: nextDate.toLocaleDateString('tr-TR')
+    };
+  };
+
   // Start exam
   const handleStartExam = (categoryId: string, sessionType: string = 'full_mock') => {
     const category = categories?.find(c => c.id === categoryId);
@@ -250,13 +290,25 @@ const TurkishExams: React.FC = () => {
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              🇹🇷 Türkiye Sınav Hazırlık Sistemi
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              YKS, KPSS, ALES, DGS, MSÜ, Ehliyet ve diğer resmi sınavlara hazırlan
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => window.location.href = '/dashboard'}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+              data-testid="button-home"
+            >
+              <Home className="w-5 h-5" />
+              Ana Sayfa
+            </Button>
+            <div className="border-l border-gray-300 dark:border-gray-600 h-6"></div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                🇹🇷 Türkiye Sınav Hazırlık Sistemi
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">
+                YKS, KPSS, ALES, DGS, MSÜ, Ehliyet ve diğer resmi sınavlara hazırlan
+              </p>
+            </div>
           </div>
           
           {isExamActive && (
@@ -396,33 +448,41 @@ const TurkishExams: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                    <h3 className="font-semibold text-blue-800 dark:text-blue-200">YKS TYT/AYT</h3>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">14-15 Haziran 2025 (TYT)</p>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">21-22 Haziran 2025 (AYT)</p>
-                  </div>
-                  <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <h3 className="font-semibold text-green-800 dark:text-green-200">KPSS</h3>
-                    <p className="text-sm text-green-600 dark:text-green-400">13 Temmuz 2025</p>
-                    <p className="text-sm text-green-600 dark:text-green-400">9 Kasım 2025</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                    <h3 className="font-semibold text-purple-800 dark:text-purple-200">ALES</h3>
-                    <p className="text-sm text-purple-600 dark:text-purple-400">13 Nisan, 18 Mayıs 2025</p>
-                    <p className="text-sm text-purple-600 dark:text-purple-400">26 Ekim, 16 Kasım 2025</p>
-                  </div>
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                    <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">DGS</h3>
-                    <p className="text-sm text-yellow-600 dark:text-yellow-400">20 Temmuz 2025</p>
-                  </div>
-                  <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
-                    <h3 className="font-semibold text-red-800 dark:text-red-200">MSÜ</h3>
-                    <p className="text-sm text-red-600 dark:text-red-400">6 Temmuz 2025</p>
-                  </div>
-                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950 rounded-lg">
-                    <h3 className="font-semibold text-indigo-800 dark:text-indigo-200">Ehliyet</h3>
-                    <p className="text-sm text-indigo-600 dark:text-indigo-400">Haftalık sınavlar</p>
-                  </div>
+                  {categories?.map(category => {
+                    const dateStatus = getExamDateStatus(category.officialExamDates);
+                    const colorClasses = {
+                      'yks-tyt': 'bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
+                      'yks-ayt': 'bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
+                      'kpss-genel': 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200',
+                      'kpss-egitim': 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200', 
+                      'ales': 'bg-purple-50 dark:bg-purple-950 text-purple-800 dark:text-purple-200',
+                      'dgs': 'bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200',
+                      'msu': 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200',
+                      'ehliyet-teorik': 'bg-indigo-50 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200',
+                      'src-belgesi': 'bg-orange-50 dark:bg-orange-950 text-orange-800 dark:text-orange-200'
+                    };
+                    
+                    const statusColors = {
+                      passed: 'text-red-500 dark:text-red-400',
+                      upcoming: dateStatus.status === 'upcoming' && dateStatus.text.includes('gün') ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400',
+                      ongoing: 'text-gray-600 dark:text-gray-400'
+                    };
+
+                    return (
+                      <div key={category.id} className={`p-4 rounded-lg ${colorClasses[category.id] || 'bg-gray-50 dark:bg-gray-800'}`}>
+                        <h3 className="font-semibold mb-2">{category.name}</h3>
+                        <div className={`text-sm font-medium ${statusColors[dateStatus.status]}`}>
+                          {dateStatus.text}
+                        </div>
+                        {dateStatus.status === 'upcoming' && dateStatus.date && (
+                          <p className="text-xs opacity-75 mt-1">{dateStatus.date}</p>
+                        )}
+                        {category.officialExamDates && category.officialExamDates.length > 1 && (
+                          <p className="text-xs opacity-75 mt-1">{category.officialExamDates.length} farklı tarih</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
