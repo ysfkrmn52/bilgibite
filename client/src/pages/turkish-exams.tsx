@@ -1,7 +1,7 @@
 // Turkish Exam Preparation Page
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   BookOpen, Clock, Target, TrendingUp, Award, Brain, Users, 
   Calendar, Play, Pause, RotateCcw, CheckCircle, AlertCircle,
@@ -218,7 +218,7 @@ const TurkishExams: React.FC = () => {
     const answerArray = (activeExam.questions || []).map((q, index) => ({
       questionId: q.id,
       selectedAnswer: userAnswers[q.id] || '',
-      timeSpent: Math.round(timeSpent / activeExam.questions.length)
+      timeSpent: Math.round(timeSpent / (activeExam.questions?.length || 1))
     }));
 
     submitExamMutation.mutate({
