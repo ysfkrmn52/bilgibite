@@ -432,6 +432,13 @@ export type QuizSession = typeof quizSessions.$inferSelect;
 export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 
+// Import and re-export subscription tables
+import { subscriptionPlans, subscriptions, payments } from './subscription-tables';
+export { subscriptionPlans, subscriptions, payments };
+
+// Re-export subscription types and schemas
+export * from './subscription-schema';
+
 // AI Tables Types
 export type InsertAIGeneratedQuestion = typeof aiGeneratedQuestions.$inferInsert;
 export type AIGeneratedQuestion = typeof aiGeneratedQuestions.$inferSelect;

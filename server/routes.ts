@@ -15,6 +15,7 @@ import {
   completeDailyChallenge,
   updateUserXP
 } from "./gamification";
+import { registerSubscriptionRoutes } from "./subscription-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -317,6 +318,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/:userId/turkish-exams/submit", submitExamSession);
   app.post("/api/users/:userId/turkish-exams/register", registerForExam);
   app.get("/api/users/:userId/turkish-exams/prediction", getSuccessPrediction);
+
+  // Subscription Routes
+  registerSubscriptionRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
