@@ -40,18 +40,21 @@ export default function Header({ user }: HeaderProps) {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-home">
-              Ana Sayfa
+            <Link href="/dashboard" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-dashboard">
+              Dashboard
             </Link>
-            <a href="#exams" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-exams">
+            <Link href="/turkish-exams" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-exams">
               Sınavlar
-            </a>
-            <a href="#stats" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-stats">
+            </Link>
+            <Link href="/ai-learning" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-ai">
+              AI Öğretmen
+            </Link>
+            <Link href="/analytics" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-stats">
               İstatistikler
-            </a>
-            <a href="#profile" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-profile">
-              Profil
-            </a>
+            </Link>
+            <Link href="/pricing" className="text-gray-900 dark:text-white hover:text-primary transition-colors font-medium" data-testid="nav-pricing">
+              Fiyatlar
+            </Link>
           </nav>
 
           {/* Theme & Language Controls */}

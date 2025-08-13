@@ -62,3 +62,22 @@ export const payments = pgTable('payments', {
   statusIdx: index('payments_status_idx').on(table.status),
   iyzicoPaymentIdIdx: index('payments_iyzico_payment_id_idx').on(table.iyzicoPaymentId)
 }));
+
+// Referral System
+export const referrals = pgTable('referrals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  referrerId: text('referrer_id').notNull(), // User who sent the invitation
+  refereeId: text('referee_id').notNull(), // User who was invited
+  referralCode: text('referral_code').notNull(),
+  status: text('status').notNull(), // pending, completed, expired
+  reward: text('reward').notNull(), // +1_month, discount_percentage, etc.
+  completedAt: timestamp('completed_at'),
+  expiresAt: timestamp('expires_at'),
+  metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => ({
+  referrerIdIdx: index('referrals_referrer_id_idx').on(table.referrerId),
+  refereeIdIdx: index('referrals_referee_id_idx').on(table.refereeId),
+  referralCodeIdx: index('referrals_code_idx').on(table.referralCode)
+}));
