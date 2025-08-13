@@ -145,24 +145,158 @@ export class TurkishExamService {
         updatedAt: new Date()
       },
       {
-        id: 'src-teorik',
-        name: 'SRC - Kısa Mesafe Telsiz Sertifikası',
-        slug: 'src-teorik',
+        id: 'src-belgesi',
+        name: 'SRC Belgesi - Yolcu ve Yük Taşımacılığı',
+        slug: 'src-belgesi',
         type: 'src',
-        description: 'Denizcilik için kısa mesafe telsiz kullanım sertifikası sınavı.',
-        icon: '⛵',
+        description: 'Yurt içi ve yurt dışı yolcu ve yük taşımacılığı için SRC belgesi sınavı.',
+        icon: '🚛',
         color: '#0891b2',
-        examDuration: 60,
-        totalQuestions: 40,
-        passingScore: '75.00',
-        officialExamDates: ['2025-03-15', '2025-06-15', '2025-09-15', '2025-12-15'],
-        subjects: ExamSubjects.SRC.TEORIK,
+        examDuration: 90,
+        totalQuestions: 60,
+        passingScore: '70.00',
+        officialExamDates: ['2025-01-15', '2025-04-15', '2025-07-15', '2025-10-15'],
+        subjects: ['Mevzuat', 'Güvenlik', 'Yük Güvenliği', 'Uluslararası Taşımacılık'],
         examFormat: {
           sections: [
-            { name: 'Telsiz İletişimi', questions: 15, duration: 25 },
-            { name: 'Denizcilik Bilgisi', questions: 10, duration: 15 },
-            { name: 'Acil Durumlar', questions: 10, duration: 15 },
-            { name: 'Mevzuat', questions: 5, duration: 5 }
+            { name: 'Mevzuat ve Kurallar', questions: 20, duration: 30 },
+            { name: 'Yük Güvenliği', questions: 15, duration: 25 },
+            { name: 'Uluslararası Taşımacılık', questions: 15, duration: 25 },
+            { name: 'Güvenlik ve İlk Yardım', questions: 10, duration: 10 }
+          ],
+          scoringSystem: 'percentage',
+          negativeScoring: false,
+          wrongAnswerPenalty: 0
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'ales',
+        name: 'ALES - Akademik Personel ve Lisansüstü Eğitimi Giriş Sınavı',
+        slug: 'ales',
+        type: 'ales',
+        description: 'Akademik personel ve lisansüstü eğitimi giriş sınavı.',
+        icon: '🎓',
+        color: '#8b5cf6',
+        examDuration: 150,
+        totalQuestions: 80,
+        passingScore: '55.00',
+        officialExamDates: ['2025-04-13', '2025-05-18', '2025-10-26', '2025-11-16'],
+        subjects: ['Sözel Yetenek', 'Sayısal Yetenek'],
+        examFormat: {
+          sections: [
+            { name: 'Sözel Yetenek', questions: 40, duration: 75 },
+            { name: 'Sayısal Yetenek', questions: 40, duration: 75 }
+          ],
+          scoringSystem: 'standard_scoring',
+          negativeScoring: true,
+          wrongAnswerPenalty: 0.25
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'dgs',
+        name: 'DGS - Dikey Geçiş Sınavı',
+        slug: 'dgs',
+        type: 'dgs',
+        description: 'Önlisans mezunları için lisans programlarına geçiş sınavı.',
+        icon: '📈',
+        color: '#f59e0b',
+        examDuration: 150,
+        totalQuestions: 120,
+        passingScore: '60.00',
+        officialExamDates: ['2025-07-20'],
+        subjects: ['Türkçe', 'Matematik'],
+        examFormat: {
+          sections: [
+            { name: 'Türkçe', questions: 60, duration: 75 },
+            { name: 'Matematik', questions: 60, duration: 75 }
+          ],
+          scoringSystem: 'net_calculation',
+          negativeScoring: true,
+          wrongAnswerPenalty: 0.25
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'tyt-ayt-yabanci-dil',
+        name: 'YKS - Yabancı Dil Testi (YDT)',
+        slug: 'tyt-ayt-yabanci-dil',
+        type: 'yks',
+        description: 'Yabancı dil eğitimi veren programlar için yabancı dil testi.',
+        icon: '🌍',
+        color: '#10b981',
+        examDuration: 180,
+        totalQuestions: 80,
+        passingScore: '60.00',
+        officialExamDates: ['2025-06-22'],
+        subjects: ['İngilizce', 'Almanca', 'Fransızca', 'Arapça', 'Rusça'],
+        examFormat: {
+          sections: [
+            { name: 'Dil Bilgisi ve Kelime', questions: 40, duration: 90 },
+            { name: 'Okuduğunu Anlama', questions: 40, duration: 90 }
+          ],
+          scoringSystem: 'net_calculation',
+          negativeScoring: true,
+          wrongAnswerPenalty: 0.25
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'msu',
+        name: 'MSÜ - Milli Savunma Üniversitesi Sınavı',
+        slug: 'msu',
+        type: 'msu',
+        description: 'Milli Savunma Üniversitesi giriş sınavı.',
+        icon: '🎖️',
+        color: '#dc2626',
+        examDuration: 180,
+        totalQuestions: 120,
+        passingScore: '180.00',
+        officialExamDates: ['2025-07-06'],
+        subjects: ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler'],
+        examFormat: {
+          sections: [
+            { name: 'Türkçe', questions: 30, duration: 45 },
+            { name: 'Matematik', questions: 30, duration: 45 },
+            { name: 'Fen Bilimleri', questions: 30, duration: 45 },
+            { name: 'Sosyal Bilimler', questions: 30, duration: 45 }
+          ],
+          scoringSystem: 'net_calculation',
+          negativeScoring: true,
+          wrongAnswerPenalty: 0.25
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'polis-akademisi',
+        name: 'Polis Akademisi Giriş Sınavı',
+        slug: 'polis-akademisi',
+        type: 'polis',
+        description: 'Polis Akademisi giriş sınavı.',
+        icon: '👮',
+        color: '#1e40af',
+        examDuration: 120,
+        totalQuestions: 100,
+        passingScore: '70.00',
+        officialExamDates: ['2025-08-10'],
+        subjects: ['Türkçe', 'Matematik', 'Genel Kültür', 'Anayasa ve Vatandaşlık Bilgisi'],
+        examFormat: {
+          sections: [
+            { name: 'Türkçe', questions: 25, duration: 30 },
+            { name: 'Matematik', questions: 25, duration: 30 },
+            { name: 'Genel Kültür', questions: 25, duration: 30 },
+            { name: 'Anayasa ve Vatandaşlık', questions: 25, duration: 30 }
           ],
           scoringSystem: 'percentage',
           negativeScoring: false,
@@ -371,18 +505,27 @@ export class TurkishExamService {
       );
     }
 
-    // Fill remaining questions with generated content
+    // Fill remaining questions with subject-grouped generated content
     const remainingCount = count - questions.length;
-    for (let i = 0; i < remainingCount; i++) {
-      questions.push(this.generateRandomQuestion(categoryId, category, i + questions.length + 1));
+    if (remainingCount > 0 && Array.isArray(category.subjects)) {
+      const questionsPerSubject = Math.ceil(remainingCount / category.subjects.length);
+      let questionIndex = questions.length + 1;
+      
+      // Group questions by subject to avoid mixing
+      for (const subject of category.subjects) {
+        for (let i = 0; i < questionsPerSubject && questionIndex <= count; i++) {
+          questions.push(this.generateRandomQuestion(categoryId, category, questionIndex, subject));
+          questionIndex++;
+        }
+      }
     }
 
     return questions.slice(0, count);
   }
 
-  private static generateRandomQuestion(categoryId: string, category: ExamCategory, index: number): ExamQuestion {
+  private static generateRandomQuestion(categoryId: string, category: ExamCategory, index: number, forceSubject?: string): ExamQuestion {
     const subjects = Array.isArray(category.subjects) ? category.subjects : [];
-    const randomSubject = subjects[Math.floor(Math.random() * subjects.length)] || 'Genel';
+    const selectedSubject = forceSubject || subjects[Math.floor(Math.random() * subjects.length)] || 'Genel';
     
     const difficulties = ['easy', 'medium', 'hard'];
     const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)] as 'easy' | 'medium' | 'hard';
@@ -390,9 +533,9 @@ export class TurkishExamService {
     return {
       id: `${categoryId}-gen-${String(index).padStart(3, '0')}`,
       categoryId,
-      subject: randomSubject,
-      topic: `${randomSubject} Konuları`,
-      questionText: `${randomSubject} alanından ${index}. soru metni buraya gelecek.`,
+      subject: selectedSubject,
+      topic: `${selectedSubject} Konuları`,
+      questionText: `${selectedSubject} alanından ${index}. soru metni buraya gelecek.`,
       questionType: 'multiple_choice',
       options: ['A şıkkı', 'B şıkkı', 'C şıkkı', 'D şıkkı', 'E şıkkı'],
       correctAnswer: 'A şıkkı',
@@ -402,7 +545,7 @@ export class TurkishExamService {
       questionNumber: index,
       timeEstimate: randomDifficulty === 'easy' ? 30 : randomDifficulty === 'medium' ? 60 : 90,
       mediaUrl: null,
-      tags: [randomSubject.toLowerCase().replace(' ', '_')],
+      tags: [selectedSubject.toLowerCase().replace(' ', '_')],
       officialSource: categoryId.includes('yks') ? 'OSYM' : categoryId.includes('kpss') ? 'OSYM' : categoryId.includes('ehliyet') ? 'MEB' : 'Ulaştırma Bakanlığı',
       isActive: true,
       createdAt: new Date(),

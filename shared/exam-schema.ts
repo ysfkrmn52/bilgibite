@@ -168,7 +168,21 @@ export const ExamSubjects = {
     PRATIK: ['Park Etme', 'Yol Kuralları', 'Kavşak Geçişi']
   },
   SRC: {
-    TEORIK: ['Denizcilik Bilgisi', 'Navigasyon', 'Meteoroloji', 'İletişim', 'Güvenlik'],
-    PRATIK: ['Tekne Kullanımı', 'Bağlama Teknikleri', 'Acil Durumlar']
+    BELGESI: ['Mevzuat', 'Güvenlik', 'Yük Güvenliği', 'Uluslararası Taşımacılık']
+  },
+  ALES: {
+    GENEL: ['Sözel Yetenek', 'Sayısal Yetenek']
+  },
+  DGS: {
+    TEMEL: ['Türkçe', 'Matematik']
+  },
+  YDT: {
+    DIL: ['İngilizce', 'Almanca', 'Fransızca', 'Arapça', 'Rusça']
+  },
+  MSU: {
+    TEMEL: ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler']
+  },
+  POLIS: {
+    AKADEMI: ['Türkçe', 'Matematik', 'Genel Kültür', 'Anayasa ve Vatandaşlık Bilgisi']
   }
 } as const;

@@ -347,10 +347,10 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <h3 className="text-xl font-bold text-red-800 dark:text-red-200 mb-2">
-                    Turkish Exams
+                    Türkiye Sınav Sistemi
                   </h3>
                   <p className="text-red-600 dark:text-red-400 text-sm mb-4">
-                    YKS, KPSS, Ehliyet ve SRC sınav hazırlığı!
+                    YKS, KPSS, ALES, DGS, MSÜ ve diğer resmi sınavlar!
                   </p>
                   <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                     Authentic Tests!

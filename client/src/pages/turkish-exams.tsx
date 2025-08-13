@@ -252,15 +252,28 @@ const TurkishExams: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              🇹🇷 Turkish Exam Preparation
+              🇹🇷 Türkiye Sınav Hazırlık Sistemi
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mt-1">
-              YKS, KPSS, Ehliyet ve SRC sınavlarına hazırlan
+              YKS, KPSS, ALES, DGS, MSÜ, Ehliyet ve diğer resmi sınavlara hazırlan
             </p>
           </div>
           
           {isExamActive && (
             <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsExamActive(false);
+                  setActiveExam(null);
+                  setUserAnswers({});
+                  setCurrentQuestionIndex(0);
+                }}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Ana Menüye Dön
+              </Button>
               <div className="text-right">
                 <p className="text-sm text-gray-500 dark:text-gray-400">Kalan Süre</p>
                 <p className={`text-xl font-mono font-bold ${timeRemaining < 300 ? 'text-red-500' : 'text-blue-600'}`}>
@@ -357,7 +370,10 @@ const TurkishExams: React.FC = () => {
                           className="w-full"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleStartExam(category.id, 'subject_practice');
+                            toast({
+                              title: "Yakında Geliyor",
+                              description: "Konu bazlı çalışma özelliği yakında eklenecek."
+                            });
                           }}
                         >
                           <BookOpen className="w-4 h-4 mr-2" />
@@ -381,20 +397,31 @@ const TurkishExams: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                    <h3 className="font-semibold text-blue-800 dark:text-blue-200">YKS TYT</h3>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">14-15 Haziran 2025</p>
-                  </div>
-                  <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
-                    <h3 className="font-semibold text-red-800 dark:text-red-200">YKS AYT</h3>
-                    <p className="text-sm text-red-600 dark:text-red-400">21-22 Haziran 2025</p>
+                    <h3 className="font-semibold text-blue-800 dark:text-blue-200">YKS TYT/AYT</h3>
+                    <p className="text-sm text-blue-600 dark:text-blue-400">14-15 Haziran 2025 (TYT)</p>
+                    <p className="text-sm text-blue-600 dark:text-blue-400">21-22 Haziran 2025 (AYT)</p>
                   </div>
                   <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                     <h3 className="font-semibold text-green-800 dark:text-green-200">KPSS</h3>
                     <p className="text-sm text-green-600 dark:text-green-400">13 Temmuz 2025</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">9 Kasım 2025</p>
                   </div>
                   <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                    <h3 className="font-semibold text-purple-800 dark:text-purple-200">SRC</h3>
-                    <p className="text-sm text-purple-600 dark:text-purple-400">15 Mart, Haziran, Eylül</p>
+                    <h3 className="font-semibold text-purple-800 dark:text-purple-200">ALES</h3>
+                    <p className="text-sm text-purple-600 dark:text-purple-400">13 Nisan, 18 Mayıs 2025</p>
+                    <p className="text-sm text-purple-600 dark:text-purple-400">26 Ekim, 16 Kasım 2025</p>
+                  </div>
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+                    <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">DGS</h3>
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400">20 Temmuz 2025</p>
+                  </div>
+                  <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+                    <h3 className="font-semibold text-red-800 dark:text-red-200">MSÜ</h3>
+                    <p className="text-sm text-red-600 dark:text-red-400">6 Temmuz 2025</p>
+                  </div>
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950 rounded-lg">
+                    <h3 className="font-semibold text-indigo-800 dark:text-indigo-200">Ehliyet</h3>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400">Haftalık sınavlar</p>
                   </div>
                 </div>
               </CardContent>
