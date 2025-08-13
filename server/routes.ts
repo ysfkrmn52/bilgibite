@@ -299,6 +299,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId/analytics/patterns", getLearningPatterns);
   app.post("/api/users/:userId/analytics/export", exportAnalytics);
 
+  // Turkish Exam Routes
+  const {
+    getTurkishExamCategories,
+    getExamQuestions,
+    createMockExamSession,
+    submitExamSession,
+    getExamStatistics,
+    registerForExam,
+    getSuccessPrediction
+  } = await import("./turkish-exam-routes");
+  
+  app.get("/api/turkish-exams/categories", getTurkishExamCategories);
+  app.get("/api/turkish-exams/:categoryId/questions", getExamQuestions);
+  app.get("/api/turkish-exams/:categoryId/statistics", getExamStatistics);
+  app.post("/api/users/:userId/turkish-exams/sessions", createMockExamSession);
+  app.post("/api/users/:userId/turkish-exams/submit", submitExamSession);
+  app.post("/api/users/:userId/turkish-exams/register", registerForExam);
+  app.get("/api/users/:userId/turkish-exams/prediction", getSuccessPrediction);
+
   const httpServer = createServer(app);
   return httpServer;
 }

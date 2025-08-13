@@ -13,6 +13,7 @@ import Gamification from "@/pages/gamification";
 import AILearning from "@/pages/ai-learning";
 import Social from "@/pages/social";
 import Analytics from "@/pages/analytics";
+import TurkishExams from "@/pages/turkish-exams";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/ai-learning" component={AILearning} />
       <Route path="/social" component={Social} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/turkish-exams" component={TurkishExams} />
       <Route path="/quiz/:categoryId" component={Quiz} />
       <Route path="/gamification" component={Gamification} />
       <Route component={NotFound} />

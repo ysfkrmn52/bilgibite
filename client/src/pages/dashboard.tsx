@@ -329,6 +329,35 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Turkish Exams Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8 + (categories.length * 0.1), duration: 0.5 }}
+            >
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-red-200 hover:border-red-400 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950"
+                onClick={() => setLocation('/turkish-exams')}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-red-400 to-orange-400 rounded-full flex items-center justify-center text-white text-3xl group-hover:scale-110 transition-transform">
+                      🇹🇷
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-red-800 dark:text-red-200 mb-2">
+                    Turkish Exams
+                  </h3>
+                  <p className="text-red-600 dark:text-red-400 text-sm mb-4">
+                    YKS, KPSS, Ehliyet ve SRC sınav hazırlığı!
+                  </p>
+                  <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                    Authentic Tests!
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.section>
 
