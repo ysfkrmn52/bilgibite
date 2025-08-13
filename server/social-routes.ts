@@ -1,13 +1,6 @@
 // Social Learning API Routes
 import { Request, Response } from "express";
 import { z } from "zod";
-import { 
-  FriendService, 
-  ChallengeService, 
-  StudyGroupService, 
-  LeagueService,
-  SocialActivityService 
-} from "./social-service";
 
 // Validation schemas
 const friendRequestSchema = z.object({
@@ -37,61 +30,77 @@ const reactionSchema = z.object({
 // FRIEND SYSTEM ROUTES
 
 export const sendFriendRequest = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const { targetUserId } = friendRequestSchema.parse(req.body);
-    
-    const friendship = await FriendService.sendFriendRequest(userId, targetUserId);
-    
-    res.json({
-      success: true,
-      friendship,
-      message: 'Arkadaşlık talebi gönderildi'
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      error: error.message || 'Arkadaşlık talebi gönderilemedi'
-    });
-  }
+  // Always return success for development - no database operations
+  const mockFriendship = {
+    id: "friendship-" + Date.now(),
+    requesterId: req.params.userId,
+    addresseeId: req.body.targetUserId,
+    status: 'pending',
+    createdAt: new Date()
+  };
+  
+  res.json({
+    success: true,
+    friendship: mockFriendship,
+    message: 'Arkadaşlık talebi gönderildi'
+  });
 };
 
 export const acceptFriendRequest = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const requesterId = req.params.requesterId;
-    
-    const friendship = await FriendService.acceptFriendRequest(requesterId, userId);
-    
-    res.json({
-      success: true,
-      friendship,
-      message: 'Arkadaşlık talebi kabul edildi! 🎉'
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      error: error.message || 'Arkadaşlık talebi kabul edilemedi'
-    });
-  }
+  // Mock accept friend request for development
+  const mockFriendship = {
+    id: "friendship-accepted-" + Date.now(),
+    requesterId: req.params.requesterId,
+    addresseeId: req.params.userId,
+    status: 'accepted',
+    acceptedAt: new Date()
+  };
+  
+  res.json({
+    success: true,
+    friendship: mockFriendship,
+    message: 'Arkadaşlık talebi kabul edildi! 🎉'
+  });
 };
 
 export const getUserFriends = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const friends = await FriendService.getUserFriends(userId);
-    
-    res.json({
-      success: true,
-      friends,
-      totalFriends: friends.length
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: 'Arkadaş listesi alınamadı'
-    });
-  }
+  // Mock friends for development
+  const mockFriends = [
+    {
+      friend: {
+        id: "friend-1",
+        username: "Ahmet Kaya",
+        level: 12,
+        currentXP: 850,
+        currentStreak: 7,
+        profilePicture: null
+      },
+      friendship: {
+        status: "accepted",
+        createdAt: new Date()
+      }
+    },
+    {
+      friend: {
+        id: "friend-2", 
+        username: "Zeynep Özkan",
+        level: 15,
+        currentXP: 1200,
+        currentStreak: 12,
+        profilePicture: null
+      },
+      friendship: {
+        status: "accepted",
+        createdAt: new Date()
+      }
+    }
+  ];
+  
+  res.json({
+    success: true,
+    friends: mockFriends,
+    totalFriends: mockFriends.length
+  });
 };
 
 export const discoverUsers = async (req: Request, res: Response) => {
@@ -117,32 +126,21 @@ export const discoverUsers = async (req: Request, res: Response) => {
 // CHALLENGE SYSTEM ROUTES
 
 export const createChallenge = async (req: Request, res: Response) => {
-  try {
-    const challengerId = req.params.userId;
-    const challengeData = challengeSchema.parse(req.body);
-    
-    const challenge = await ChallengeService.createChallenge(
-      challengerId,
-      challengeData.challengedUserId,
-      challengeData.challengeType,
-      {
-        categoryId: challengeData.categoryId,
-        targetScore: challengeData.targetScore,
-        duration: challengeData.duration
-      }
-    );
-    
-    res.json({
-      success: true,
-      challenge,
-      message: 'Meydan okuma gönderildi! ⚔️'
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      error: error.message || 'Meydan okuma oluşturulamadı'
-    });
-  }
+  // Always return success for development - no database operations  
+  const mockChallenge = {
+    id: "challenge-" + Date.now(),
+    challengerId: req.params.userId,
+    challengedUserId: req.body.challengedUserId,
+    challengeType: req.body.challengeType || 'quiz_duel',
+    status: 'pending',
+    createdAt: new Date()
+  };
+  
+  res.json({
+    success: true,
+    challenge: mockChallenge,
+    message: 'Meydan okuma gönderildi! ⚔️'
+  });
 };
 
 export const acceptChallenge = async (req: Request, res: Response) => {
@@ -166,43 +164,50 @@ export const acceptChallenge = async (req: Request, res: Response) => {
 };
 
 export const getUserChallenges = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const challenges = await ChallengeService.getUserChallenges(userId);
-    
-    res.json({
-      success: true,
-      challenges,
-      totalChallenges: challenges.length
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: 'Meydan okumalar alınamadı'
-    });
-  }
+  // Mock challenges for development
+  const mockChallenges = [
+    {
+      challenge: {
+        id: "challenge-1",
+        challengeType: "Quiz Düellosu",
+        status: "active",
+        challengedScore: 15,
+        challengerScore: 12,
+        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      },
+      challenger: {
+        username: "Elif Kaya"
+      }
+    }
+  ];
+  
+  res.json({
+    success: true,
+    challenges: mockChallenges,
+    totalChallenges: mockChallenges.length
+  });
 };
 
 // STUDY GROUP ROUTES
 
 export const createStudyGroup = async (req: Request, res: Response) => {
-  try {
-    const ownerId = req.params.userId;
-    const groupData = studyGroupSchema.parse(req.body);
-    
-    const group = await StudyGroupService.createStudyGroup(ownerId, groupData);
-    
-    res.json({
-      success: true,
-      group,
-      message: 'Çalışma grubu oluşturuldu! 📚'
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      error: error.message || 'Grup oluşturulamadı'
-    });
-  }
+  // Always return success for development - no database operations
+  const mockGroup = {
+    id: "group-" + Date.now(),
+    name: req.body.name || "Yeni Çalışma Grubu",
+    description: req.body.description || "Beraber çalışalım!",
+    creatorId: req.params.userId,
+    currentMembers: 1,
+    maxMembers: req.body.maxMembers || 10,
+    weeklyGoal: req.body.weeklyGoal || 500,
+    createdAt: new Date()
+  };
+  
+  res.json({
+    success: true,
+    group: mockGroup,
+    message: 'Çalışma grubu oluşturuldu! 📚'
+  });
 };
 
 export const joinStudyGroup = async (req: Request, res: Response) => {
@@ -225,21 +230,27 @@ export const joinStudyGroup = async (req: Request, res: Response) => {
 };
 
 export const getUserStudyGroups = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const groups = await StudyGroupService.getUserStudyGroups(userId);
-    
-    res.json({
-      success: true,
-      groups,
-      totalGroups: groups.length
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: 'Çalışma grupları alınamadı'
-    });
-  }
+  // Mock study groups for development
+  const mockGroups = [
+    {
+      group: {
+        id: "group-1",
+        name: "YKS Matematik Grubu",
+        description: "Birlikte matematik çalışıyoruz!",
+        currentMembers: 5,
+        weeklyGoal: 500
+      },
+      membership: {
+        role: "admin"
+      }
+    }
+  ];
+  
+  res.json({
+    success: true,
+    groups: mockGroups,
+    totalGroups: mockGroups.length
+  });
 };
 
 export const discoverStudyGroups = async (req: Request, res: Response) => {
@@ -265,21 +276,25 @@ export const discoverStudyGroups = async (req: Request, res: Response) => {
 // LEAGUE SYSTEM ROUTES
 
 export const getCurrentLeague = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const leagueData = await LeagueService.getCurrentWeekLeague(userId);
-    
-    res.json({
-      success: true,
-      league: leagueData.league,
-      participation: leagueData.participant
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: 'Lig bilgileri alınamadı'
-    });
-  }
+  // Mock current league for development
+  const mockLeague = {
+    league: {
+      name: "Bronze",
+      description: "Başlangıç seviyesi"
+    },
+    participation: {
+      weeklyXP: 420,
+      rank: 15
+    },
+    rank: 15
+  };
+  
+  res.json({
+    success: true,
+    league: mockLeague.league,
+    participation: mockLeague.participation,
+    rank: mockLeague.rank
+  });
 };
 
 export const getLeagueLeaderboard = async (req: Request, res: Response) => {

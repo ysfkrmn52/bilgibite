@@ -25,14 +25,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 
 const mockUserId = "mock-user-123";
 
 export default function SocialPage() {
   const [activeTab, setActiveTab] = useState('feed');
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Social data queries
   const { data: friends = [] } = useQuery({
@@ -88,6 +91,73 @@ export default function SocialPage() {
       return data.users || [];
     },
     enabled: activeTab === 'discover'
+  });
+
+  // Mutations for social actions
+  const sendFriendRequestMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const response = await fetch(`/api/social/users/${mockUserId}/friends/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Arkadaşlık talebi gönderildi!",
+        description: "Talebiniz başarıyla iletildi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'discover'] });
+    }
+  });
+
+  const challengeFriendMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const response = await fetch(`/api/social/users/${mockUserId}/challenges`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          challengedUserId: targetUserId,
+          challengeType: 'quiz_duel',
+          categoryId: 'yks',
+          targetScore: 20,
+          duration: 300
+        })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Meydan okuma gönderildi!",
+        description: "Arkadaşınız bildiri alacak.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'challenges'] });
+    }
+  });
+
+  const createGroupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/social/users/${mockUserId}/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: "Yeni Çalışma Grubu",
+          description: "Beraber çalışalım!",
+          category: "yks",
+          maxMembers: 10,
+          weeklyGoal: 500
+        })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Grup oluşturuldu!",
+        description: "Arkadaşlarını davet edebilirsin.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'groups'] });
+    }
   });
 
   const containerVariants = {
@@ -297,7 +367,13 @@ export default function SocialPage() {
                                 </div>
                               </div>
                             </div>
-                            <Button variant="outline" size="sm" className="text-xs">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-xs"
+                              onClick={() => challengeFriendMutation.mutate(friend.id)}
+                              disabled={challengeFriendMutation.isPending}
+                            >
                               <Zap className="h-3 w-3 mr-1" />
                               Meydan Oku
                             </Button>
@@ -332,7 +408,13 @@ export default function SocialPage() {
                               </div>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" className="text-xs">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs"
+                            onClick={() => sendFriendRequestMutation.mutate(user.id)}
+                            disabled={sendFriendRequestMutation.isPending}
+                          >
                             <UserPlus className="h-3 w-3 mr-1" />
                             Ekle
                           </Button>
@@ -453,7 +535,11 @@ export default function SocialPage() {
                         <p className="text-gray-600 dark:text-gray-400">
                           Henüz bir çalışma grubunda değilsin
                         </p>
-                        <Button className="mt-4">
+                        <Button 
+                          className="mt-4"
+                          onClick={() => createGroupMutation.mutate()}
+                          disabled={createGroupMutation.isPending}
+                        >
                           <Target className="h-4 w-4 mr-2" />
                           Grup Oluştur
                         </Button>
@@ -523,11 +609,23 @@ export default function SocialPage() {
                           Seviye {user.level} • {user.xp} XP
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => sendFriendRequestMutation.mutate(user.id)}
+                            disabled={sendFriendRequestMutation.isPending}
+                          >
                             <UserPlus className="h-3 w-3 mr-1" />
                             Arkadaş Ekle
                           </Button>
-                          <Button variant="default" size="sm" className="flex-1">
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => challengeFriendMutation.mutate(user.id)}
+                            disabled={challengeFriendMutation.isPending}
+                          >
                             <Zap className="h-3 w-3 mr-1" />
                             Meydan Oku
                           </Button>
