@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendEmailVerification
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -40,16 +40,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   async function signup(email: string, password: string, displayName: string) {
+    if (!auth || !isFirebaseConfigured) {
+      throw new Error('Firebase authentication not configured');
+    }
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(user, { displayName });
     await sendEmailVerification(user);
   }
 
   async function login(email: string, password: string) {
+    if (!auth || !isFirebaseConfigured) {
+      throw new Error('Firebase authentication not configured');
+    }
     await signInWithEmailAndPassword(auth, email, password);
   }
 
   async function loginWithGoogle() {
+    if (!auth || !googleProvider || !isFirebaseConfigured) {
+      throw new Error('Firebase authentication not configured');
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
@@ -68,16 +77,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout() {
+    if (!auth || !isFirebaseConfigured) {
+      throw new Error('Firebase authentication not configured');
+    }
     await signOut(auth);
   }
 
   async function updateUserProfile(displayName: string, photoURL?: string) {
+    if (!auth || !isFirebaseConfigured) {
+      throw new Error('Firebase authentication not configured');
+    }
     if (currentUser) {
       await updateProfile(currentUser, { displayName, photoURL });
     }
   }
 
   useEffect(() => {
+    if (!auth || !isFirebaseConfigured) {
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       setCurrentUser(user);
       setLoading(false);

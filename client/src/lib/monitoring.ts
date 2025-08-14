@@ -188,7 +188,7 @@ export class MonitoringService {
         const endTime = performance.now();
         
         this.reportError({
-          message: `Network error: ${error.message}`,
+          message: `Network error: ${(error as Error).message}`,
           url: url,
           userAgent: navigator.userAgent,
           timestamp: Date.now(),

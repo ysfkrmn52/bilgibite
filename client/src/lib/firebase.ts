@@ -2,35 +2,49 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 
-const firebaseConfig = {
+// Check if Firebase environment variables are available
+const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && 
+                          import.meta.env.VITE_FIREBASE_PROJECT_ID && 
+                          import.meta.env.VITE_FIREBASE_APP_ID;
+
+const firebaseConfig = hasFirebaseConfig ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+} : null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if config is available
+const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 
 // Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
+export const auth = app ? getAuth(app) : null;
 
-// Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
-googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+// Auth providers - only initialize if Firebase is available
+export const googleProvider = app ? (() => {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+  provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  return provider;
+})() : null;
 
 // Facebook Auth Provider setup
 import { FacebookAuthProvider } from "firebase/auth";
-export const facebookProvider = new FacebookAuthProvider();
-facebookProvider.addScope('email');
-facebookProvider.addScope('public_profile');
-facebookProvider.setCustomParameters({
-  'display': 'popup'
-});
+export const facebookProvider = app ? (() => {
+  const provider = new FacebookAuthProvider();
+  provider.addScope('email');
+  provider.addScope('public_profile');
+  provider.setCustomParameters({
+    'display': 'popup'
+  });
+  return provider;
+})() : null;
+
+// Export config status for components to check
+export const isFirebaseConfigured = hasFirebaseConfig;
 
 export default app;
