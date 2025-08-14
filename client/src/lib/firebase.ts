@@ -7,7 +7,10 @@ const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY &&
                           import.meta.env.VITE_FIREBASE_PROJECT_ID && 
                           import.meta.env.VITE_FIREBASE_APP_ID;
 
-const firebaseConfig = hasFirebaseConfig ? {
+// Development/Demo mode configuration - disable Firebase for development
+const isDevelopment = import.meta.env.DEV || !hasFirebaseConfig;
+
+const firebaseConfig = hasFirebaseConfig && !isDevelopment ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -45,6 +48,7 @@ export const facebookProvider = app ? (() => {
 })() : null;
 
 // Export config status for components to check
-export const isFirebaseConfigured = hasFirebaseConfig;
+export const isFirebaseConfigured = hasFirebaseConfig && !isDevelopment;
+export const isDemoMode = isDevelopment;
 
 export default app;

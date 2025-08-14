@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendEmailVerification
 } from 'firebase/auth';
-import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase';
+import { auth, googleProvider, isFirebaseConfigured, isDemoMode } from '@/lib/firebase';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -39,7 +39,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Demo mode user for development
+  const demoUser: User = {
+    uid: 'demo-user-123',
+    email: 'demo@bilgibite.com',
+    displayName: 'Demo Kullanıcı',
+    emailVerified: true,
+    photoURL: null,
+    isAnonymous: false,
+    metadata: {
+      creationTime: new Date().toISOString(),
+      lastSignInTime: new Date().toISOString()
+    },
+    providerData: [],
+    refreshToken: '',
+    tenantId: null,
+    delete: async () => {},
+    getIdToken: async () => 'demo-token',
+    getIdTokenResult: async () => ({} as any),
+    reload: async () => {},
+    toJSON: () => ({})
+  } as User;
+
   async function signup(email: string, password: string, displayName: string) {
+    if (isDemoMode) {
+      // Demo mode: simulate successful signup
+      setCurrentUser({ ...demoUser, email, displayName });
+      return;
+    }
+    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -49,6 +77,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function login(email: string, password: string) {
+    if (isDemoMode) {
+      // Demo mode: simulate successful login
+      setCurrentUser({ ...demoUser, email });
+      return;
+    }
+    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -56,6 +90,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function loginWithGoogle() {
+    if (isDemoMode) {
+      // Demo mode: simulate successful Google login
+      setCurrentUser({ ...demoUser, displayName: 'Google Demo User', email: 'google-demo@bilgibite.com' });
+      return;
+    }
+    
     if (!auth || !googleProvider || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -77,6 +117,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout() {
+    if (isDemoMode) {
+      // Demo mode: simulate successful logout
+      setCurrentUser(null);
+      return;
+    }
+    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -93,6 +139,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
+    if (isDemoMode) {
+      // Demo mode: set demo user and finish loading
+      setCurrentUser(demoUser);
+      setLoading(false);
+      return;
+    }
+
     if (!auth || !isFirebaseConfigured) {
       setLoading(false);
       return;

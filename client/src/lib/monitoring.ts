@@ -290,6 +290,18 @@ export class MonitoringService {
   }
 
   private async sendToMonitoringService(error: ErrorReport) {
+    // Filter out Firebase auth errors in development mode
+    if (error.message.includes('Failed to fetch') && 
+        (error.url?.includes('googleapis.com') || error.url?.includes('firebaseapp.com'))) {
+      console.warn('Firebase auth error (expected in development):', error.message);
+      return;
+    }
+
+    // Filter out Replit beacon errors
+    if (error.message.includes('beacon.js')) {
+      return;
+    }
+
     try {
       // In production, send to your monitoring service
       await fetch('/api/errors', {
