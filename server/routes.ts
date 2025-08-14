@@ -1,5 +1,6 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import cors from 'cors';
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -17,56 +18,94 @@ import {
 } from "./gamification";
 import { registerSubscriptionRoutes } from "./subscription-routes";
 
+// Security middleware imports
+import { 
+  authenticateToken, 
+  authorizeUser, 
+  requireAdmin,
+  authRateLimit,
+  apiRateLimit,
+  aiRateLimit
+} from "./middleware/auth";
+import { 
+  validateSchema, 
+  sanitizeInput,
+  corsOptions,
+  securityHeaders,
+  requestLogger 
+} from "./middleware/validation";
+import { 
+  errorHandler, 
+  notFoundHandler, 
+  asyncHandler 
+} from "./middleware/error-handler";
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // User routes
-  app.get("/api/users/:id", async (req, res) => {
-    try {
-      const user = await storage.getUser(req.params.id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
+  // Apply global middleware
+  app.use(cors(corsOptions));
+  app.use(securityHeaders);
+  app.use(requestLogger);
+  app.use(sanitizeInput);
+  app.use(apiRateLimit); // Global rate limiting
+
+  // Public routes (no authentication required)
+  app.get("/health", (req: Request, res: Response) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV 
+    });
   });
 
-  app.post("/api/users", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
-      res.status(201).json(user);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
-      }
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  app.get("/api/exam-categories", asyncHandler(async (req: Request, res: Response) => {
+    const categories = await storage.getExamCategories();
+    res.json(categories);
+  }));
 
-  app.patch("/api/users/:id", async (req, res) => {
-    try {
-      const updates = req.body;
-      const user = await storage.updateUser(req.params.id, updates);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  // Authentication endpoints (with special rate limiting)
+  app.post("/api/auth/login", authRateLimit, validateSchema(z.object({
+    email: z.string().email(),
+    password: z.string().min(6)
+  })), asyncHandler(async (req: Request, res: Response) => {
+    // Login logic would go here
+    res.json({ message: "Login endpoint - implement with Firebase Auth" });
+  }));
 
-  // Exam categories
-  app.get("/api/exam-categories", async (req, res) => {
-    try {
-      const categories = await storage.getExamCategories();
-      res.json(categories);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+  app.post("/api/auth/register", authRateLimit, validateSchema(z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    username: z.string().min(3).max(50)
+  })), asyncHandler(async (req: Request, res: Response) => {
+    // Registration logic would go here  
+    res.json({ message: "Register endpoint - implement with Firebase Auth" });
+  }));
+
+  // Protected user routes (require authentication)
+  app.get("/api/users/:userId", authenticateToken, authorizeUser, asyncHandler(async (req: Request, res: Response) => {
+    const user = await storage.getUser(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  });
+    res.json(user);
+  }));
+
+  app.post("/api/users", validateSchema(insertUserSchema), asyncHandler(async (req: Request, res: Response) => {
+    const userData = req.body;
+    const user = await storage.createUser(userData);
+    res.status(201).json(user);
+  }));
+
+  app.patch("/api/users/:userId", authenticateToken, authorizeUser, asyncHandler(async (req: Request, res: Response) => {
+    const updates = req.body;
+    const user = await storage.updateUser(req.params.userId, updates);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  }));
+
+
 
   app.get("/api/exam-categories/:id", async (req, res) => {
     try {
@@ -325,6 +364,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Subscription Routes
   registerSubscriptionRoutes(app);
+
+  // Error handling middleware (must be last)
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   const httpServer = createServer(app);
   return httpServer;
