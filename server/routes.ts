@@ -20,20 +20,25 @@ import { registerSubscriptionRoutes } from "./subscription-routes";
 
 // Security middleware imports
 import { 
-  authenticateToken, 
-  authorizeUser, 
-  requireAdmin,
-  authRateLimit,
-  apiRateLimit,
-  aiRateLimit
+  authenticationMiddleware, 
+  requireRole, 
+  requireOrganization
 } from "./middleware/auth";
 import { 
-  validateSchema, 
-  sanitizeInput,
-  corsOptions,
-  securityHeaders,
-  requestLogger 
+  rateLimiter,
+  strictRateLimiter,
+  moderateRateLimiter,
+  apiRateLimiter
+} from "./middleware/rate-limiter";
+import { 
+  validationMiddleware
 } from "./middleware/validation";
+import { 
+  securityMiddleware
+} from "./middleware/security";
+import { 
+  loggingMiddleware
+} from "./middleware/logging";
 import { 
   errorHandler, 
   notFoundHandler, 
@@ -43,11 +48,17 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Apply global middleware
-  app.use(cors(corsOptions));
-  app.use(securityHeaders);
-  app.use(requestLogger);
-  app.use(sanitizeInput);
-  app.use(apiRateLimit); // Global rate limiting
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://your-domain.com'] 
+      : ['http://localhost:3000', 'http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+  app.use(securityMiddleware);
+  app.use(loggingMiddleware);
+  app.use(apiRateLimiter); // Global rate limiting
 
   // Public routes (no authentication required)
   app.get("/health", (req: Request, res: Response) => {
@@ -64,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Authentication endpoints (with special rate limiting)
-  app.post("/api/auth/login", authRateLimit, validateSchema(z.object({
+  app.post("/api/auth/login", strictRateLimiter, validationMiddleware(z.object({
     email: z.string().email(),
     password: z.string().min(6)
   })), asyncHandler(async (req: Request, res: Response) => {
@@ -72,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: "Login endpoint - implement with Firebase Auth" });
   }));
 
-  app.post("/api/auth/register", authRateLimit, validateSchema(z.object({
+  app.post("/api/auth/register", strictRateLimiter, validationMiddleware(z.object({
     email: z.string().email(),
     password: z.string().min(8),
     username: z.string().min(3).max(50)
@@ -82,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Protected user routes (require authentication)
-  app.get("/api/users/:userId", authenticateToken, authorizeUser, asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/users/:userId", authenticationMiddleware, asyncHandler(async (req: Request, res: Response) => {
     const user = await storage.getUser(req.params.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -90,13 +101,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(user);
   }));
 
-  app.post("/api/users", validateSchema(insertUserSchema), asyncHandler(async (req: Request, res: Response) => {
+  app.post("/api/users", validationMiddleware(insertUserSchema), asyncHandler(async (req: Request, res: Response) => {
     const userData = req.body;
     const user = await storage.createUser(userData);
     res.status(201).json(user);
   }));
 
-  app.patch("/api/users/:userId", authenticateToken, authorizeUser, asyncHandler(async (req: Request, res: Response) => {
+  app.patch("/api/users/:userId", authenticationMiddleware, asyncHandler(async (req: Request, res: Response) => {
     const updates = req.body;
     const user = await storage.updateUser(req.params.userId, updates);
     if (!user) {

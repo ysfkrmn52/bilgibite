@@ -1,15 +1,17 @@
 import { db } from './db';
 import { 
   users, 
+  quizSessions,
+  userProgress
+} from '@shared/schema';
+import {
   organizations, 
   organizationMembers,
-  quizSessions,
-  userProgress,
   videoProgress,
   teacherClasses,
   assignments,
   studentAssignments
-} from '@shared/schema';
+} from '@shared/enterprise-schema';
 import { eq, and, gte, desc, count, avg, sum } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 

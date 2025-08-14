@@ -5,7 +5,7 @@ import {
   organizationSettings,
   organizationBilling,
   organizationUsage
-} from '@shared/schema';
+} from '@shared/enterprise-schema';
 import { eq, and, count } from 'drizzle-orm';
 
 export interface TenantConfig {

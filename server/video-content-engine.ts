@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from './db';
-import { videoLessons, videoProgress, videoQuizzes } from '@shared/schema';
+import { videoLessons, videoProgress, videoQuizzes } from '@shared/enterprise-schema';
 import { eq, and } from 'drizzle-orm';
 
 const anthropic = new Anthropic({
