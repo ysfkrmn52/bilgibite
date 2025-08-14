@@ -16,7 +16,8 @@ import { SEOManager } from "./lib/seo";
 import { pwaManager } from "./lib/pwa";
 
 import AuthPage from "@/pages/auth";
-import Dashboard from "@/pages/dashboard";
+import Home from "@/pages/home";
+import Profile from "@/pages/profile";
 import Quiz from "@/pages/quiz";
 import Gamification from "@/pages/gamification";
 import AILearning from "@/pages/ai-learning";
@@ -28,24 +29,29 @@ import MonitoringDashboard from "@/pages/monitoring-dashboard";
 import EnterpriseDashboard from "@/pages/enterprise-dashboard";
 import TeacherDashboard from "@/pages/teacher-dashboard";
 import NotFound from "@/pages/not-found";
+import { Navbar } from "@/components/layout/Navbar";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={AuthPage} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/ai-learning" component={AILearning} />
-      <Route path="/social" component={Social} />
-      <Route path="/analytics" component={Analytics} />
-      <Route path="/turkish-exams" component={TurkishExams} />
-      <Route path="/pricing" component={Pricing} />
-      <Route path="/quiz/:categoryId" component={Quiz} />
-      <Route path="/gamification" component={Gamification} />
-      <Route path="/monitoring" component={MonitoringDashboard} />
-      <Route path="/enterprise" component={EnterpriseDashboard} />
-      <Route path="/teacher" component={TeacherDashboard} />
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen">
+      <Navbar />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/ai-learning" component={AILearning} />
+        <Route path="/social" component={Social} />
+        <Route path="/analytics" component={Analytics} />
+        <Route path="/turkish-exams" component={TurkishExams} />
+        <Route path="/pricing" component={Pricing} />
+        <Route path="/quiz/:categoryId" component={Quiz} />
+        <Route path="/gamification" component={Gamification} />
+        <Route path="/monitoring" component={MonitoringDashboard} />
+        <Route path="/enterprise" component={EnterpriseDashboard} />
+        <Route path="/teacher" component={TeacherDashboard} />
+        <Route path="/auth" component={AuthPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </div>
   );
 }
 
