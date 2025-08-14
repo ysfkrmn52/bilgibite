@@ -365,9 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription Routes
   registerSubscriptionRoutes(app);
 
-  // Error handling middleware (must be last)
-  app.use(notFoundHandler);
-  app.use(errorHandler);
+  // Note: Error handling middleware moved to index.ts after Vite setup
 
   const httpServer = createServer(app);
   return httpServer;
