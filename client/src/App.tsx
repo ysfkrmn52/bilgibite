@@ -50,35 +50,62 @@ function Router() {
 }
 
 function App() {
-  // Initialize performance monitoring and analytics
+  // Initialize core services with better error handling
   useEffect(() => {
-    // Initialize analytics
-    if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
-      initializeAnalytics('mock-user-123'); // Replace with actual user ID
-    }
+    const initializeApp = async () => {
+      try {
+        console.log('Initializing BilgiBite App...');
+        
+        // Initialize analytics only if configured
+        if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
+          console.log('Initializing analytics...');
+          initializeAnalytics('demo-user-123');
+        }
 
-    // Initialize monitoring service
-    MonitoringService.getInstance().initialize();
+        // Initialize monitoring service with error handling
+        try {
+          MonitoringService.getInstance().initialize();
+          console.log('Monitoring service initialized');
+        } catch (error) {
+          console.warn('Monitoring service initialization failed:', error);
+        }
 
-    // Initialize PWA manager
-    if ('serviceWorker' in navigator) {
-      pwaManager; // Initialize PWA manager
-    }
+        // Initialize PWA manager cautiously
+        if ('serviceWorker' in navigator) {
+          try {
+            await pwaManager;
+            console.log('PWA manager initialized');
+          } catch (error) {
+            console.warn('PWA initialization failed:', error);
+          }
+        }
 
-    // Set up SEO for the app
-    const seoManager = SEOManager.getInstance();
-    seoManager.updateMetaTags({
-      title: 'BilgiBite - AI Destekli Türk Sınav Hazırlık Platformu',
-      description: 'YKS, KPSS ve ehliyet sınavlarına AI destekli modern quiz sistemi ile hazırlanın. Kişisel öğretmen, ilerleme takibi ve gamification özellikleri.',
-      keywords: 'YKS, KPSS, ehliyet sınavı, AI öğretmen, quiz, Turkish exam preparation, online test',
-      canonical: window.location.origin,
-      ogImage: '/icons/icon-512x512.png',
-      structuredData: seoManager.generateWebsiteStructuredData()
-    });
+        // Set up SEO for the app
+        try {
+          const seoManager = SEOManager.getInstance();
+          seoManager.updateMetaTags({
+            title: 'BilgiBite - AI Destekli Türk Sınav Hazırlık Platformu',
+            description: 'YKS, KPSS ve ehliyet sınavlarına AI destekli modern quiz sistemi ile hazırlanın. Kişisel öğretmen, ilerleme takibi ve gamification özellikleri.',
+            keywords: 'YKS, KPSS, ehliyet sınavı, AI öğretmen, quiz, Turkish exam preparation, online test',
+            canonical: window.location.origin,
+            ogImage: '/icons/icon-512x512.png',
+            structuredData: seoManager.generateWebsiteStructuredData()
+          });
 
-    // Preload critical resources
-    seoManager.preloadCriticalResources();
+          // Preload critical resources
+          seoManager.preloadCriticalResources();
+          console.log('SEO manager initialized');
+        } catch (error) {
+          console.warn('SEO initialization failed:', error);
+        }
 
+        console.log('BilgiBite App initialization complete');
+      } catch (error) {
+        console.error('App initialization failed:', error);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   return (
