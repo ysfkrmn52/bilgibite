@@ -115,11 +115,12 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    @apply rounded-full;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    background-color: hsl(var(--muted-foreground) / 0.5);
   }
   
   /* Animation classes */
@@ -280,7 +281,12 @@
 }
 
 .nav-inactive {
-  @apply hover:bg-accent/60 text-muted-foreground hover:text-foreground;
+  @apply text-muted-foreground hover:text-foreground;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-inactive:hover {
+  background-color: hsl(var(--accent) / 0.6);
 }
 
 /* Content spacing */
