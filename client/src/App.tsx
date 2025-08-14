@@ -25,6 +25,8 @@ import Analytics from "@/pages/analytics";
 import TurkishExams from "@/pages/turkish-exams";
 import Pricing from "@/pages/pricing";
 import MonitoringDashboard from "@/pages/monitoring-dashboard";
+import EnterpriseDashboard from "@/pages/enterprise-dashboard";
+import TeacherDashboard from "@/pages/teacher-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -40,6 +42,8 @@ function Router() {
       <Route path="/quiz/:categoryId" component={Quiz} />
       <Route path="/gamification" component={Gamification} />
       <Route path="/monitoring" component={MonitoringDashboard} />
+      <Route path="/enterprise" component={EnterpriseDashboard} />
+      <Route path="/teacher" component={TeacherDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

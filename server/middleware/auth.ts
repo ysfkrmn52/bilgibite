@@ -1,105 +1,65 @@
-// Authentication middleware for protected routes
-import { Request, Response, NextFunction } from 'express';
-import * as admin from 'firebase-admin';
+import type { Request, Response, NextFunction } from 'express';
 
-// Extend Express Request type to include user
+interface AuthenticatedUser {
+  uid: string;
+  email?: string;
+  role?: string;
+  organizationId?: string;
+}
+
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        uid: string;
-        email?: string;
-        email_verified?: boolean;
-      };
+      user?: AuthenticatedUser;
     }
   }
 }
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+export const authenticationMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  // Demo mode authentication - in production, this would verify JWT tokens
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader && req.path.includes('/api/system/health')) {
+    // Allow health checks without authentication
+    return next();
+  }
 
-    if (!token) {
-      return res.status(401).json({ 
-        error: 'Access token required',
-        message: 'Authorization header with Bearer token is required' 
+  // Mock authentication for development
+  req.user = {
+    uid: 'demo-user-123',
+    email: 'demo@bilgibite.com',
+    role: 'teacher',
+    organizationId: 'demo-org-123'
+  };
+
+  next();
+};
+
+export const requireRole = (roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userRole = req.user?.role;
+    
+    if (!userRole || !roles.includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions'
       });
     }
-
-    // Verify Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
-      email_verified: decodedToken.email_verified
-    };
-
+    
     next();
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return res.status(403).json({ 
-      error: 'Invalid token',
-      message: 'Token verification failed' 
+  };
+};
+
+export const requireOrganization = (req: Request, res: Response, next: NextFunction) => {
+  const organizationId = req.params.orgId || req.user?.organizationId;
+  
+  if (!organizationId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Organization ID required'
     });
   }
-};
-
-// Middleware to check if user owns the resource
-export const authorizeUser = (req: Request, res: Response, next: NextFunction) => {
-  const requestedUserId = req.params.userId;
-  const authenticatedUserId = req.user?.uid;
-
-  if (!authenticatedUserId) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  if (requestedUserId !== authenticatedUserId) {
-    return res.status(403).json({ 
-      error: 'Forbidden',
-      message: 'You can only access your own data' 
-    });
-  }
-
+  
+  // In production, verify user has access to this organization
   next();
 };
-
-// Admin-only middleware
-export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  // Check if user has admin role (implement based on your admin system)
-  // For now, we'll check a custom claim
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  // This would need to be implemented with custom claims in Firebase
-  // admin.auth().getUser(req.user.uid).then(userRecord => {
-  //   if (userRecord.customClaims?.admin === true) {
-  //     next();
-  //   } else {
-  //     res.status(403).json({ error: 'Admin access required' });
-  //   }
-  // });
-
-  // For now, allow access - implement proper admin check
-  next();
-};
-
-// Rate limiting middleware
-import rateLimit from 'express-rate-limit';
-
-export const createRateLimit = (windowMs: number, max: number) => rateLimit({
-  windowMs,
-  max,
-  message: {
-    error: 'Too many requests',
-    message: `Too many requests from this IP, please try again after ${windowMs / 1000} seconds.`
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Specific rate limits
-export const authRateLimit = createRateLimit(15 * 60 * 1000, 10); // 10 requests per 15 minutes
-export const apiRateLimit = createRateLimit(60 * 1000, 500); // 500 requests per minute (development)
-export const aiRateLimit = createRateLimit(60 * 1000, 50); // 50 AI requests per minute

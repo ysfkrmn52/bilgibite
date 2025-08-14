@@ -365,6 +365,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription Routes
   registerSubscriptionRoutes(app);
 
+  // Enterprise Routes
+  const { registerEnterpriseRoutes } = await import('./enterprise-routes');
+  registerEnterpriseRoutes(app);
+
   // Note: Error handling middleware moved to index.ts after Vite setup
 
   const httpServer = createServer(app);
