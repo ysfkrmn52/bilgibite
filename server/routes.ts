@@ -795,5 +795,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Education API Routes
+  const { EducationService, seedEducationData } = await import("./education-service");
+  const educationService = new EducationService();
+
+  // Initialize education data
+  try {
+    await seedEducationData();
+  } catch (error) {
+    console.log('Education data already seeded or error occurred:', error);
+  }
+
+  // Education Subject Routes
+  app.get("/api/education/subjects", async (req, res) => {
+    try {
+      const subjects = await educationService.getAllSubjects();
+      res.json(subjects);
+    } catch (error) {
+      console.error("Education subjects error:", error);
+      res.status(500).json({ error: "Eğitim alanları getirilemedi" });
+    }
+  });
+
+  // Education Course Routes
+  app.get("/api/education/courses", async (req, res) => {
+    try {
+      const { subjectId, featured, search } = req.query;
+      let courses;
+      
+      if (search) {
+        courses = await educationService.searchCourses(search as string, subjectId as string);
+      } else if (featured === 'true') {
+        courses = await educationService.getFeaturedCourses(6);
+      } else {
+        courses = await educationService.getAllCourses(subjectId as string);
+      }
+      
+      res.json(courses);
+    } catch (error) {
+      console.error("Education courses error:", error);
+      res.status(500).json({ error: "Kurslar getirilemedi" });
+    }
+  });
+
+  app.get("/api/education/courses/:id", async (req, res) => {
+    try {
+      const course = await educationService.getCourseById(req.params.id);
+      if (!course) {
+        return res.status(404).json({ error: "Kurs bulunamadı" });
+      }
+      
+      // Get course statistics
+      const stats = await educationService.getCourseStats(req.params.id);
+      res.json({ ...course, stats });
+    } catch (error) {
+      console.error("Course details error:", error);
+      res.status(500).json({ error: "Kurs detayları getirilemedi" });
+    }
+  });
+
+  app.post("/api/education/courses/:id/enroll", async (req, res) => {
+    try {
+      const userId = "demo-user"; // Mock user ID
+      const courseId = req.params.id;
+      
+      const enrollment = await educationService.enrollUserInCourse(userId, courseId);
+      res.json(enrollment);
+    } catch (error) {
+      console.error("Course enrollment error:", error);
+      res.status(500).json({ error: "Kursa kayıt olunamadı" });
+    }
+  });
+
+  app.put("/api/education/courses/:id/progress", async (req, res) => {
+    try {
+      const userId = "demo-user"; // Mock user ID
+      const courseId = req.params.id;
+      const { progress } = req.body;
+      
+      const updated = await educationService.updateCourseProgress(userId, courseId, progress);
+      if (!updated) {
+        return res.status(404).json({ error: "Kurs kaydı bulunamadı" });
+      }
+      
+      res.json({ message: "İlerleme güncellendi", progress });
+    } catch (error) {
+      console.error("Course progress error:", error);
+      res.status(500).json({ error: "İlerleme güncellenemedi" });
+    }
+  });
+
+  // Education Materials Routes
+  app.get("/api/education/materials", async (req, res) => {
+    try {
+      const { subjectId } = req.query;
+      const materials = await educationService.getAllMaterials(subjectId as string);
+      res.json(materials);
+    } catch (error) {
+      console.error("Education materials error:", error);
+      res.status(500).json({ error: "Eğitim materyalleri getirilemedi" });
+    }
+  });
+
+  app.post("/api/education/materials/:id/download", async (req, res) => {
+    try {
+      const materialId = req.params.id;
+      const incremented = await educationService.incrementMaterialDownloads(materialId);
+      
+      if (!incremented) {
+        return res.status(404).json({ error: "Materyal bulunamadı" });
+      }
+      
+      res.json({ message: "İndirme sayısı güncellendi" });
+    } catch (error) {
+      console.error("Material download error:", error);
+      res.status(500).json({ error: "İndirme kayıt edilemedi" });
+    }
+  });
+
+  // Learning Paths Routes
+  app.get("/api/education/learning-paths", async (req, res) => {
+    try {
+      const paths = await educationService.getAllLearningPaths();
+      res.json(paths);
+    } catch (error) {
+      console.error("Learning paths error:", error);
+      res.status(500).json({ error: "Öğrenim yolları getirilemedi" });
+    }
+  });
+
+  // User Progress Routes
+  app.get("/api/education/user/enrollments", async (req, res) => {
+    try {
+      const userId = "demo-user"; // Mock user ID
+      const enrollments = await educationService.getUserEnrollments(userId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error("User enrollments error:", error);
+      res.status(500).json({ error: "Kullanıcı kayıtları getirilemedi" });
+    }
+  });
+
+  app.get("/api/education/user/analytics", async (req, res) => {
+    try {
+      const userId = "demo-user"; // Mock user ID
+      const analytics = await educationService.getUserLearningAnalytics(userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("User analytics error:", error);
+      res.status(500).json({ error: "Kullanıcı analitikleri getirilemedi" });
+    }
+  });
+
+  app.get("/api/education/popular-courses", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const courses = await educationService.getPopularCourses(limit);
+      res.json(courses);
+    } catch (error) {
+      console.error("Popular courses error:", error);
+      res.status(500).json({ error: "Popüler kurslar getirilemedi" });
+    }
+  });
+
   return httpServer;
 }

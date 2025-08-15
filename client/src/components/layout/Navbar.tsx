@@ -14,6 +14,7 @@ import {
   User, 
   Settings, 
   BookOpen, 
+  GraduationCap,
   Trophy, 
   Brain, 
   Users, 
@@ -30,7 +31,8 @@ export function Navbar() {
   
   const navigationItems = [
     { path: "/", label: "Ana Sayfa", icon: Home },
-    { path: "/exams", label: "Sınavlar", icon: BookOpen },
+    { path: "/exams", label: "Sınavlar", icon: GraduationCap },
+    { path: "/education", label: "Eğitim", icon: BookOpen },
     { path: "/ai", label: "AI", icon: Brain },
     { path: "/badges", label: "Rozetler", icon: Trophy },
     { path: "/social", label: "Sosyal", icon: Users },

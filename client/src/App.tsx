@@ -25,6 +25,7 @@ import AILearning from "@/pages/ai-learning";
 import Social from "@/pages/social";
 import Analytics from "@/pages/analytics";
 import TurkishExams from "@/pages/symmetric-exams";
+import Education from "@/pages/education";
 import Pricing from "@/pages/updated-pricing";
 import MonitoringDashboard from "@/pages/monitoring-dashboard";
 import EnterpriseDashboard from "@/pages/enterprise-dashboard";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/social" component={Social} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/exams" component={TurkishExams} />
+        <Route path="/education" component={Education} />
         <Route path="/subscription" component={Pricing} />
         <Route path="/quiz/:categoryId" component={Quiz} />
         <Route path="/badges" component={Rozetler} />

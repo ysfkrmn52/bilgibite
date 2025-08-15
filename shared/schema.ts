@@ -432,6 +432,91 @@ export type QuizSession = typeof quizSessions.$inferSelect;
 export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 
+// Education Tables
+export const educationSubjects = pgTable("education_subjects", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  color: text("color").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const educationCourses = pgTable("education_courses", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  instructor: text("instructor").notNull(),
+  subjectId: text("subject_id").notNull().references(() => educationSubjects.id),
+  duration: text("duration").notNull(),
+  level: text("level").notNull(),
+  rating: integer("rating").default(0), // Simplified to integer for compatibility
+  totalStudents: integer("total_students").default(0),
+  featured: boolean("featured").default(false),
+  price: integer("price").default(0),
+  thumbnailUrl: text("thumbnail_url"),
+  videoUrl: text("video_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const educationMaterials = pgTable("education_materials", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(),
+  subjectId: text("subject_id").notNull().references(() => educationSubjects.id),
+  fileUrl: text("file_url").notNull(),
+  fileSize: text("file_size").notNull(),
+  downloads: integer("downloads").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const educationLearningPaths = pgTable("education_learning_paths", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  duration: text("duration").notNull(),
+  totalCourses: integer("total_courses").notNull(),
+  difficulty: text("difficulty").notNull(),
+  completionRate: integer("completion_rate").default(0),
+  subjects: jsonb("subjects").$type<string[]>().notNull(),
+  courseIds: jsonb("course_ids").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const userCourseEnrollments = pgTable("user_course_enrollments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull(),
+  courseId: text("course_id").notNull().references(() => educationCourses.id),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  progress: integer("progress").default(0),
+  status: text("status").notNull().default('active'),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  completedAt: timestamp("completed_at"),
+  rating: integer("rating"),
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const educationProgress = pgTable("education_progress", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull(),
+  subjectId: text("subject_id").notNull().references(() => educationSubjects.id),
+  totalLessonsCompleted: integer("total_lessons_completed").default(0),
+  totalStudyTime: integer("total_study_time").default(0),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  masteryLevel: text("mastery_level").default('beginner'),
+  lastStudyDate: timestamp("last_study_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Import and re-export subscription tables
 import { subscriptionPlans, subscriptions, payments, referrals } from './subscription-tables';
 export { subscriptionPlans, subscriptions, payments, referrals };

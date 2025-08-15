@@ -178,7 +178,7 @@ export default function SimplifiedHome() {
           >
             
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Button 
                 variant="outline" 
                 className="h-20 flex-col gap-2 bg-white/50 hover:bg-blue-50 border-blue-200"
@@ -200,6 +200,18 @@ export default function SimplifiedHome() {
                 <Link href="/exams">
                   <GraduationCap className="w-6 h-6 text-green-600" />
                   <span className="text-sm">Sınavlar</span>
+                </Link>
+              </Button>
+
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col gap-2 bg-white/50 hover:bg-indigo-50 border-indigo-200"
+                asChild
+                data-testid="button-education"
+              >
+                <Link href="/education">
+                  <BookOpen className="w-6 h-6 text-indigo-600" />
+                  <span className="text-sm">Eğitim</span>
                 </Link>
               </Button>
 
