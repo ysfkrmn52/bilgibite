@@ -30,6 +30,7 @@ import Pricing from "@/pages/updated-pricing";
 import MonitoringDashboard from "@/pages/monitoring-dashboard";
 import EnterpriseDashboard from "@/pages/enterprise-dashboard";
 import TeacherDashboard from "@/pages/teacher-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/monitoring" component={MonitoringDashboard} />
         <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route path="/teacher" component={TeacherDashboard} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
