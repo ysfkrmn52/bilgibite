@@ -301,7 +301,7 @@ export default function SocialPage() {
                       socialFeed.map((activity: any) => (
                         <div key={activity.activity.id} className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user.id}`} />
+                            <AvatarImage src="/avatars/user.svg" />
                             <AvatarFallback>{activity.user.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
@@ -357,7 +357,7 @@ export default function SocialPage() {
                           <div key={friend.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.id}`} />
+                                <AvatarImage src="/avatars/user.svg" />
                                 <AvatarFallback>{friend.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
                               </Avatar>
                               <div>
@@ -398,7 +398,7 @@ export default function SocialPage() {
                         <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} />
+                              <AvatarImage src="/avatars/user.svg" />
                               <AvatarFallback>{user.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div>

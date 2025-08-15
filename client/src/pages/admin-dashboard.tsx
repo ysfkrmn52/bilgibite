@@ -173,7 +173,7 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
-      return response as AdminUser[];
+      return response as unknown as AdminUser[];
     }
   });
 
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/courses'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/courses');
-      return response as Course[];
+      return response as unknown as Course[];
     }
   });
 
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/teachers'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/teachers');
-      return response as Teacher[];
+      return response as unknown as Teacher[];
     }
   });
 

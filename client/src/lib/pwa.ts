@@ -66,7 +66,7 @@ export class PWAManager {
         });
 
         // Enable background sync if supported
-        if (this.swRegistration.sync) {
+        if ('sync' in this.swRegistration) {
           await this.setupBackgroundSync();
         }
 
@@ -177,7 +177,7 @@ export class PWAManager {
   private async setupBackgroundSync() {
     if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
       try {
-        await this.swRegistration?.sync.register('background-sync');
+        await (this.swRegistration as any)?.sync?.register('background-sync');
         console.log('Background sync registered');
       } catch (error) {
         console.error('Background sync registration failed:', error);

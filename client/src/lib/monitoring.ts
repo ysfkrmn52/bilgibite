@@ -140,15 +140,15 @@ export class MonitoringService {
     // First Input Delay
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        this.analytics.trackPerformance('fid', entry.processingStart - entry.startTime);
+        this.analytics.trackPerformance('fid', (entry as any).processingStart - entry.startTime);
       }
     }).observe({ entryTypes: ['first-input'] });
 
     // Cumulative Layout Shift
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          this.analytics.trackPerformance('cls', entry.value);
+        if (!(entry as any).hadRecentInput) {
+          this.analytics.trackPerformance('cls', (entry as any).value);
         }
       }
     }).observe({ entryTypes: ['layout-shift'] });
