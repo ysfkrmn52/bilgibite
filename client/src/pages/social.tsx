@@ -204,7 +204,7 @@ export default function SocialPage() {
 
             {/* Quick Stats */}
             <div className="flex items-center gap-4">
-              <Card className="p-3">
+              <Card className="p-3 bg-white">
                 <div className="flex items-center gap-2 text-center">
                   <Users className="h-4 w-4 text-blue-600" />
                   <div>
@@ -214,7 +214,7 @@ export default function SocialPage() {
                 </div>
               </Card>
               
-              <Card className="p-3">
+              <Card className="p-3 bg-white">
                 <div className="flex items-center gap-2 text-center">
                   <Trophy className="h-4 w-4 text-yellow-600" />
                   <div>
@@ -226,7 +226,7 @@ export default function SocialPage() {
                 </div>
               </Card>
 
-              <Card className="p-3">
+              <Card className="p-3 bg-white">
                 <div className="flex items-center gap-2 text-center">
                   <Zap className="h-4 w-4 text-purple-600" />
                   <div>

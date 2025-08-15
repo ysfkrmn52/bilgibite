@@ -169,7 +169,7 @@ const Analytics: React.FC = () => {
           </div>
           
           <div className="flex gap-3">
-            <div className="flex rounded-lg bg-white dark:bg-slate-800 p-1">
+            <div className="flex rounded-lg bg-white p-1">
               {(['week', 'month', 'year'] as const).map((period) => (
                 <Button
                   key={period}

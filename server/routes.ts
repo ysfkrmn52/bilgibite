@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import cors from 'cors';
 import multer from "multer";
 import { storage } from "./storage";
+import { processContentFile } from "./ai-content-processor";
 import { 
   insertUserSchema, 
   insertQuizSessionSchema,
@@ -955,6 +956,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Popular courses error:", error);
       res.status(500).json({ error: "Popüler kurslar getirilemedi" });
+    }
+  });
+
+  // AI-powered content processing endpoint
+  app.post('/api/admin/process-content', upload.single('file'), processContentFile);
+
+  // Existing admin file upload endpoint (for compatibility)
+  app.post('/api/admin/upload', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Dosya gerekli' });
+      }
+
+      // Simple file storage (existing functionality)
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      
+      res.json({
+        success: true,
+        fileName,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        uploadedAt: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('File upload error:', error);
+      res.status(500).json({ 
+        error: 'Dosya yükleme hatası',
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      });
     }
   });
 

@@ -234,7 +234,7 @@ export default function Education() {
                     className={`h-auto p-4 flex-col gap-2 w-full transition-all duration-200 ${
                       selectedCategory === category.id 
                         ? `bg-${category.color}-500 hover:bg-${category.color}-600 text-white` 
-                        : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        : 'bg-white hover:bg-gray-50'
                     }`}
                     onClick={() => setSelectedCategory(selectedCategory === category.id ? '' : category.id)}
                     data-testid={`button-category-${category.id}`}
@@ -305,7 +305,7 @@ export default function Education() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white backdrop-blur-sm">
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start mb-2">
                         <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
@@ -382,7 +382,7 @@ export default function Education() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white backdrop-blur-sm">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <Badge variant="secondary">{material.type}</Badge>
@@ -431,7 +431,7 @@ export default function Education() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white backdrop-blur-sm">
                     <CardHeader>
                       <div className="flex justify-between items-start mb-2">
                         <Badge variant="outline">{path.difficulty}</Badge>

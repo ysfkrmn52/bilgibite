@@ -103,7 +103,7 @@ const pricingPlans: PricingPlan[] = [
       '7/24 destek'
     ],
     aiFeatures: [
-      'AI Premium (5000 soru/ay)',
+      'AI Premium (1000 soru/ay)',
       'AI Chat Desteği (150 saat/ay)',
       'Gelişmiş AI mentor',
       'Kişiselleştirilmiş müfredat',
@@ -222,7 +222,7 @@ export default function UpdatedPricing() {
           
           {/* Billing Period Selector */}
           <div className="flex justify-center mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-lg border">
+            <div className="bg-white rounded-xl p-2 shadow-lg border">
               <div className="flex gap-1">
                 {billingPeriods.map((period) => (
                   <Button
@@ -329,6 +329,7 @@ export default function UpdatedPricing() {
                           <Switch
                             checked={includeAI[plan.id]}
                             onCheckedChange={() => toggleAI(plan.id)}
+                            className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
                           />
                         </div>
                       )}

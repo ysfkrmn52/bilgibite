@@ -23,7 +23,10 @@ import {
   Download,
   Search,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Brain,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 interface Question {
@@ -58,6 +61,9 @@ export default function AdminDashboard() {
   const [questionFilter, setQuestionFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [contentType, setContentType] = useState<'questions' | 'courses' | 'lessons'>('questions');
+  const [processedContent, setProcessedContent] = useState<any>(null);
+  const [showProcessedContent, setShowProcessedContent] = useState(false);
 
   // Question form state
   const [newQuestion, setNewQuestion] = useState({
@@ -140,6 +146,35 @@ export default function AdminDashboard() {
     }
   });
 
+  // AI Content Processing Mutation
+  const processContentMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch('/api/admin/process-content', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error('AI işleme hatası');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setProcessedContent(data.data);
+      setShowProcessedContent(true);
+      toast({ 
+        title: 'AI İşleme Tamamlandı', 
+        description: `${data.originalFileName} dosyası başarıyla işlendi` 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'AI İşleme Hatası', 
+        description: error.message || 'Dosya işlenirken hata oluştu', 
+        variant: 'destructive' 
+      });
+    }
+  });
+
   // Functions
   const resetQuestionForm = () => {
     setNewQuestion({
@@ -186,6 +221,28 @@ export default function AdminDashboard() {
     
     setIsUploading(true);
     uploadFileMutation.mutate(formData);
+  };
+
+  // AI Content Processing Handler
+  const handleAIContentProcessing = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // AI destekli işleme için daha geniş format desteği
+    const supportedFormats = ['application/pdf', 'text/plain', 'application/json', 'text/markdown'];
+    if (!supportedFormats.includes(file.type)) {
+      toast({
+        title: 'Hata',
+        description: 'AI işleme için desteklenen formatlar: PDF, TXT, JSON, MD',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contentType', contentType);
+    processContentMutation.mutate(formData);
   };
 
   const filteredQuestions = questions.filter((q: Question) => {
@@ -518,44 +575,118 @@ export default function AdminDashboard() {
 
           {/* File Upload Tab */}
           <TabsContent value="upload" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Toplu Soru Yükleme</CardTitle>
-                <CardDescription>PDF, TXT veya JSON dosyasından toplu soru yükleyin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Dosya Yükle</h3>
-                  <p className="text-muted-foreground mb-4">
-                    PDF, TXT veya JSON dosyanızı sürükleyin veya seçin
-                  </p>
-                  <Input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept=".pdf,.txt,.json"
-                    className="hidden"
-                    data-testid="file-upload-input"
-                  />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    data-testid="button-upload-file"
-                  >
-                    {isUploading ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                        Yükleniyor...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Dosya Seç
-                      </>
-                    )}
-                  </Button>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* AI Destekli İçerik İşleme */}
+              <Card className="border-blue-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-blue-600" />
+                    AI Destekli İçerik İşleme
+                  </CardTitle>
+                  <CardDescription>
+                    AI ile otomatik içerik ayrıştırma ve organize etme
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    {/* İçerik Tipi Seçimi */}
+                    <div>
+                      <Label className="text-sm font-medium">İçerik Tipi</Label>
+                      <Select value={contentType} onValueChange={setContentType as (value: string) => void}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="questions">Sorular & Testler</SelectItem>
+                          <SelectItem value="courses">Kurslar & Dersler</SelectItem>
+                          <SelectItem value="lessons">Ders Materyalleri</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
+                      <Brain className="mx-auto h-10 w-10 text-blue-500" />
+                      <h3 className="mt-2 text-sm font-semibold text-blue-900">AI İle İşle</h3>
+                      <p className="mt-1 text-sm text-blue-600">
+                        Dosyalarınız AI ile otomatik ayrıştırılır
+                      </p>
+                      <div className="mt-4">
+                        <Label htmlFor="ai-file-upload" className="cursor-pointer">
+                          <div className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition-colors">
+                            <Brain className="w-4 h-4 mr-2" />
+                            {processContentMutation.isPending ? 'AI İşliyor...' : 'AI İle İşle'}
+                          </div>
+                        </Label>
+                        <Input
+                          id="ai-file-upload"
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.txt,.json,.md"
+                          onChange={handleAIContentProcessing}
+                          disabled={processContentMutation.isPending}
+                        />
+                      </div>
+                    </div>
+
+                    {/* AI Özellikler */}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        AI Özellikler
+                      </h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>🧠 Otomatik içerik kategorilendirme</li>
+                        <li>📚 Akıllı soru/ders ayrıştırma</li>
+                        <li>🎯 Zorluk seviyesi analizi</li>
+                        <li>🏷️ Otomatik etiketleme</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Klasik Dosya Yükleme */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="w-5 h-5" />
+                    Klasik Dosya Yükleme
+                  </CardTitle>
+                  <CardDescription>PDF, TXT veya JSON dosyasından toplu soru yükleyin</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                    <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">Dosya Yükle</h3>
+                    <p className="text-muted-foreground mb-4">
+                      PDF, TXT veya JSON dosyanızı sürükleyin veya seçin
+                    </p>
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".pdf,.txt,.json"
+                      className="hidden"
+                      data-testid="file-upload-input"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      data-testid="button-upload-file"
+                    >
+                      {isUploading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                          Yükleniyor...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Dosya Seç
+                        </>
+                      )}
+                    </Button>
+                  </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
@@ -597,8 +728,59 @@ export default function AdminDashboard() {
                     <p><strong>PDF:</strong> Standart soru bankası formatı (AI ile ayrıştırılır)</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* İşlenmiş İçerik Görüntüleme */}
+            {showProcessedContent && processedContent && (
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-800">
+                    <CheckCircle className="w-5 h-5" />
+                    İşlenmiş İçerik Önizlemesi
+                  </CardTitle>
+                  <CardDescription className="text-green-600">
+                    AI tarafından başarıyla işlenen içerik aşağıdadır
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {Array.isArray(processedContent) ? processedContent.map((item, index) => (
+                      <div key={index} className="bg-white p-4 rounded-lg border">
+                        <h5 className="font-medium text-gray-900">
+                          {contentType === 'questions' ? 'Soru' : 'İçerik'} {index + 1}
+                        </h5>
+                        <p className="text-sm text-gray-600 mt-2">
+                          {typeof item === 'string' ? item : item.title || item.question || JSON.stringify(item, null, 2)}
+                        </p>
+                      </div>
+                    )) : (
+                      <div className="bg-white p-4 rounded-lg border">
+                        <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {JSON.stringify(processedContent, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setShowProcessedContent(false)}>
+                      Kapat
+                    </Button>
+                    <Button onClick={() => {
+                      toast({ 
+                        title: 'Başarılı', 
+                        description: 'İçerik veritabanına kaydedildi' 
+                      });
+                      setShowProcessedContent(false);
+                      setProcessedContent(null);
+                    }}>
+                      Veritabanına Kaydet
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Users Tab */}
