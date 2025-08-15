@@ -79,6 +79,18 @@
     @apply outline-none ring-2 ring-primary ring-offset-2;
   }
   
+  /* Dropdown menu background fix */
+  [data-radix-popper-content-wrapper] {
+    background-color: white !important;
+  }
+  
+  .dropdown-content,
+  [role="menu"],
+  [role="listbox"] {
+    background-color: white !important;
+    color: black !important;
+  }
+  
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;

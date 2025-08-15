@@ -50,6 +50,7 @@ const pricingPlans: PricingPlan[] = [
     ],
     aiFeatures: [
       'AI Öğretmen (100 soru/ay)',
+      'AI Chat Desteği (10 saat/ay)',
       'Kişiselleştirilmiş öneriler',
       'Akıllı soru üretimi',
       'Performans analizi'
@@ -73,7 +74,8 @@ const pricingPlans: PricingPlan[] = [
       'PDF dışa aktarma'
     ],
     aiFeatures: [
-      'AI Öğretmen (Sınırsız)',
+      'AI Öğretmen (1000 soru/ay)',
+      'AI Chat Desteği (50 saat/ay)',
       'Gelişmiş soru üretimi',
       'Kişisel çalışma planları',
       'Zayıf nokta analizi',
@@ -101,7 +103,8 @@ const pricingPlans: PricingPlan[] = [
       '7/24 destek'
     ],
     aiFeatures: [
-      'AI Premium (Sınırsız)',
+      'AI Premium (5000 soru/ay)',
+      'AI Chat Desteği (150 saat/ay)',
       'Gelişmiş AI mentor',
       'Kişiselleştirilmiş müfredat',
       'Gerçek zamanlı feedback',
@@ -129,7 +132,8 @@ const pricingPlans: PricingPlan[] = [
       'Dedike hesap yöneticisi'
     ],
     aiFeatures: [
-      'AI Enterprise Suite',
+      'AI Enterprise (Sınırsız)',
+      'AI Chat Desteği (Sınırsız)',
       'Kuruma özel AI modeli',
       'Toplu öğrenci analizi',
       'AI ile otomatik raporlama',
@@ -142,6 +146,7 @@ const pricingPlans: PricingPlan[] = [
 ];
 
 export default function UpdatedPricing() {
+  const [activeBillingPeriod, setActiveBillingPeriod] = useState('1'); // 1, 3, 6, 12 months
   const [includeAI, setIncludeAI] = useState<Record<string, boolean>>({
     basic: false,
     pro: false,
@@ -149,11 +154,34 @@ export default function UpdatedPricing() {
     enterprise: false
   });
 
+  const billingPeriods = [
+    { value: '1', label: '1 Ay', discount: 0 },
+    { value: '3', label: '3 Ay', discount: 10 },
+    { value: '6', label: '6 Ay', discount: 20 },
+    { value: '12', label: '12 Ay', discount: 30 }
+  ];
+
   const toggleAI = (planId: string) => {
     setIncludeAI(prev => ({
       ...prev,
       [planId]: !prev[planId]
     }));
+  };
+
+  const getDiscountedPrice = (basePrice: number) => {
+    const currentPeriod = billingPeriods.find(p => p.value === activeBillingPeriod);
+    const discount = currentPeriod?.discount || 0;
+    return Math.round(basePrice * (1 - discount / 100));
+  };
+
+  const getAILimits = (planId: string) => {
+    const limits = {
+      basic: { questions: 100, hours: 10 },
+      pro: { questions: 1000, hours: 50 },
+      premium: { questions: 5000, hours: 150 },
+      enterprise: { questions: 'Sınırsız', hours: 'Sınırsız' }
+    };
+    return limits[planId as keyof typeof limits];
   };
 
   const containerVariants = {
@@ -191,6 +219,35 @@ export default function UpdatedPricing() {
           <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-8">
             İhtiyaçlarına uygun planı seç ve öğrenme yolculuğunu hızlandır. AI özellikler ile daha akıllı çalış.
           </p>
+          
+          {/* Billing Period Selector */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-lg border">
+              <div className="flex gap-1">
+                {billingPeriods.map((period) => (
+                  <Button
+                    key={period.value}
+                    variant={activeBillingPeriod === period.value ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveBillingPeriod(period.value)}
+                    className={`relative px-4 py-2 rounded-lg transition-all ${
+                      activeBillingPeriod === period.value 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' 
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    data-testid={`button-billing-${period.value}`}
+                  >
+                    {period.label}
+                    {period.discount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1 py-0.5">
+                        -%{period.discount}
+                      </Badge>
+                    )}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Pricing Cards */}
@@ -202,7 +259,9 @@ export default function UpdatedPricing() {
         >
           {pricingPlans.map((plan) => {
             const IconComponent = plan.icon;
-            const currentPrice = includeAI[plan.id] ? plan.aiPrice : plan.basePrice;
+            const basePrice = includeAI[plan.id] ? plan.aiPrice : plan.basePrice;
+            const currentPrice = getDiscountedPrice(basePrice);
+            const aiLimits = getAILimits(plan.id);
             
             return (
               <motion.div key={plan.id} variants={cardVariants}>
@@ -236,9 +295,14 @@ export default function UpdatedPricing() {
                           {currentPrice === 0 ? 'Ücretsiz' : `₺${currentPrice}`}
                           {currentPrice > 0 && <span className="text-lg text-muted-foreground">/ay</span>}
                         </div>
-                        {includeAI[plan.id] && plan.basePrice > 0 && (
+                        {activeBillingPeriod !== '1' && basePrice > 0 && (
                           <div className="text-sm text-muted-foreground line-through">
-                            ₺{plan.basePrice}/ay
+                            ₺{basePrice}/ay
+                          </div>
+                        )}
+                        {activeBillingPeriod !== '1' && currentPrice > 0 && (
+                          <div className="text-xs text-green-600 font-medium">
+                            {billingPeriods.find(p => p.value === activeBillingPeriod)?.discount}% indirim
                           </div>
                         )}
                       </div>
@@ -248,7 +312,14 @@ export default function UpdatedPricing() {
                         <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                           <div className="flex items-center gap-2">
                             <Brain className="w-4 h-4 text-purple-600" />
-                            <span className="text-sm font-medium">AI Özellikleri</span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">AI Özellikleri</span>
+                              {includeAI[plan.id] && (
+                                <span className="text-xs text-gray-500">
+                                  {aiLimits.questions} soru/ay • {aiLimits.hours} saat/ay
+                                </span>
+                              )}
+                            </div>
                             {includeAI[plan.id] && (
                               <Badge variant="secondary" className="text-xs">
                                 +₺{plan.aiPrice - plan.basePrice}
@@ -268,8 +339,10 @@ export default function UpdatedPricing() {
                         <ul className="space-y-2">
                           {plan.features.map((feature, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm">
-                              <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                              <span>{feature}</span>
+                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                             </li>
                           ))}
                         </ul>
@@ -280,8 +353,10 @@ export default function UpdatedPricing() {
                             <ul className="space-y-2">
                               {plan.aiFeatures.map((feature, index) => (
                                 <li key={index} className="flex items-start gap-2 text-sm">
-                                  <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
-                                  <span>{feature}</span>
+                                  <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <Sparkles className="w-3 h-3 text-white" />
+                                  </div>
+                                  <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                                 </li>
                               ))}
                             </ul>

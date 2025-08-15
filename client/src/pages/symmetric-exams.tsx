@@ -70,17 +70,62 @@ const examCategories = [
   {
     id: "src",
     name: "SRC",
-    fullName: "Kısa Mesafe Telsiz Sınavı",
+    fullName: "Mesleki Yeterlilik Sınavları (SRC1-4)",
     icon: Radio,
     color: "from-pink-500 to-rose-600", 
     bgColor: "bg-pink-50",
     textColor: "text-pink-700",
     iconColor: "text-pink-600",
-    questionsCount: 95,
-    totalStudents: 125000,
-    averageScore: 82,
+    questionsCount: 200,
+    totalStudents: 120000,
+    averageScore: 72,
     userProgress: 30,
-    description: "Amatör telsiz operatörlüğü için gerekli sınav. Elektronik ve telsiz teknolojisi."
+    description: "SRC1-4 mesleki yeterlilik sınavları. Yolcu ve yük taşımacılığı için gerekli."
+  },
+  {
+    id: "ales",
+    name: "ALES",
+    fullName: "Akademik Personel ve Lisansüstü Eğitimi Giriş Sınavı",
+    icon: BookOpen,
+    color: "from-indigo-500 to-blue-600",
+    bgColor: "bg-indigo-50",
+    textColor: "text-indigo-700",
+    iconColor: "text-indigo-600",
+    questionsCount: 80,
+    totalStudents: 350000,
+    averageScore: 55,
+    userProgress: 45,
+    description: "Lisansüstü eğitim ve akademik kariyer için gerekli sınav."
+  },
+  {
+    id: "dgs",
+    name: "DGS",
+    fullName: "Dikey Geçiş Sınavı",
+    icon: GraduationCap,
+    color: "from-purple-500 to-violet-600",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-700",
+    iconColor: "text-purple-600",
+    questionsCount: 120,
+    totalStudents: 180000,
+    averageScore: 62,
+    userProgress: 55,
+    description: "Önlisans mezunlarının 4 yıllık programa geçiş sınavı."
+  },
+  {
+    id: "meb-ogretmenlik",
+    name: "MEB Öğretmenlik",
+    fullName: "Öğretmenlik Alan Bilgisi Sınavı",
+    icon: Users,
+    color: "from-emerald-500 to-green-600",
+    bgColor: "bg-emerald-50",
+    textColor: "text-emerald-700",
+    iconColor: "text-emerald-600",
+    questionsCount: 75,
+    totalStudents: 450000,
+    averageScore: 68,
+    userProgress: 35,
+    description: "MEB öğretmenlik kadroları için alan bilgisi ve eğitim bilimleri sınavı."
   }
 ];
 
@@ -129,7 +174,7 @@ export default function SymmetricExams() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10"
         >
           {examCategories.map((exam) => {
             const IconComponent = exam.icon;

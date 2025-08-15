@@ -177,7 +177,7 @@ export default function SocialPage() {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+      className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
