@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/mode-toggle";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -29,13 +29,13 @@ export function Navbar() {
   const [location] = useLocation();
   
   const navigationItems = [
-    { path: "/", label: "Anasayfa", icon: Home },
-    { path: "/turkish-exams", label: "Türk Sınavları", icon: BookOpen },
-    { path: "/ai-learning", label: "AI Öğrenme", icon: Brain },
-    { path: "/gamification", label: "Rozetler", icon: Trophy },
+    { path: "/", label: "Ana Sayfa", icon: Home },
+    { path: "/exams", label: "Sınavlar", icon: BookOpen },
+    { path: "/ai", label: "AI", icon: Brain },
+    { path: "/badges", label: "Rozetler", icon: Trophy },
     { path: "/social", label: "Sosyal", icon: Users },
     { path: "/analytics", label: "İstatistikler", icon: BarChart3 },
-    { path: "/pricing", label: "Fiyatlar", icon: CreditCard }
+    { path: "/subscription", label: "Abonelik", icon: CreditCard }
   ];
 
   const isActivePath = (path: string) => {
@@ -108,18 +108,47 @@ export function Navbar() {
         <div className="flex items-center space-x-4">
           
           {/* Bildirimler */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-4 w-4" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs p-0"
-            >
-              3
-            </Badge>
-          </Button>
-
-          {/* Tema Değiştirici */}
-          <ModeToggle />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-4 w-4" />
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs p-0"
+                >
+                  3
+                </Badge>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 bg-white/95 backdrop-blur-sm border shadow-lg" align="end">
+              <div className="p-4">
+                <h3 className="font-medium text-sm mb-3">Bildirimler</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-blue-50 border border-blue-100">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-sm font-medium">Yeni rozet kazandınız!</p>
+                      <p className="text-xs text-gray-600">"Kararlı Öğrenci" rozetini aldınız</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-green-50 border border-green-100">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-sm font-medium">Quiz tamamlandı</p>
+                      <p className="text-xs text-gray-600">YKS Matematik - %85 başarı</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-orange-50 border border-orange-100">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-sm font-medium">Arkadaş isteği</p>
+                      <p className="text-xs text-gray-600">Ahmet Yılmaz seni arkadaş olarak ekledi</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Kullanıcı Menüsü */}
           <DropdownMenu>

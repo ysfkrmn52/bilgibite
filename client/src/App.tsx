@@ -16,15 +16,16 @@ import { SEOManager } from "./lib/seo";
 import { pwaManager } from "./lib/pwa";
 
 import AuthPage from "@/pages/auth";
-import Home from "@/pages/home";
+import Home from "@/pages/simplified-home";
 import Profile from "@/pages/profile";
 import Quiz from "@/pages/quiz";
-import Gamification from "@/pages/gamification";
+import Rozetler from "@/pages/rozetler";
+import AIProtected from "@/pages/ai-protected";
 import AILearning from "@/pages/ai-learning";
 import Social from "@/pages/social";
 import Analytics from "@/pages/analytics";
-import TurkishExams from "@/pages/turkish-exams";
-import Pricing from "@/pages/pricing";
+import TurkishExams from "@/pages/symmetric-exams";
+import Pricing from "@/pages/updated-pricing";
 import MonitoringDashboard from "@/pages/monitoring-dashboard";
 import EnterpriseDashboard from "@/pages/enterprise-dashboard";
 import TeacherDashboard from "@/pages/teacher-dashboard";
@@ -38,13 +39,13 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/profile" component={Profile} />
-        <Route path="/ai-learning" component={AILearning} />
+        <Route path="/ai" component={() => <AIProtected><AILearning /></AIProtected>} />
         <Route path="/social" component={Social} />
         <Route path="/analytics" component={Analytics} />
-        <Route path="/turkish-exams" component={TurkishExams} />
-        <Route path="/pricing" component={Pricing} />
+        <Route path="/exams" component={TurkishExams} />
+        <Route path="/subscription" component={Pricing} />
         <Route path="/quiz/:categoryId" component={Quiz} />
-        <Route path="/gamification" component={Gamification} />
+        <Route path="/badges" component={Rozetler} />
         <Route path="/monitoring" component={MonitoringDashboard} />
         <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route path="/teacher" component={TeacherDashboard} />
