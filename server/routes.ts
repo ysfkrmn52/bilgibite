@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import cors from 'cors';
+import multer from "multer";
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -44,6 +45,14 @@ import {
   notFoundHandler, 
   asyncHandler 
 } from "./middleware/error-handler";
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -383,5 +392,408 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: Error handling middleware moved to index.ts after Vite setup
 
   const httpServer = createServer(app);
+  // Admin Dashboard Routes
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      // Mock admin stats - replace with real database queries
+      const stats = {
+        totalQuestions: 1250,
+        activeUsers: 342,
+        dailyQuizzes: 89,
+        successRate: 73,
+        recentActivities: [
+          { description: "Yeni kullanıcı kaydı: Ali M.", time: "2 dakika önce" },
+          { description: "50 yeni soru eklendi (YKS Matematik)", time: "15 dakika önce" },
+          { description: "Quiz tamamlandı: Zeynep K.", time: "28 dakika önce" },
+          { description: "Sistem güncellendi", time: "1 saat önce" }
+        ]
+      };
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "İstatistikler alınamadı" });
+    }
+  });
+
+  app.get("/api/admin/questions", async (req, res) => {
+    try {
+      // Mock questions data - replace with database query
+      const questions = [
+        {
+          id: "1",
+          question: "Türkiye'nin başkenti neresidir?",
+          options: ["İstanbul", "Ankara", "İzmir", "Bursa"],
+          correctAnswer: 1,
+          explanation: "Türkiye Cumhuriyeti'nin başkenti Ankara'dır.",
+          category: "Genel Kültür",
+          difficulty: "beginner",
+          tags: ["coğrafya", "temel"]
+        },
+        {
+          id: "2", 
+          question: "2x + 5 = 15 denkleminin çözümü nedir?",
+          options: ["x = 3", "x = 5", "x = 7", "x = 10"],
+          correctAnswer: 1,
+          explanation: "2x = 15 - 5 = 10, x = 5",
+          category: "Matematik",
+          difficulty: "intermediate",
+          tags: ["algebra", "denklem"]
+        }
+      ];
+      res.json(questions);
+    } catch (error) {
+      res.status(500).json({ error: "Sorular alınamadı" });
+    }
+  });
+
+  app.post("/api/admin/questions", async (req, res) => {
+    try {
+      const { question, options, correctAnswer, explanation, category, difficulty, tags } = req.body;
+      
+      // Validate required fields
+      if (!question || !options || correctAnswer === undefined || !category) {
+        return res.status(400).json({ error: "Gerekli alanlar eksik" });
+      }
+
+      // Mock creation - replace with database insert
+      const newQuestion = {
+        id: Date.now().toString(),
+        question,
+        options,
+        correctAnswer,
+        explanation,
+        category,
+        difficulty: difficulty || "intermediate",
+        tags: tags || [],
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json(newQuestion);
+    } catch (error) {
+      res.status(500).json({ error: "Soru eklenemedi" });
+    }
+  });
+
+  app.delete("/api/admin/questions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Mock deletion - replace with database delete
+      res.json({ message: "Soru silindi", id });
+    } catch (error) {
+      res.status(500).json({ error: "Soru silinemedi" });
+    }
+  });
+
+  app.post("/api/admin/upload-questions", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Dosya gerekli" });
+      }
+
+      const file = req.file;
+      let questions = [];
+
+      // Parse different file types
+      if (file.mimetype === 'application/json') {
+        const content = file.buffer.toString('utf-8');
+        questions = JSON.parse(content);
+      } else if (file.mimetype === 'text/plain') {
+        // Simple text parsing - extend as needed
+        const content = file.buffer.toString('utf-8');
+        const lines = content.split('\n').filter(line => line.trim());
+        
+        // Simple format: Question|Option1|Option2|Option3|Option4|CorrectIndex|Category
+        questions = lines.map((line, index) => {
+          const parts = line.split('|');
+          if (parts.length >= 6) {
+            return {
+              question: parts[0],
+              options: [parts[1], parts[2], parts[3], parts[4]],
+              correctAnswer: parseInt(parts[5]),
+              category: parts[6] || 'Genel',
+              difficulty: 'intermediate',
+              explanation: '',
+              tags: []
+            };
+          }
+        }).filter(q => q);
+      } else if (file.mimetype === 'application/pdf') {
+        // PDF parsing would require additional libraries (pdf-parse)
+        // For now, return mock data
+        questions = [
+          {
+            question: "PDF'den çıkarılan örnek soru",
+            options: ["A", "B", "C", "D"],
+            correctAnswer: 0,
+            category: "PDF Import",
+            difficulty: "intermediate",
+            explanation: "PDF'den otomatik çıkarım yapıldı",
+            tags: ["pdf-import"]
+          }
+        ];
+      }
+
+      // Mock database insertion
+      const insertedCount = questions.length;
+      
+      res.json({ 
+        message: `${insertedCount} soru başarıyla yüklendi`,
+        count: insertedCount,
+        questions: questions.slice(0, 3) // Return first 3 for preview
+      });
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ error: "Dosya işlenirken hata oluştu" });
+    }
+  });
+
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      // Mock users data
+      const users = [
+        {
+          id: "1",
+          username: "ahmet_yilmaz",
+          email: "ahmet@example.com",
+          level: 12,
+          totalXP: 2450,
+          streakCount: 7,
+          lastActive: "2 saat önce",
+          joinDate: "2024-01-15"
+        },
+        {
+          id: "2",
+          username: "zeynep_kaya",
+          email: "zeynep@example.com", 
+          level: 8,
+          totalXP: 1680,
+          streakCount: 3,
+          lastActive: "45 dakika önce",
+          joinDate: "2024-03-20"
+        }
+      ];
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Kullanıcılar alınamadı" });
+    }
+  });
+
+  // User Profile Routes
+  app.get("/api/user/profile", async (req, res) => {
+    try {
+      // Mock user profile
+      const profile = {
+        id: "user-123",
+        username: "demo_user",
+        email: "demo@bilgibite.com",
+        firstName: "Demo",
+        lastName: "Kullanıcı",
+        phone: "+90 555 123 4567",
+        location: "İstanbul, Türkiye",
+        school: "İstanbul Üniversitesi",
+        bio: "YKS'ye hazırlanıyorum. Matematik ve Fizik alanlarında kendimi geliştirmeye odaklandım.",
+        avatar: "",
+        level: 12,
+        totalXP: 2450,
+        streakCount: 7,
+        joinDate: "2024-01-15T00:00:00.000Z",
+        lastActive: "2025-01-15T19:30:00.000Z",
+        goals: ["YKS", "Matematik"],
+        preferences: {
+          examFocus: ["YKS"],
+          dailyGoal: 30,
+          difficulty: "intermediate",
+          notifications: true,
+          privacy: "public"
+        }
+      };
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Profil bilgisi alınamadı" });
+    }
+  });
+
+  app.put("/api/user/profile", async (req, res) => {
+    try {
+      const updates = req.body;
+      // Mock profile update
+      res.json({ message: "Profil güncellendi", updates });
+    } catch (error) {
+      res.status(500).json({ error: "Profil güncellenemedi" });
+    }
+  });
+
+  app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Avatar dosyası gerekli" });
+      }
+      
+      // Mock avatar upload - in real app, save to cloud storage
+      const avatarUrl = `/uploads/avatars/${Date.now()}-${req.file.originalname}`;
+      
+      res.json({ 
+        message: "Avatar güncellendi",
+        avatarUrl 
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Avatar yüklenemedi" });
+    }
+  });
+
+  app.get("/api/user/stats", async (req, res) => {
+    try {
+      const stats = {
+        totalQuizzesTaken: 45,
+        averageScore: 78,
+        totalTimeSpent: 8520, // seconds
+        bestStreak: 15,
+        completedChallenges: 8,
+        achievementsCount: 12,
+        weeklyProgress: [20, 35, 28, 42, 38, 45, 32],
+        categoryStats: [
+          { category: "YKS Matematik", score: 85, quizCount: 15 },
+          { category: "YKS Fizik", score: 72, quizCount: 10 },
+          { category: "YKS Kimya", score: 68, quizCount: 8 },
+          { category: "Genel Kültür", score: 91, quizCount: 12 }
+        ]
+      };
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "İstatistikler alınamadı" });
+    }
+  });
+
+  app.get("/api/user/achievements", async (req, res) => {
+    try {
+      const achievements = [
+        {
+          id: "first_quiz",
+          title: "İlk Adım",
+          description: "İlk quiz'ini tamamladın!",
+          unlocked: true,
+          unlockedAt: "2024-01-15T10:00:00.000Z",
+          progress: 100
+        },
+        {
+          id: "streak_7",
+          title: "Haftalık Kahraman",
+          description: "7 gün üst üste quiz çözdün",
+          unlocked: true,
+          unlockedAt: "2024-01-22T15:30:00.000Z",
+          progress: 100
+        },
+        {
+          id: "perfect_score",
+          title: "Mükemmellik",
+          description: "Bir quiz'de 100 puan aldın",
+          unlocked: true,
+          unlockedAt: "2024-02-01T12:00:00.000Z",
+          progress: 100
+        },
+        {
+          id: "math_expert",
+          title: "Matematik Uzmanı",
+          description: "Matematik kategorisinde 50 soru çöz",
+          unlocked: false,
+          progress: 76
+        },
+        {
+          id: "streak_30",
+          title: "Aylık Şampiyon",
+          description: "30 gün üst üste quiz çöz",
+          unlocked: false,
+          progress: 23
+        }
+      ];
+      res.json(achievements);
+    } catch (error) {
+      res.status(500).json({ error: "Başarımlar alınamadı" });
+    }
+  });
+
+  // User Settings Routes
+  app.get("/api/user/settings", async (req, res) => {
+    try {
+      const settings = {
+        notifications: {
+          email: true,
+          push: true,
+          marketing: false,
+          reminders: true,
+          achievements: true,
+        },
+        privacy: {
+          profileVisibility: 'public',
+          showProgress: true,
+          showAchievements: true,
+          allowFriendRequests: true,
+        },
+        appearance: {
+          theme: 'system',
+          language: 'tr',
+          fontSize: 'medium',
+          animationsEnabled: true,
+        },
+        study: {
+          dailyGoalMinutes: 30,
+          difficulty: 'intermediate',
+          autoplaySounds: true,
+          showHints: true,
+          reviewMode: false,
+        }
+      };
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Ayarlar alınamadı" });
+    }
+  });
+
+  app.put("/api/user/settings", async (req, res) => {
+    try {
+      const settings = req.body;
+      // Mock settings update
+      res.json({ message: "Ayarlar kaydedildi", settings });
+    } catch (error) {
+      res.status(500).json({ error: "Ayarlar kaydedilemedi" });
+    }
+  });
+
+  app.post("/api/user/export-data", async (req, res) => {
+    try {
+      // Mock user data export
+      const userData = {
+        profile: {
+          username: "demo_user",
+          email: "demo@bilgibite.com",
+          joinDate: "2024-01-15T00:00:00.000Z"
+        },
+        stats: {
+          totalQuizzes: 45,
+          totalXP: 2450,
+          streakCount: 7
+        },
+        quizHistory: [],
+        achievements: [],
+        settings: {},
+        exportDate: new Date().toISOString()
+      };
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename=bilgibite-data-export.json');
+      res.json(userData);
+    } catch (error) {
+      res.status(500).json({ error: "Veri dışa aktarılamadı" });
+    }
+  });
+
+  app.delete("/api/user/account", async (req, res) => {
+    try {
+      // Mock account deletion - implement proper user deletion
+      res.json({ message: "Hesap silindi" });
+    } catch (error) {
+      res.status(500).json({ error: "Hesap silinemedi" });
+    }
+  });
+
   return httpServer;
 }

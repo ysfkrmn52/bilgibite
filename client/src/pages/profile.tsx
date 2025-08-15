@@ -1,180 +1,466 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
+  Edit3, 
   Trophy, 
   Target, 
-  Book, 
-  Clock, 
-  Zap,
-  Settings,
-  Bell,
-  Shield,
-  CreditCard,
-  Download,
-  Trash2
-} from "lucide-react";
-import { motion } from "framer-motion";
+  Calendar,
+  BookOpen,
+  BarChart3,
+  Award,
+  Flame,
+  Camera,
+  Save,
+  RefreshCw,
+  Mail,
+  Phone,
+  MapPin,
+  School,
+  Users,
+  Clock
+} from 'lucide-react';
+
+interface UserProfile {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  location: string;
+  school: string;
+  bio: string;
+  avatar: string;
+  level: number;
+  totalXP: number;
+  streakCount: number;
+  joinDate: string;
+  lastActive: string;
+  goals: string[];
+  preferences: {
+    examFocus: string[];
+    dailyGoal: number;
+    difficulty: string;
+    notifications: boolean;
+    privacy: string;
+  };
+}
+
+interface UserStats {
+  totalQuizzesTaken: number;
+  averageScore: number;
+  totalTimeSpent: number;
+  bestStreak: number;
+  completedChallenges: number;
+  achievementsCount: number;
+  weeklyProgress: number[];
+  categoryStats: { category: string; score: number; quizCount: number }[];
+}
 
 export default function Profile() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "Kullanıcı",
-    lastName: "Adı",
-    email: "kullanici@bilgibite.com",
-    phone: "+90 555 123 4567",
-    city: "İstanbul",
-    school: "Galatasaray Üniversitesi",
-    grade: "12. Sınıf",
-    targetExam: "YKS",
-    bio: "YKS'ye hazırlanıyorum. Hedefim tıp fakültesi okumak.",
-    birthDate: "2005-03-15"
+  const [activeTab, setActiveTab] = useState('profile');
+
+  // Profile form state
+  const [profileData, setProfileData] = useState<Partial<UserProfile>>({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    location: '',
+    school: '',
+    bio: '',
+    goals: [],
+    preferences: {
+      examFocus: [],
+      dailyGoal: 20,
+      difficulty: 'intermediate',
+      notifications: true,
+      privacy: 'public'
+    }
   });
 
-  const userStats = {
-    level: 12,
-    xp: 2450,
-    nextLevelXP: 2800,
-    studyStreak: 7,
-    totalStudyTime: 142, // saat
-    completedQuizzes: 45,
-    correctAnswers: 387,
-    totalAnswers: 542,
-    achievements: 8,
-    joinDate: "2024-09-15",
-    subscriptionPlan: "Premium",
-    subscriptionEnd: "2025-02-15"
+  // Queries
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['/api/user/profile'],
+    queryFn: () => apiRequest('GET', '/api/user/profile').then(res => res.json()),
+    onSuccess: (data) => {
+      setProfileData(data);
+    }
+  });
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/user/stats'],
+    queryFn: () => apiRequest('GET', '/api/user/stats').then(res => res.json())
+  });
+
+  const { data: achievements, isLoading: achievementsLoading } = useQuery({
+    queryKey: ['/api/user/achievements'],
+    queryFn: () => apiRequest('GET', '/api/user/achievements').then(res => res.json())
+  });
+
+  // Mutations
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: Partial<UserProfile>) => 
+      apiRequest('PUT', '/api/user/profile', data),
+    onSuccess: () => {
+      toast({
+        title: 'Başarılı',
+        description: 'Profil güncellendi',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      setIsEditing(false);
+    },
+    onError: () => {
+      toast({
+        title: 'Hata',
+        description: 'Profil güncellenirken hata oluştu',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (formData: FormData) =>
+      apiRequest('POST', '/api/user/avatar', formData),
+    onSuccess: () => {
+      toast({
+        title: 'Başarılı',
+        description: 'Profil fotoğrafı güncellendi',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+    }
+  });
+
+  // Functions
+  const handleSaveProfile = () => {
+    updateProfileMutation.mutate(profileData);
   };
 
-  const achievements = [
-    { id: 1, title: "İlk Quiz", description: "İlk quizini tamamladın", icon: "🎯", earned: true },
-    { id: 2, title: "7 Gün Serisi", description: "7 gün üst üste çalıştın", icon: "🔥", earned: true },
-    { id: 3, title: "Matematik Ustası", description: "Matematik'te 100 doğru cevap", icon: "🧮", earned: true },
-    { id: 4, title: "Hızlı Öğrenci", description: "5 dakikada quiz bitir", icon: "⚡", earned: true },
-    { id: 5, title: "Sosyal Kelebek", description: "10 arkadaş ekle", icon: "👥", earned: false },
-    { id: 6, title: "AI Öğrencisi", description: "AI öğretmenle 50 soru çöz", icon: "🤖", earned: false }
-  ];
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // API çağrısı burada olacak
+    const formData = new FormData();
+    formData.append('avatar', file);
+    uploadAvatarMutation.mutate(formData);
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const calculateLevelProgress = (xp: number) => {
+    const currentLevelXP = Math.floor(xp / 1000) * 1000;
+    const nextLevelXP = currentLevelXP + 1000;
+    return ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8">
-        
-        {/* Profil Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 opacity-10"></div>
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="relative">
-                  <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                    <AvatarImage src="/avatars/user.png" />
-                    <AvatarFallback className="text-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                      {formData.firstName[0]}{formData.lastName[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Badge className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600">
-                    Seviye {userStats.level}
-                  </Badge>
-                </div>
-                
-                <div className="flex-1 text-center md:text-left space-y-2">
-                  <h1 className="text-3xl font-bold">
-                    {formData.firstName} {formData.lastName}
-                  </h1>
-                  <p className="text-muted-foreground">{formData.bio}</p>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {formData.city}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Book className="h-4 w-4" />
-                      {formData.school}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Target className="h-4 w-4" />
-                      {formData.targetExam} Hedefi
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-center space-y-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    {userStats.subscriptionPlan}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">
-                    {userStats.subscriptionEnd} tarihine kadar
-                  </p>
-                </div>
-              </div>
-
-              {/* XP Progress */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span>Seviye İlerlemesi</span>
-                  <span>{userStats.xp} / {userStats.nextLevelXP} XP</span>
-                </div>
-                <Progress 
-                  value={(userStats.xp / userStats.nextLevelXP) * 100} 
-                  className="h-2"
+        {/* Profile Header */}
+        <Card className="mb-8">
+          <CardContent className="p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="relative">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage src={profile?.avatar} />
+                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {profile?.firstName?.charAt(0) || profile?.username?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 rounded-full p-2 h-auto"
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                  data-testid="button-upload-avatar"
+                >
+                  <Camera className="w-3 h-3" />
+                </Button>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  data-testid="input-avatar-upload"
                 />
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* Profil Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold">
+                    {profile?.firstName && profile?.lastName 
+                      ? `${profile.firstName} ${profile.lastName}` 
+                      : profile?.username || 'Kullanıcı'
+                    }
+                  </h1>
+                  <Badge variant="secondary">Seviye {profile?.level || 1}</Badge>
+                </div>
+                
+                <p className="text-muted-foreground mb-4">
+                  {profile?.bio || 'Henüz bir bio eklenmemiş'}
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm">{profile?.totalXP || 0} XP</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <span className="text-sm">{profile?.streakCount || 0} gün seri</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm">Üye: {new Date(profile?.joinDate || Date.now()).getFullYear()}</span>
+                  </div>
+                </div>
+
+                {/* Level Progress */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Seviye {profile?.level || 1}</span>
+                    <span>Seviye {(profile?.level || 1) + 1}</span>
+                  </div>
+                  <Progress value={calculateLevelProgress(profile?.totalXP || 0)} className="h-2" />
+                </div>
+              </div>
+
+              <Button 
+                variant={isEditing ? "default" : "outline"}
+                onClick={() => setIsEditing(!isEditing)}
+                data-testid="button-edit-profile"
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                {isEditing ? 'Düzenleme Modu' : 'Profili Düzenle'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Profile Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
-            <TabsTrigger value="personal">Kişisel Bilgiler</TabsTrigger>
-            <TabsTrigger value="achievements">Rozetler</TabsTrigger>
-            <TabsTrigger value="settings">Ayarlar</TabsTrigger>
-            <TabsTrigger value="subscription">Abonelik</TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Profil
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              İstatistikler
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              Başarımlar
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Hedefler
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Ayarlar
+            </TabsTrigger>
           </TabsList>
 
-          {/* Genel Bakış */}
-          <TabsContent value="overview">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              
-              {/* İstatistik Kartları */}
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kişisel Bilgiler</CardTitle>
+                  <CardDescription>Temel profil bilgilerinizi güncelleyin</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">Ad</Label>
+                      <Input
+                        id="firstName"
+                        value={profileData.firstName || ''}
+                        onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                        disabled={!isEditing}
+                        data-testid="input-first-name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Soyad</Label>
+                      <Input
+                        id="lastName"
+                        value={profileData.lastName || ''}
+                        onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                        disabled={!isEditing}
+                        data-testid="input-last-name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">E-posta</Label>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        value={profile?.email || ''}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Telefon</Label>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        value={profileData.phone || ''}
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        disabled={!isEditing}
+                        data-testid="input-phone"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location">Konum</Label>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="location"
+                        value={profileData.location || ''}
+                        onChange={(e) => setProfileData({...profileData, location: e.target.value})}
+                        disabled={!isEditing}
+                        placeholder="Şehir, Ülke"
+                        data-testid="input-location"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="school">Okul/Kurum</Label>
+                    <div className="flex items-center gap-2">
+                      <School className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="school"
+                        value={profileData.school || ''}
+                        onChange={(e) => setProfileData({...profileData, school: e.target.value})}
+                        disabled={!isEditing}
+                        data-testid="input-school"
+                      />
+                    </div>
+                  </div>
+
+                  {isEditing && (
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsEditing(false)}>
+                        İptal
+                      </Button>
+                      <Button 
+                        onClick={handleSaveProfile}
+                        disabled={updateProfileMutation.isPending}
+                        data-testid="button-save-profile"
+                      >
+                        {updateProfileMutation.isPending ? (
+                          <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-2" />
+                        )}
+                        Kaydet
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hakkımda</CardTitle>
+                  <CardDescription>Kendinizi tanıtın</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="bio">Bio</Label>
+                    <textarea
+                      id="bio"
+                      className="w-full min-h-[120px] p-3 border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={profileData.bio || ''}
+                      onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                      disabled={!isEditing}
+                      placeholder="Kendiniz hakkında birkaç kelime..."
+                      data-testid="textarea-bio"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Sınav Hedefleri</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['YKS', 'KPSS', 'Ehliyet', 'SRC'].map((exam) => (
+                        <Badge
+                          key={exam}
+                          variant={profileData.goals?.includes(exam) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => {
+                            if (!isEditing) return;
+                            const goals = profileData.goals || [];
+                            const newGoals = goals.includes(exam)
+                              ? goals.filter(g => g !== exam)
+                              : [...goals, exam];
+                            setProfileData({...profileData, goals: newGoals});
+                          }}
+                          data-testid={`badge-goal-${exam.toLowerCase()}`}
+                        >
+                          {exam}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-primary">{stats?.totalQuizzesTaken || 0}</p>
+                      <p className="text-sm text-muted-foreground">Quiz Tamamlandı</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{stats?.averageScore || 0}%</p>
+                      <p className="text-sm text-muted-foreground">Ortalama Skor</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Stats Tab */}
+          <TabsContent value="stats" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Çalışma Serisi</p>
-                      <p className="text-2xl font-bold text-orange-600">{userStats.studyStreak}</p>
-                      <p className="text-xs text-muted-foreground">gün</p>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                      <BookOpen className="w-6 h-6 text-blue-600" />
                     </div>
-                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
-                      <Zap className="h-6 w-6 text-orange-600" />
+                    <div>
+                      <p className="text-2xl font-bold">{stats?.totalQuizzesTaken || 0}</p>
+                      <p className="text-sm text-muted-foreground">Toplam Quiz</p>
                     </div>
                   </div>
                 </CardContent>
@@ -182,14 +468,13 @@ export default function Profile() {
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Toplam Çalışma</p>
-                      <p className="text-2xl font-bold text-blue-600">{userStats.totalStudyTime}</p>
-                      <p className="text-xs text-muted-foreground">saat</p>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                      <BarChart3 className="w-6 h-6 text-green-600" />
                     </div>
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                      <Clock className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <p className="text-2xl font-bold">{stats?.averageScore || 0}%</p>
+                      <p className="text-sm text-muted-foreground">Ortalama Skor</p>
                     </div>
                   </div>
                 </CardContent>
@@ -197,389 +482,222 @@ export default function Profile() {
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                      <Clock className="w-6 h-6 text-orange-600" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Doğru Cevap</p>
-                      <p className="text-2xl font-bold text-green-600">
-                        {Math.round((userStats.correctAnswers / userStats.totalAnswers) * 100)}%
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {userStats.correctAnswers}/{userStats.totalAnswers}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                      <Target className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Kazanılan Rozet</p>
-                      <p className="text-2xl font-bold text-purple-600">{userStats.achievements}</p>
-                      <p className="text-xs text-muted-foreground">toplam</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                      <Trophy className="h-6 w-6 text-purple-600" />
+                      <p className="text-2xl font-bold">{Math.floor((stats?.totalTimeSpent || 0) / 60)}h</p>
+                      <p className="text-sm text-muted-foreground">Çalışma Süresi</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Son Aktiviteler */}
-            <Card className="mt-6">
+            <Card>
               <CardHeader>
-                <CardTitle>Son Aktiviteler</CardTitle>
+                <CardTitle>Kategori Performansı</CardTitle>
+                <CardDescription>Her sınav kategorisindeki performansınız</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                      <Book className="h-4 w-4 text-blue-600" />
+                  {stats?.categoryStats?.map((stat: any, index: number) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{stat.category}</span>
+                        <span>{stat.score}% ({stat.quizCount} quiz)</span>
+                      </div>
+                      <Progress value={stat.score} className="h-2" />
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">YKS Matematik Quizi Tamamlandı</p>
-                      <p className="text-sm text-muted-foreground">15/20 doğru • 2 saat önce</p>
-                    </div>
-                    <Badge>+50 XP</Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
-                      <Trophy className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">"7 Gün Serisi" Rozeti Kazanıldı</p>
-                      <p className="text-sm text-muted-foreground">1 gün önce</p>
-                    </div>
-                    <Badge variant="secondary">Rozet</Badge>
-                  </div>
+                  )) || (
+                    <p className="text-center text-muted-foreground py-8">
+                      Henüz quiz verisi bulunmuyor
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Kişisel Bilgiler */}
-          <TabsContent value="personal">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Kişisel Bilgiler</CardTitle>
-                  <CardDescription>
-                    Profil bilgilerinizi güncelleyebilirsiniz
-                  </CardDescription>
-                </div>
-                <Button
-                  variant={isEditing ? "default" : "outline"}
-                  onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                >
-                  {isEditing ? "Kaydet" : "Düzenle"}
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Ad</Label>
-                    <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Soyad</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">E-posta</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Şehir</Label>
-                    <Select
-                      value={formData.city}
-                      onValueChange={(value) => handleInputChange('city', value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="İstanbul">İstanbul</SelectItem>
-                        <SelectItem value="Ankara">Ankara</SelectItem>
-                        <SelectItem value="İzmir">İzmir</SelectItem>
-                        <SelectItem value="Bursa">Bursa</SelectItem>
-                        <SelectItem value="Antalya">Antalya</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="targetExam">Hedef Sınav</Label>
-                    <Select
-                      value={formData.targetExam}
-                      onValueChange={(value) => handleInputChange('targetExam', value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="YKS">YKS</SelectItem>
-                        <SelectItem value="KPSS">KPSS</SelectItem>
-                        <SelectItem value="Ehliyet">Ehliyet Sınavı</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="school">Okul</Label>
-                  <Input
-                    id="school"
-                    value={formData.school}
-                    onChange={(e) => handleInputChange('school', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Hakkımda</Label>
-                  <Textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    disabled={!isEditing}
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Rozetler */}
-          <TabsContent value="achievements">
-            <Card>
-              <CardHeader>
-                <CardTitle>Rozetler ve Başarılar</CardTitle>
-                <CardDescription>
-                  Kazandığın rozetler ve henüz kazanmadığın başarılar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {achievements.map((achievement) => (
-                    <Card 
-                      key={achievement.id}
-                      className={`relative ${
-                        achievement.earned 
-                          ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 dark:from-yellow-950/20 dark:to-orange-950/20 dark:border-yellow-800" 
-                          : "opacity-60 border-dashed"
-                      }`}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <div className="text-4xl mb-2">{achievement.icon}</div>
-                        <h4 className="font-medium mb-1">{achievement.title}</h4>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                        {achievement.earned && (
-                          <Badge className="mt-2 bg-yellow-500 hover:bg-yellow-600">
-                            Kazanıldı
-                          </Badge>
+          {/* Achievements Tab */}
+          <TabsContent value="achievements" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {achievements?.map((achievement: any, index: number) => (
+                <Card key={index} className="relative overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-3 rounded-lg ${achievement.unlocked ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                        <Award className={`w-6 h-6 ${achievement.unlocked ? 'text-yellow-600' : 'text-gray-400'}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`font-semibold ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {achievement.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {achievement.description}
+                        </p>
+                        {achievement.unlocked && achievement.unlockedAt && (
+                          <p className="text-xs text-primary mt-2">
+                            Kazanıldı: {new Date(achievement.unlockedAt).toLocaleDateString()}
+                          </p>
                         )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                    </div>
+                    {achievement.progress !== undefined && (
+                      <div className="mt-4 space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span>İlerleme</span>
+                          <span>{achievement.progress}%</span>
+                        </div>
+                        <Progress value={achievement.progress} className="h-1" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )) || (
+                <div className="col-span-full text-center py-8">
+                  <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Henüz başarım kazanılmadı</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Ayarlar */}
-          <TabsContent value="settings">
-            <div className="space-y-6">
-              
-              {/* Bildirim Ayarları */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Bildirim Ayarları
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">E-posta Bildirimleri</p>
-                      <p className="text-sm text-muted-foreground">Önemli güncellemeler için e-posta al</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Çalışma Hatırlatıcıları</p>
-                      <p className="text-sm text-muted-foreground">Günlük çalışma hatırlatıcıları</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Sosyal Bildirimler</p>
-                      <p className="text-sm text-muted-foreground">Arkadaş istekleri ve mesajlar</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Gizlilik Ayarları */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Gizlilik Ayarları
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Profil Görünürlüğü</p>
-                      <p className="text-sm text-muted-foreground">Profilin diğer kullanıcılar tarafından görülsün</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">İstatistik Paylaşımı</p>
-                      <p className="text-sm text-muted-foreground">Başarı istatistiklerini arkadaşlarınla paylaş</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Veri Yönetimi */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Veri Yönetimi</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Download className="h-4 w-4 mr-2" />
-                    Verilerimi İndir
-                  </Button>
-                  
-                  <Button variant="destructive" className="w-full justify-start">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Hesabımı Sil
-                  </Button>
-                </CardContent>
-              </Card>
+              )}
             </div>
           </TabsContent>
 
-          {/* Abonelik */}
-          <TabsContent value="subscription">
+          {/* Goals Tab */}
+          <TabsContent value="goals" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Abonelik Bilgileri
-                </CardTitle>
+                <CardTitle>Hedef Takibi</CardTitle>
+                <CardDescription>Kişisel öğrenme hedeflerinizi belirleyin ve takip edin</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-blue-600">Premium Plan</h3>
-                      <p className="text-muted-foreground">Tüm özellikler dahil</p>
-                    </div>
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
-                      Aktif
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Başlangıç Tarihi:</p>
-                      <p className="font-medium">15 Eylül 2024</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Bitiş Tarihi:</p>
-                      <p className="font-medium">15 Şubat 2025</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Aylık Tutar:</p>
-                      <p className="font-medium">130 TL</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Sonraki Ödeme:</p>
-                      <p className="font-medium">15 Şubat 2025</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Button>Planı Değiştir</Button>
-                  <Button variant="outline">Aboneliği İptal Et</Button>
-                </div>
-
-                {/* Plan Özellikleri */}
                 <div>
-                  <h4 className="font-medium mb-3">Plan Dahilindeki Özellikler:</h4>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Sınırsız quiz erişimi
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      AI öğretmen (aylık 1000 soru)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Detaylı analitik raporlar
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Sosyal özellikler
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Öncelikli destek
-                    </li>
-                  </ul>
+                  <Label>Günlük Çalışma Hedefi</Label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={profileData.preferences?.dailyGoal || 20}
+                      onChange={(e) => setProfileData({
+                        ...profileData,
+                        preferences: {
+                          ...profileData.preferences!,
+                          dailyGoal: parseInt(e.target.value)
+                        }
+                      })}
+                      className="flex-1"
+                      disabled={!isEditing}
+                    />
+                    <span className="text-sm font-medium w-12">
+                      {profileData.preferences?.dailyGoal || 20} dk
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Sınav Odağı</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {['YKS', 'KPSS', 'Ehliyet', 'SRC'].map((exam) => (
+                      <Badge
+                        key={exam}
+                        variant={profileData.preferences?.examFocus?.includes(exam) ? "default" : "outline"}
+                        className={`cursor-pointer ${!isEditing ? 'pointer-events-none' : ''}`}
+                        onClick={() => {
+                          if (!isEditing) return;
+                          const focus = profileData.preferences?.examFocus || [];
+                          const newFocus = focus.includes(exam)
+                            ? focus.filter(e => e !== exam)
+                            : [...focus, exam];
+                          setProfileData({
+                            ...profileData,
+                            preferences: {
+                              ...profileData.preferences!,
+                              examFocus: newFocus
+                            }
+                          });
+                        }}
+                      >
+                        {exam}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bildirim Ayarları</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>E-posta Bildirimleri</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProfileData({
+                        ...profileData,
+                        preferences: {
+                          ...profileData.preferences!,
+                          notifications: !profileData.preferences?.notifications
+                        }
+                      })}
+                      disabled={!isEditing}
+                    >
+                      {profileData.preferences?.notifications ? 'Açık' : 'Kapalı'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gizlilik Ayarları</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Profil Görünürlüğü</Label>
+                    <select
+                      value={profileData.preferences?.privacy || 'public'}
+                      onChange={(e) => setProfileData({
+                        ...profileData,
+                        preferences: {
+                          ...profileData.preferences!,
+                          privacy: e.target.value
+                        }
+                      })}
+                      className="w-full mt-1 p-2 border border-input bg-background rounded-md"
+                      disabled={!isEditing}
+                    >
+                      <option value="public">Herkese Açık</option>
+                      <option value="friends">Sadece Arkadaşlar</option>
+                      <option value="private">Özel</option>
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Hesap İşlemleri</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-destructive">Hesabı Sil</h4>
+                    <p className="text-sm text-muted-foreground">Bu işlem geri alınamaz</p>
+                  </div>
+                  <Button variant="destructive" size="sm">
+                    Hesabı Sil
+                  </Button>
                 </div>
               </CardContent>
             </Card>
