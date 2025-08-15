@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -26,30 +29,102 @@ import {
   RefreshCw,
   Brain,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  UserPlus,
+  Crown,
+  BookOpen,
+  GraduationCap,
+  Database,
+  Layers,
+  Server,
+  Key,
+  Package,
+  Mail,
+  Bell,
+  Globe,
+  Palette,
+  Code,
+  Zap,
+  Activity,
+  TrendingUp,
+  FileX,
+  FolderPlus,
+  Cog,
+  Lock,
+  Unlock,
+  UserCheck,
+  UserX,
+  ChevronDown,
+  MoreHorizontal,
+  Save,
+  X
 } from 'lucide-react';
 
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-  category: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  tags: string[];
-}
-
-interface User {
+interface AdminUser {
   id: string;
   username: string;
   email: string;
-  level: number;
-  totalXP: number;
-  streakCount: number;
-  lastActive: string;
-  joinDate: string;
+  role: 'super_admin' | 'admin' | 'moderator' | 'teacher';
+  permissions: string[];
+  isActive: boolean;
+  lastLogin: string;
+  createdAt: string;
 }
+
+interface SystemSettings {
+  siteName: string;
+  siteDescription: string;
+  maintenanceMode: boolean;
+  registrationEnabled: boolean;
+  emailNotifications: boolean;
+  aiQuestionLimit: number;
+  maxFileSize: number;
+  supportedFormats: string[];
+  theme: 'light' | 'dark' | 'auto';
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  isActive: boolean;
+  enrollmentCount: number;
+  createdAt: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  studentsCount: number;
+  coursesCount: number;
+  isActive: boolean;
+  joinedAt: string;
+}
+
+const ADMIN_ROLES = {
+  super_admin: { name: 'Süper Admin', color: 'bg-red-100 text-red-800', icon: Crown },
+  admin: { name: 'Admin', color: 'bg-blue-100 text-blue-800', icon: Shield },
+  moderator: { name: 'Moderatör', color: 'bg-green-100 text-green-800', icon: UserCheck },
+  teacher: { name: 'Öğretmen', color: 'bg-purple-100 text-purple-800', icon: GraduationCap }
+};
+
+const PERMISSIONS = [
+  { id: 'users.read', name: 'Kullanıcı Görüntüleme', category: 'Kullanıcılar' },
+  { id: 'users.write', name: 'Kullanıcı Düzenleme', category: 'Kullanıcılar' },
+  { id: 'users.delete', name: 'Kullanıcı Silme', category: 'Kullanıcılar' },
+  { id: 'content.read', name: 'İçerik Görüntüleme', category: 'İçerik' },
+  { id: 'content.write', name: 'İçerik Düzenleme', category: 'İçerik' },
+  { id: 'content.delete', name: 'İçerik Silme', category: 'İçerik' },
+  { id: 'system.read', name: 'Sistem Ayarları Görüntüleme', category: 'Sistem' },
+  { id: 'system.write', name: 'Sistem Ayarları Düzenleme', category: 'Sistem' },
+  { id: 'analytics.read', name: 'Analitik Görüntüleme', category: 'Analitik' },
+  { id: 'api.manage', name: 'API Yönetimi', category: 'Geliştirici' }
+];
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -58,301 +133,370 @@ export default function AdminDashboard() {
   
   // States
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [questionFilter, setQuestionFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [contentType, setContentType] = useState<'questions' | 'courses' | 'lessons'>('questions');
-  const [processedContent, setProcessedContent] = useState<any>(null);
-  const [showProcessedContent, setShowProcessedContent] = useState(false);
-
-  // Question form state
-  const [newQuestion, setNewQuestion] = useState({
-    question: '',
-    options: ['', '', '', ''],
-    correctAnswer: 0,
-    explanation: '',
-    category: '',
-    difficulty: 'beginner' as const,
-    tags: [] as string[]
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  
+  // Form states
+  const [newAdmin, setNewAdmin] = useState({
+    username: '',
+    email: '',
+    role: 'admin' as const,
+    permissions: [] as string[]
   });
 
-  // Queries
-  const { data: questions = [], isLoading: questionsLoading } = useQuery({
-    queryKey: ['/api/admin/questions'],
-    queryFn: () => apiRequest('GET', '/api/admin/questions').then(res => res.json())
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>({
+    siteName: 'BilgiBite',
+    siteDescription: 'AI destekli öğrenme platformu',
+    maintenanceMode: false,
+    registrationEnabled: true,
+    emailNotifications: true,
+    aiQuestionLimit: 1000,
+    maxFileSize: 10,
+    supportedFormats: ['pdf', 'txt', 'json'],
+    theme: 'light'
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
-    queryFn: () => apiRequest('GET', '/api/admin/users').then(res => res.json())
-  });
-
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Queries with proper typing
+  const { data: adminStats } = useQuery({
     queryKey: ['/api/admin/stats'],
-    queryFn: () => apiRequest('GET', '/api/admin/stats').then(res => res.json())
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/stats');
+      return response as any;
+    }
+  });
+
+  const { data: adminUsers } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/users');
+      return response as AdminUser[];
+    }
+  });
+
+  const { data: courses } = useQuery({
+    queryKey: ['/api/admin/courses'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/courses');
+      return response as Course[];
+    }
+  });
+
+  const { data: teachers } = useQuery({
+    queryKey: ['/api/admin/teachers'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/teachers');
+      return response as Teacher[];
+    }
   });
 
   // Mutations
-  const createQuestionMutation = useMutation({
-    mutationFn: (questionData: any) => 
-      apiRequest('POST', '/api/admin/questions', questionData),
+  const createAdminMutation = useMutation({
+    mutationFn: (adminData: typeof newAdmin) => 
+      apiRequest('POST', '/api/admin/create-admin', adminData),
     onSuccess: () => {
-      toast({
-        title: 'Başarılı',
-        description: 'Soru başarıyla eklendi',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
-      resetQuestionForm();
-    },
-    onError: () => {
-      toast({
-        title: 'Hata',
-        description: 'Soru eklenirken hata oluştu',
-        variant: 'destructive'
-      });
+      toast({ title: 'Başarılı', description: 'Yeni admin oluşturuldu' });
+      setShowCreateAdmin(false);
+      setNewAdmin({ username: '', email: '', role: 'admin', permissions: [] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
     }
   });
 
-  const uploadFileMutation = useMutation({
-    mutationFn: (formData: FormData) => 
-      apiRequest('POST', '/api/admin/upload-questions', formData),
-    onSuccess: (response) => {
-      toast({
-        title: 'Başarılı',
-        description: `${response.count} soru başarıyla yüklendi`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
-      setIsUploading(false);
-    },
-    onError: () => {
-      toast({
-        title: 'Hata',
-        description: 'Dosya yüklenirken hata oluştu',
-        variant: 'destructive'
-      });
-      setIsUploading(false);
-    }
-  });
-
-  const deleteQuestionMutation = useMutation({
-    mutationFn: (questionId: string) =>
-      apiRequest('DELETE', `/api/admin/questions/${questionId}`),
+  const updateSystemSettingsMutation = useMutation({
+    mutationFn: (settings: SystemSettings) => 
+      apiRequest('PUT', '/api/admin/system-settings', settings),
     onSuccess: () => {
-      toast({
-        title: 'Başarılı',
-        description: 'Soru silindi',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      toast({ title: 'Başarılı', description: 'Sistem ayarları güncellendi' });
     }
   });
 
-  // AI Content Processing Mutation
-  const processContentMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+  const toggleUserStatusMutation = useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string, isActive: boolean }) =>
+      apiRequest('PUT', `/api/admin/users/${userId}/status`, { isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ title: 'Başarılı', description: 'Kullanıcı durumu güncellendi' });
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => apiRequest('DELETE', `/api/admin/users/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ title: 'Başarılı', description: 'Kullanıcı silindi' });
+    }
+  });
+
+  const handleCreateAdmin = () => {
+    if (!newAdmin.username || !newAdmin.email || !newAdmin.role) {
+      toast({ title: 'Hata', description: 'Tüm alanlar doldurulmalıdır', variant: 'destructive' });
+      return;
+    }
+    createAdminMutation.mutate(newAdmin);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('contentType', 'questions');
+
+    try {
       const response = await fetch('/api/admin/process-content', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
-      if (!response.ok) {
-        throw new Error('AI işleme hatası');
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({ title: 'Başarılı', description: 'Dosya başarıyla işlendi' });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
       }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setProcessedContent(data.data);
-      setShowProcessedContent(true);
-      toast({ 
-        title: 'AI İşleme Tamamlandı', 
-        description: `${data.originalFileName} dosyası başarıyla işlendi` 
-      });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: 'AI İşleme Hatası', 
-        description: error.message || 'Dosya işlenirken hata oluştu', 
-        variant: 'destructive' 
-      });
+    } catch (error) {
+      toast({ title: 'Hata', description: 'Dosya işlenirken hata oluştu', variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
     }
-  });
-
-  // Functions
-  const resetQuestionForm = () => {
-    setNewQuestion({
-      question: '',
-      options: ['', '', '', ''],
-      correctAnswer: 0,
-      explanation: '',
-      category: '',
-      difficulty: 'beginner',
-      tags: []
-    });
   };
-
-  const handleCreateQuestion = () => {
-    if (!newQuestion.question || !newQuestion.options.every(opt => opt.trim())) {
-      toast({
-        title: 'Hata',
-        description: 'Lütfen tüm alanları doldurun',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    createQuestionMutation.mutate(newQuestion);
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Supported formats: PDF, TXT, JSON
-    const supportedFormats = ['application/pdf', 'text/plain', 'application/json'];
-    if (!supportedFormats.includes(file.type)) {
-      toast({
-        title: 'Hata',
-        description: 'Desteklenen formatlar: PDF, TXT, JSON',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    setIsUploading(true);
-    uploadFileMutation.mutate(formData);
-  };
-
-  // AI Content Processing Handler
-  const handleAIContentProcessing = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // AI destekli işleme için daha geniş format desteği
-    const supportedFormats = ['application/pdf', 'text/plain', 'application/json', 'text/markdown'];
-    if (!supportedFormats.includes(file.type)) {
-      toast({
-        title: 'Hata',
-        description: 'AI işleme için desteklenen formatlar: PDF, TXT, JSON, MD',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('contentType', contentType);
-    processContentMutation.mutate(formData);
-  };
-
-  const filteredQuestions = questions.filter((q: Question) => {
-    const matchesSearch = q.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         q.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = questionFilter === 'all' || q.difficulty === questionFilter;
-    return matchesSearch && matchesFilter;
-  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">BilgiBite yönetim paneli - Tüm sistem kontrolü</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                BilgiBite Admin Paneli
+              </h1>
+              <p className="text-gray-600">
+                Gelişmiş sistem yönetimi ve içerik düzenleme merkezi
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" size="sm">
+                <Activity className="w-4 h-4 mr-2" />
+                Sistem Durumu
+              </Button>
+              <Button onClick={() => setShowSystemSettings(true)}>
+                <Settings className="w-4 h-4 mr-2" />
+                Ayarlar
+              </Button>
+            </div>
+          </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Toplam Kullanıcı</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-gray-900">
+                  {adminStats?.totalUsers || 0}
+                </span>
+                <Users className="w-5 h-5 text-blue-500" />
+              </div>
+              <p className="text-xs text-green-600 mt-1">+12% bu ay</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Aktif Kurslar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-gray-900">
+                  {adminStats?.activeCourses || 0}
+                </span>
+                <BookOpen className="w-5 h-5 text-green-500" />
+              </div>
+              <p className="text-xs text-green-600 mt-1">+8% bu ay</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Toplam Soru</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-gray-900">
+                  {adminStats?.totalQuestions || 0}
+                </span>
+                <Brain className="w-5 h-5 text-purple-500" />
+              </div>
+              <p className="text-xs text-green-600 mt-1">+25% bu ay</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Öğretmenler</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-gray-900">
+                  {adminStats?.totalTeachers || 0}
+                </span>
+                <GraduationCap className="w-5 h-5 text-orange-500" />
+              </div>
+              <p className="text-xs text-green-600 mt-1">+5% bu ay</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Genel
-            </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Sorular
-            </TabsTrigger>
-            <TabsTrigger value="add-question" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Soru Ekle
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Toplu Yükle
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Kullanıcılar
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Ayarlar
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6 bg-white">
+            <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
+            <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
+            <TabsTrigger value="content">İçerik</TabsTrigger>
+            <TabsTrigger value="courses">Kurslar</TabsTrigger>
+            <TabsTrigger value="teachers">Öğretmenler</TabsTrigger>
+            <TabsTrigger value="system">Sistem</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-100">Toplam Soru</p>
-                      <p className="text-3xl font-bold">{stats?.totalQuestions || 0}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Son Aktiviteler
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm">Yeni kullanıcı kaydı</span>
+                      <span className="text-xs text-gray-500">2 dakika önce</span>
                     </div>
-                    <FileText className="w-8 h-8 text-blue-200" />
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm">Yeni kurs oluşturuldu</span>
+                      <span className="text-xs text-gray-500">15 dakika önce</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm">AI soru üretildi</span>
+                      <span className="text-xs text-gray-500">1 saat önce</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-100">Aktif Kullanıcı</p>
-                      <p className="text-3xl font-bold">{stats?.activeUsers || 0}</p>
-                    </div>
-                    <Users className="w-8 h-8 text-green-200" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-100">Günlük Quiz</p>
-                      <p className="text-3xl font-bold">{stats?.dailyQuizzes || 0}</p>
-                    </div>
-                    <BarChart3 className="w-8 h-8 text-purple-200" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100">Başarı Oranı</p>
-                      <p className="text-3xl font-bold">{stats?.successRate || 0}%</p>
-                    </div>
-                    <RefreshCw className="w-8 h-8 text-orange-200" />
-                  </div>
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Hızlı İşlemler
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Yeni Admin Ekle
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Toplu İçerik Yükle
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Verileri Dışa Aktar
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Toplu E-posta Gönder
+                  </Button>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Recent Activity */}
-            <Card>
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-6">
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Son Aktiviteler</CardTitle>
-                <CardDescription>Sistemdeki son hareketler</CardDescription>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Admin Kullanıcıları</CardTitle>
+                  <Button onClick={() => setShowCreateAdmin(true)}>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Yeni Admin
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {stats?.recentActivities?.map((activity: any, index: number) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">{activity.description}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{activity.time}</span>
+                  {Array.isArray(adminUsers) && adminUsers.map((user: AdminUser) => (
+                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <h4 className="font-medium">{user.username}</h4>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
+                        <Badge className={ADMIN_ROLES[user.role].color}>
+                          {ADMIN_ROLES[user.role].name}
+                        </Badge>
+                        {user.isActive ? (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            Aktif
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-red-600 border-red-600">
+                            Pasif
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toggleUserStatusMutation.mutate({ 
+                            userId: user.id, 
+                            isActive: !user.isActive 
+                          })}
+                        >
+                          {user.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-red-600">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Kullanıcıyı sil?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bu işlem geri alınamaz. Kullanıcı kalıcı olarak silinecek.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>İptal</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteUserMutation.mutate(user.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Sil
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -360,555 +504,298 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Questions Management Tab */}
-          <TabsContent value="questions" className="space-y-6">
-            <Card>
+          {/* Content Tab */}
+          <TabsContent value="content" className="space-y-6">
+            <Card className="bg-white">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Soru Yönetimi</CardTitle>
-                    <CardDescription>Tüm soruları görüntüle ve yönet</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Soru ara..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
-                        data-testid="search-questions"
-                      />
-                    </div>
-                    <Select value={questionFilter} onValueChange={setQuestionFilter}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Hepsi</SelectItem>
-                        <SelectItem value="beginner">Başlangıç</SelectItem>
-                        <SelectItem value="intermediate">Orta</SelectItem>
-                        <SelectItem value="advanced">İleri</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  AI Destekli İçerik Yönetimi
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {questionsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <RefreshCw className="w-6 h-6 animate-spin" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredQuestions.map((question: Question) => (
-                      <Card key={question.id} className="border border-muted">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <p className="font-medium mb-2">{question.question}</p>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="secondary">{question.category}</Badge>
-                                <Badge variant={
-                                  question.difficulty === 'beginner' ? 'default' :
-                                  question.difficulty === 'intermediate' ? 'secondary' : 
-                                  'destructive'
-                                }>
-                                  {question.difficulty}
-                                </Badge>
-                                {question.tags.map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {question.options.length} seçenek
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm" data-testid={`view-question-${question.id}`}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" data-testid={`edit-question-${question.id}`}>
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => deleteQuestionMutation.mutate(question.id)}
-                                data-testid={`delete-question-${question.id}`}
-                              >
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Add Question Tab */}
-          <TabsContent value="add-question" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Yeni Soru Ekle</CardTitle>
-                <CardDescription>Manuel olarak tek soru ekleyin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="question">Soru Metni</Label>
-                  <Textarea
-                    id="question"
-                    value={newQuestion.question}
-                    onChange={(e) => setNewQuestion({...newQuestion, question: e.target.value})}
-                    placeholder="Sorunuzu buraya yazın..."
-                    className="mt-1"
-                    data-testid="input-question-text"
-                  />
-                </div>
-
-                <div>
-                  <Label>Seçenekler</Label>
-                  <div className="space-y-2 mt-2">
-                    {newQuestion.options.map((option, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-                          {String.fromCharCode(65 + index)}
-                        </span>
-                        <Input
-                          value={option}
-                          onChange={(e) => {
-                            const newOptions = [...newQuestion.options];
-                            newOptions[index] = e.target.value;
-                            setNewQuestion({...newQuestion, options: newOptions});
-                          }}
-                          placeholder={`${String.fromCharCode(65 + index)} seçeneği`}
-                          data-testid={`input-option-${index}`}
-                        />
-                        <Button
-                          type="button"
-                          variant={newQuestion.correctAnswer === index ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setNewQuestion({...newQuestion, correctAnswer: index})}
-                          data-testid={`button-correct-${index}`}
-                        >
-                          Doğru
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category">Kategori</Label>
-                    <Select
-                      value={newQuestion.category}
-                      onValueChange={(value) => setNewQuestion({...newQuestion, category: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kategori seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yks">YKS</SelectItem>
-                        <SelectItem value="kpss">KPSS</SelectItem>
-                        <SelectItem value="ehliyet">Ehliyet</SelectItem>
-                        <SelectItem value="src">SRC</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="difficulty">Zorluk</Label>
-                    <Select
-                      value={newQuestion.difficulty}
-                      onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') => 
-                        setNewQuestion({...newQuestion, difficulty: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Başlangıç</SelectItem>
-                        <SelectItem value="intermediate">Orta</SelectItem>
-                        <SelectItem value="advanced">İleri</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="explanation">Açıklama</Label>
-                  <Textarea
-                    id="explanation"
-                    value={newQuestion.explanation}
-                    onChange={(e) => setNewQuestion({...newQuestion, explanation: e.target.value})}
-                    placeholder="Sorunun açıklaması..."
-                    className="mt-1"
-                    data-testid="input-explanation"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={resetQuestionForm}>
-                    Temizle
-                  </Button>
-                  <Button 
-                    onClick={handleCreateQuestion}
-                    disabled={createQuestionMutation.isPending}
-                    data-testid="button-create-question"
-                  >
-                    {createQuestionMutation.isPending ? (
-                      <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Soru Ekle
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* File Upload Tab */}
-          <TabsContent value="upload" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* AI Destekli İçerik İşleme */}
-              <Card className="border-blue-200 shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-blue-600" />
-                    AI Destekli İçerik İşleme
-                  </CardTitle>
-                  <CardDescription>
-                    AI ile otomatik içerik ayrıştırma ve organize etme
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    {/* İçerik Tipi Seçimi */}
-                    <div>
-                      <Label className="text-sm font-medium">İçerik Tipi</Label>
-                      <Select value={contentType} onValueChange={setContentType as (value: string) => void}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="questions">Sorular & Testler</SelectItem>
-                          <SelectItem value="courses">Kurslar & Dersler</SelectItem>
-                          <SelectItem value="lessons">Ders Materyalleri</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
-                      <Brain className="mx-auto h-10 w-10 text-blue-500" />
-                      <h3 className="mt-2 text-sm font-semibold text-blue-900">AI İle İşle</h3>
-                      <p className="mt-1 text-sm text-blue-600">
-                        Dosyalarınız AI ile otomatik ayrıştırılır
-                      </p>
-                      <div className="mt-4">
-                        <Label htmlFor="ai-file-upload" className="cursor-pointer">
-                          <div className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition-colors">
-                            <Brain className="w-4 h-4 mr-2" />
-                            {processContentMutation.isPending ? 'AI İşliyor...' : 'AI İle İşle'}
-                          </div>
-                        </Label>
-                        <Input
-                          id="ai-file-upload"
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.txt,.json,.md"
-                          onChange={handleAIContentProcessing}
-                          disabled={processContentMutation.isPending}
-                        />
-                      </div>
-                    </div>
-
-                    {/* AI Özellikler */}
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        AI Özellikler
-                      </h4>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>🧠 Otomatik içerik kategorilendirme</li>
-                        <li>📚 Akıllı soru/ders ayrıştırma</li>
-                        <li>🎯 Zorluk seviyesi analizi</li>
-                        <li>🏷️ Otomatik etiketleme</li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Klasik Dosya Yükleme */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="w-5 h-5" />
-                    Klasik Dosya Yükleme
-                  </CardTitle>
-                  <CardDescription>PDF, TXT veya JSON dosyasından toplu soru yükleyin</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                    <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">Dosya Yükle</h3>
-                    <p className="text-muted-foreground mb-4">
-                      PDF, TXT veya JSON dosyanızı sürükleyin veya seçin
-                    </p>
-                    <Input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".pdf,.txt,.json"
-                      className="hidden"
-                      data-testid="file-upload-input"
-                    />
-                    <Button
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button 
+                      className="h-20 flex-col gap-2"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      data-testid="button-upload-file"
                     >
-                      {isUploading ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                          Yükleniyor...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4 mr-2" />
-                          Dosya Seç
-                        </>
-                      )}
+                      <Upload className="w-6 h-6" />
+                      Toplu Soru Yükle
+                    </Button>
+                    <Button className="h-20 flex-col gap-2" variant="outline">
+                      <Brain className="w-6 h-6" />
+                      AI Soru Üret
+                    </Button>
+                    <Button className="h-20 flex-col gap-2" variant="outline">
+                      <Download className="w-6 h-6" />
+                      Verileri Dışa Aktar
                     </Button>
                   </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <FileText className="w-8 h-8 text-blue-500 mb-2" />
-                      <h4 className="font-semibold">PDF Format</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Yapılandırılmış PDF dosyalarından soru çıkarımı
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <FileText className="w-8 h-8 text-green-500 mb-2" />
-                      <h4 className="font-semibold">TXT Format</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Düz metin dosyasından yapılandırılmış soru ayrıştırma
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <FileText className="w-8 h-8 text-purple-500 mb-2" />
-                      <h4 className="font-semibold">JSON Format</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Yapılandırılmış JSON verilerinden doğrudan import
-                      </p>
-                    </CardContent>
-                  </Card>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.txt,.json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
                 </div>
-
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Dosya Format Örnekleri:</h4>
-                  <div className="text-sm space-y-2">
-                    <p><strong>JSON:</strong> {'[{"question": "...", "options": [...], "correctAnswer": 0, ...}]'}</p>
-                    <p><strong>TXT:</strong> Her soru yeni satırda, seçenekler A), B), C), D) formatında</p>
-                    <p><strong>PDF:</strong> Standart soru bankası formatı (AI ile ayrıştırılır)</p>
-                  </div>
-                </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* İşlenmiş İçerik Görüntüleme */}
-            {showProcessedContent && processedContent && (
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="w-5 h-5" />
-                    İşlenmiş İçerik Önizlemesi
-                  </CardTitle>
-                  <CardDescription className="text-green-600">
-                    AI tarafından başarıyla işlenen içerik aşağıdadır
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {Array.isArray(processedContent) ? processedContent.map((item, index) => (
-                      <div key={index} className="bg-white p-4 rounded-lg border">
-                        <h5 className="font-medium text-gray-900">
-                          {contentType === 'questions' ? 'Soru' : 'İçerik'} {index + 1}
-                        </h5>
-                        <p className="text-sm text-gray-600 mt-2">
-                          {typeof item === 'string' ? item : item.title || item.question || JSON.stringify(item, null, 2)}
-                        </p>
-                      </div>
-                    )) : (
-                      <div className="bg-white p-4 rounded-lg border">
-                        <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                          {JSON.stringify(processedContent, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={() => setShowProcessedContent(false)}>
-                      Kapat
-                    </Button>
-                    <Button onClick={() => {
-                      toast({ 
-                        title: 'Başarılı', 
-                        description: 'İçerik veritabanına kaydedildi' 
-                      });
-                      setShowProcessedContent(false);
-                      setProcessedContent(null);
-                    }}>
-                      Veritabanına Kaydet
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Users Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Kullanıcı Yönetimi</CardTitle>
-                <CardDescription>Tüm kullanıcıları görüntüle ve yönet</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {usersLoading ? (
-                  <div className="flex justify-center py-8">
-                    <RefreshCw className="w-6 h-6 animate-spin" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {users.map((user: User) => (
-                      <Card key={user.id} className="border border-muted">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                {user.username.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <h4 className="font-semibold">{user.username}</h4>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                                <div className="flex items-center gap-4 mt-1">
-                                  <span className="text-xs">Seviye {user.level}</span>
-                                  <span className="text-xs">{user.totalXP} XP</span>
-                                  <span className="text-xs">{user.streakCount} gün seri</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">Son aktif</p>
-                              <p className="text-sm">{user.lastActive}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Genel Ayarlar</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Sistem Adı</Label>
-                    <Input defaultValue="BilgiBite" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label>Günlük Quiz Limiti</Label>
-                    <Input type="number" defaultValue="50" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label>XP Katsayısı</Label>
-                    <Input type="number" step="0.1" defaultValue="1.0" className="mt-1" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>İçerik Ayarları</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Varsayılan Zorluk</Label>
-                    <Select defaultValue="intermediate">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Başlangıç</SelectItem>
-                        <SelectItem value="intermediate">Orta</SelectItem>
-                        <SelectItem value="advanced">İleri</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Soru Onay Süreci</Label>
-                    <Select defaultValue="manual">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">Otomatik</SelectItem>
-                        <SelectItem value="manual">Manuel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
+          {/* Courses Tab */}
+          <TabsContent value="courses" className="space-y-6">
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Bakım İşlemleri</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Kurs Yönetimi</CardTitle>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Yeni Kurs
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4">
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Veri Yedekle
-                  </Button>
-                  <Button variant="outline">
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Cache Temizle
-                  </Button>
-                  <Button variant="destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Log Temizle
-                  </Button>
+                <div className="space-y-4">
+                  {Array.isArray(courses) && courses.map((course: Course) => (
+                    <div key={course.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{course.title}</h4>
+                        <p className="text-sm text-gray-600">{course.description}</p>
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant="secondary">{course.category}</Badge>
+                          <Badge variant="outline">{course.level}</Badge>
+                          <Badge variant="outline">{course.enrollmentCount} öğrenci</Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Teachers Tab */}
+          <TabsContent value="teachers" className="space-y-6">
+            <Card className="bg-white">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Öğretmen Yönetimi</CardTitle>
+                  <Button>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Yeni Öğretmen
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Array.isArray(teachers) && teachers.map((teacher: Teacher) => (
+                    <div key={teacher.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{teacher.name}</h4>
+                        <p className="text-sm text-gray-600">{teacher.email}</p>
+                        <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                          <span>{teacher.subject}</span>
+                          <span>{teacher.studentsCount} öğrenci</span>
+                          <span>{teacher.coursesCount} kurs</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600">
+                          <UserX className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* System Tab */}
+          <TabsContent value="system" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle>Sistem Ayarları</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Site Adı</Label>
+                    <Input 
+                      value={systemSettings.siteName}
+                      onChange={(e) => setSystemSettings(prev => ({ ...prev, siteName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Site Açıklaması</Label>
+                    <Textarea 
+                      value={systemSettings.siteDescription}
+                      onChange={(e) => setSystemSettings(prev => ({ ...prev, siteDescription: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Bakım Modu</Label>
+                    <Switch 
+                      checked={systemSettings.maintenanceMode}
+                      onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, maintenanceMode: checked }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Yeni Kayıt</Label>
+                    <Switch 
+                      checked={systemSettings.registrationEnabled}
+                      onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, registrationEnabled: checked }))}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle>API & İmkanlar</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>AI Soru Limiti (Aylık)</Label>
+                    <Input 
+                      type="number"
+                      value={systemSettings.aiQuestionLimit}
+                      onChange={(e) => setSystemSettings(prev => ({ ...prev, aiQuestionLimit: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Maksimum Dosya Boyutu (MB)</Label>
+                    <Input 
+                      type="number"
+                      value={systemSettings.maxFileSize}
+                      onChange={(e) => setSystemSettings(prev => ({ ...prev, maxFileSize: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>E-posta Bildirimleri</Label>
+                    <Switch 
+                      checked={systemSettings.emailNotifications}
+                      onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, emailNotifications: checked }))}
+                    />
+                  </div>
+                  <Button 
+                    className="w-full"
+                    onClick={() => updateSystemSettingsMutation.mutate(systemSettings)}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Ayarları Kaydet
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
+
+        {/* Create Admin Dialog */}
+        <Dialog open={showCreateAdmin} onOpenChange={setShowCreateAdmin}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Yeni Admin Oluştur</DialogTitle>
+              <DialogDescription>
+                Yeni admin kullanıcısı oluşturun ve yetkileri belirleyin
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Kullanıcı Adı</Label>
+                  <Input 
+                    value={newAdmin.username}
+                    onChange={(e) => setNewAdmin(prev => ({ ...prev, username: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-posta</Label>
+                  <Input 
+                    type="email"
+                    value={newAdmin.email}
+                    onChange={(e) => setNewAdmin(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select value={newAdmin.role} onValueChange={(value) => setNewAdmin(prev => ({ ...prev, role: value as any }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="moderator">Moderatör</SelectItem>
+                    <SelectItem value="teacher">Öğretmen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Yetkiler</Label>
+                <div className="grid grid-cols-2 gap-4 max-h-40 overflow-y-auto">
+                  {PERMISSIONS.map(permission => (
+                    <div key={permission.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={permission.id}
+                        checked={newAdmin.permissions.includes(permission.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewAdmin(prev => ({ 
+                              ...prev, 
+                              permissions: [...prev.permissions, permission.id] 
+                            }));
+                          } else {
+                            setNewAdmin(prev => ({ 
+                              ...prev, 
+                              permissions: prev.permissions.filter(p => p !== permission.id) 
+                            }));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={permission.id} className="text-sm">
+                        {permission.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowCreateAdmin(false)}>
+                  İptal
+                </Button>
+                <Button 
+                  onClick={handleCreateAdmin}
+                  disabled={createAdminMutation.isPending}
+                >
+                  {createAdminMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

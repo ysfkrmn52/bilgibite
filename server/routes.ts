@@ -959,6 +959,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advanced Admin Management Endpoints
+  
+  // Admin user management
+  app.post('/api/admin/create-admin', async (req, res) => {
+    try {
+      const { username, email, role, permissions } = req.body;
+      
+      const newAdmin = {
+        id: Math.random().toString(36).substr(2, 9),
+        username,
+        email,
+        role,
+        permissions,
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+
+      // In real app, save to database
+      res.json({ success: true, admin: newAdmin });
+    } catch (error) {
+      res.status(500).json({ error: 'Admin oluşturma hatası' });
+    }
+  });
+
+  app.put('/api/admin/users/:userId/status', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isActive } = req.body;
+      
+      // Update user status in database
+      res.json({ success: true, message: 'Kullanıcı durumu güncellendi' });
+    } catch (error) {
+      res.status(500).json({ error: 'Kullanıcı güncelleme hatası' });
+    }
+  });
+
+  app.delete('/api/admin/users/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Delete user from database
+      res.json({ success: true, message: 'Kullanıcı silindi' });
+    } catch (error) {
+      res.status(500).json({ error: 'Kullanıcı silme hatası' });
+    }
+  });
+
+  // System settings management
+  app.put('/api/admin/system-settings', async (req, res) => {
+    try {
+      const settings = req.body;
+      
+      // Save system settings to database
+      res.json({ success: true, message: 'Sistem ayarları güncellendi' });
+    } catch (error) {
+      res.status(500).json({ error: 'Ayar güncelleme hatası' });
+    }
+  });
+
+  // Course management
+  app.get('/api/admin/courses', async (req, res) => {
+    try {
+      const mockCourses = [
+        {
+          id: '1',
+          title: 'YKS Matematik Temelleri',
+          description: 'Üniversite sınavına hazırlık matematik kursu',
+          category: 'Matematik',
+          level: 'intermediate',
+          isActive: true,
+          enrollmentCount: 1250,
+          createdAt: '2025-01-15T10:00:00Z'
+        },
+        {
+          id: '2',
+          title: 'KPSS Türkçe',
+          description: 'Kamu personel seçme sınavı Türkçe dersi',
+          category: 'Türkçe',
+          level: 'advanced',
+          isActive: true,
+          enrollmentCount: 890,
+          createdAt: '2025-01-10T14:30:00Z'
+        }
+      ];
+      
+      res.json(mockCourses);
+    } catch (error) {
+      res.status(500).json({ error: 'Kurslar getirilemedi' });
+    }
+  });
+
+  // Teacher management
+  app.get('/api/admin/teachers', async (req, res) => {
+    try {
+      const mockTeachers = [
+        {
+          id: '1',
+          name: 'Prof. Dr. Mehmet Yılmaz',
+          email: 'mehmet.yilmaz@bilgibite.com',
+          subject: 'Matematik',
+          studentsCount: 450,
+          coursesCount: 8,
+          isActive: true,
+          joinedAt: '2024-09-01T09:00:00Z'
+        },
+        {
+          id: '2',
+          name: 'Doç. Dr. Ayşe Demir',
+          email: 'ayse.demir@bilgibite.com',
+          subject: 'Türkçe',
+          studentsCount: 380,
+          coursesCount: 6,
+          isActive: true,
+          joinedAt: '2024-10-15T11:00:00Z'
+        }
+      ];
+      
+      res.json(mockTeachers);
+    } catch (error) {
+      res.status(500).json({ error: 'Öğretmenler getirilemedi' });
+    }
+  });
+
   // AI-powered content processing endpoint
   app.post('/api/admin/process-content', upload.single('file'), processContentFile);
 

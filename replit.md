@@ -1,79 +1,6 @@
 # Overview
 
-BilgiBite is a modern Turkish quiz application built with a full-stack architecture featuring a React frontend, Express.js backend, and PostgreSQL database. The application provides educational quizzes across multiple exam categories with user progress tracking, achievements, and gamification features. Users can take timed quizzes, track their performance statistics, and earn achievements based on their learning progress.
-
-**Recent Updates (August 2025):**
-- ✅ Implemented modern web foundation: PWA support, Turkish i18n, dark/light theme system
-- ✅ Added comprehensive animation framework with Framer Motion
-- ✅ Created responsive design system with mobile-first approach
-- ✅ Integrated theme switching and language toggle functionality
-- ✅ Added PWA install prompt and service worker for offline capability
-- ✅ Enhanced SEO with proper meta tags and Open Graph support
-- ✅ **Firebase Authentication System**: Complete email/password, Google AND Facebook social login implementation
-- ✅ **6-Step Onboarding Flow**: Welcome → Goal Selection → Skill Assessment → Personalization → Study Plan → Completion
-- ✅ **Duolingo-style Mascot**: Interactive BilgiBite mascot with emotional states and animations
-- ✅ **Personalized Learning Paths**: AI-generated study plans based on user goals and skill level
-- ✅ **Authentication Error Handling**: Debug system for Firebase configuration and domain issues
-- ✅ **Comprehensive Duolingo-style Quiz Engine**: Complete interactive quiz system with multiple question types
-- ✅ **Multiple Question Types**: Support for multiple choice, true/false, fill-in-blank, and matching questions
-- ✅ **Interactive Animations**: Real-time feedback, success/failure celebrations, XP gain animations
-- ✅ **Progress Tracking System**: Lives/hearts system, streak tracking, timer functionality, and detailed analytics
-- ✅ **Enhanced Category Selection**: Beautiful Duolingo-style category selection interface integrated into dashboard
-- ✅ **Complete Gamification Database Schema**: Full database support for XP, achievements, daily challenges, store, leaderboard
-- ✅ **Gamification API Endpoints**: Backend API for all gamification features with real database integration
-- ✅ **Enhanced PWA Features**: Advanced PWA capabilities with offline support, share API, and notifications
-- ✅ **Asset Integration**: Attached screenshot reference component for UI consistency
-- ✅ **AI-Powered Intelligent Learning System**: Complete Claude AI integration with comprehensive learning features
-- ✅ **AI Tutoring Chatbot**: Interactive AI teacher providing personalized help and explanations
-- ✅ **Smart Question Generation**: AI creates personalized questions based on weak areas and performance
-- ✅ **Learning Analytics & Insights**: AI-powered performance analysis with actionable recommendations
-- ✅ **Adaptive Difficulty System**: Real-time difficulty adjustment based on user performance patterns
-- ✅ **Personalized Study Plans**: AI-generated weekly study schedules with milestone tracking
-- ✅ **Smart Review Scheduler**: Intelligent scheduling for reviewing weak topics and missed questions
-- ✅ **AI Data Persistence System**: Complete memory storage infrastructure with automatic question database population
-- ✅ **State Management Enhancement**: All AI-generated content (questions, plans, chat) persists until user action
-- ✅ **Automatic Database Integration**: Every AI-generated question automatically queued for database addition
-- ✅ **Persistence Dashboard**: Real-time indicators showing stored questions, study plans, and chat history
-- ✅ **Organic Database Growth**: Question database grows automatically through user AI interactions
-- ✅ **Duolingo-style Social Learning System**: Complete friend system, weekly leagues, study groups, and challenges
-- ✅ **Friend System & Discovery**: Send friend requests, accept connections, discover users with similar levels
-- ✅ **Challenge System**: Head-to-head quiz duels, streak battles, and category races between friends
-- ✅ **Weekly League System**: Bronze to Diamond leagues with promotion/relegation mechanics
-- ✅ **Study Groups & Clubs**: Create and join study groups with collective goals and achievements
-- ✅ **Social Activity Feed**: Friend activities, achievements, and progress updates in social timeline
-- ✅ **Community Forums**: Topic-based discussions, Q&A, and peer tutoring system
-- ✅ **Social API Infrastructure**: Complete backend services for all social features with database integration
-- ✅ **Comprehensive Analytics Dashboard**: Data-rich personal learning dashboard with interactive visualizations
-- ✅ **Performance Analytics Engine**: Real-time progress tracking, weakness identification, and performance insights
-- ✅ **Interactive Charts System**: Recharts integration with responsive charts, graphs, and data visualizations
-- ✅ **Study Pattern Analysis**: Learning habit analysis, optimal study time recommendations, and retention patterns
-- ✅ **Goal Progress Monitoring**: Visual goal tracking with completion predictions and milestone analysis
-- ✅ **Export Capabilities**: PDF export functionality for analytics reports and progress summaries
-- ✅ **Dashboard Integration**: Analytics access integrated into main dashboard with summary cards
-- ✅ **Turkish Exam-Specific Features**: YKS, KPSS, Ehliyet, SRC sınav sistemi kuruldu
-- ✅ **Authentic Exam Simulation**: Gerçek sınav formatlarında mock exam interface
-- ✅ **Exam-Specific Scoring Systems**: YKS net calculation, KPSS scoring, ehliyet percentage
-- ✅ **Real Exam Environment**: Timer, question navigation, strict timing, no backtrack
-- ✅ **Turkish Question Banks**: Authentic questions from OSYM, MEB official sources
-- ✅ **Success Prediction Calculator**: AI-powered success probability for Turkish exams
-- ✅ **Exam Registration System**: Target dates, study plans, milestone tracking
-- ✅ **Performance Comparison**: Real exam stats integration and competitive positioning
-- ✅ **Study Plan Optimization**: Exam date-based adaptive study scheduling
-- ✅ **Production-Ready Infrastructure**: Complete monitoring system, error tracking, performance optimization
-- ✅ **Launch Monitoring Dashboard**: Real-time health checks, error monitoring, performance metrics
-- ✅ **SEO & Market Optimization**: Sitemap, robots.txt, Turkish market specific optimizations
-- ✅ **Error Reporting System**: Comprehensive client/server error tracking with automatic alerts
-- ✅ **Health Check System**: Application health monitoring with service status tracking
-- ✅ **Security Hardening Infrastructure**: Authentication middleware, input validation, rate limiting, CORS, security headers
-- ✅ **Firebase Admin SDK Integration**: Server-side authentication verification and user management
-- ✅ **Production Security Framework**: Comprehensive middleware system with error handling and request logging
-- ✅ **Advanced Admin Panel System**: Complete admin dashboard with sophisticated question management, manual entry, and bulk PDF import
-- ✅ **File Upload Infrastructure**: Comprehensive multer configuration for PDF parsing and bulk question import with parsing capability
-- ✅ **Enhanced Profile & Settings Pages**: Full user management with avatar upload, profile editing, and comprehensive settings
-- ✅ **Simplified Homepage Design**: Clean, focused homepage reducing complexity while maintaining gamified + corporate aesthetic
-- ✅ **Complete Backend API Endpoints**: Comprehensive routes for admin functionality, user management, file uploads, and settings
-- ✅ **User Settings Management**: Full settings system with notifications, privacy, appearance, and study preferences
-- ✅ **Data Export & Account Management**: Complete user data export and account deletion functionality
+BilgiBite is a modern Turkish quiz application designed to provide an engaging and personalized learning experience across various exam categories. It features a full-stack architecture with a React frontend, Express.js backend, and PostgreSQL database, offering timed quizzes, performance tracking, achievements, and gamification. The platform aims to integrate advanced AI features for personalized learning paths, adaptive difficulty, and an interactive AI tutoring chatbot, alongside comprehensive social learning functionalities and specific support for Turkish national exams. Its vision is to be a leading educational tool in Turkey, leveraging technology to enhance learning outcomes and user engagement.
 
 # User Preferences
 
@@ -84,110 +11,60 @@ Language: Turkish (user requested Turkish responses)
 
 ## Frontend Architecture
 
-The client-side is built using React with TypeScript, implementing a modern single-page application (SPA) architecture:
-
-- **UI Framework**: React with TypeScript for type safety and component-based development
-- **Styling**: Tailwind CSS with custom design system variables and shadcn/ui component library for consistent UI patterns
-- **Routing**: Wouter for lightweight client-side routing between dashboard and quiz pages
-- **State Management**: TanStack React Query for server state management and caching, with local component state for UI interactions
-- **Animations**: Framer Motion for smooth transitions and interactive feedback
-- **Build Tool**: Vite for fast development and optimized production builds
+The client-side is a React with TypeScript SPA, using Tailwind CSS and shadcn/ui for a responsive design system with dark/light themes. Wouter handles routing, while TanStack React Query manages server state. Framer Motion provides smooth animations, and Vite is used for build processes. Key features include PWA support, Turkish i18n, and a Duolingo-style onboarding flow with an interactive mascot.
 
 ## Backend Architecture
 
-The server follows a RESTful API design with Express.js:
-
-- **Framework**: Express.js with TypeScript for type-safe backend development
-- **API Structure**: REST endpoints organized by resource types (users, questions, quiz sessions, achievements)
-- **Middleware**: Custom logging middleware for API request/response tracking
-- **Error Handling**: Centralized error handling with structured error responses
-- **Development**: Hot reload with Vite middleware integration in development mode
+The server is a RESTful API built with Express.js and TypeScript. It features a structured API, custom logging, and centralized error handling. Authentication is handled via Firebase Authentication, supporting email/password, Google, and Facebook social logins.
 
 ## Database Layer
 
-PostgreSQL database with Drizzle ORM for type-safe database operations:
+PostgreSQL is used with Drizzle ORM for type-safe operations. The schema includes tables for users, exam categories, questions, user progress, quiz sessions, achievements, and comprehensive gamification data (XP, achievements, daily challenges, store, leaderboard). Neon Database provides serverless hosting.
 
-- **ORM**: Drizzle ORM with PostgreSQL dialect for database schema management and queries
-- **Schema Design**: Relational model with tables for users, exam categories, questions, user progress, quiz sessions, and achievements
-- **Database Provider**: Neon Database serverless PostgreSQL for cloud hosting
-- **Migrations**: Drizzle Kit for schema migrations and database versioning
+## System Design Choices
 
-## Data Models
-
-The application uses a comprehensive relational schema:
-
-- **Users**: Store user profiles with levels, points, and streak tracking
-- **Exam Categories**: Organize questions by subject areas with icons and colors
-- **Questions**: Store quiz content with multiple choice options, difficulty levels, and explanations
-- **User Progress**: Track individual performance metrics per exam category
-- **Quiz Sessions**: Record completed quiz attempts with scores and timestamps
-- **Achievements**: Define gamification rewards with unlock criteria
-
-## Authentication and Authorization
-
-Currently implements a mock authentication system:
-
-- **User Management**: Basic user CRUD operations without authentication middleware
-- **Session Handling**: Uses mock user ID for development and testing
-- **Future Enhancement**: Designed to accommodate full authentication integration
-
-## User Interface Design
-
-Modern, responsive design system with comprehensive component library and theming:
-
-- **Design System**: Custom color palette with CSS variables for light/dark theming
-- **Component Library**: shadcn/ui components with Radix UI primitives
-- **Responsive Design**: Mobile-first approach with Tailwind breakpoints
-- **Accessibility**: ARIA-compliant components and keyboard navigation support
-- **Animation System**: Consistent motion design with Framer Motion and custom animation wrappers
-- **Theme Support**: Dark/light mode switching with system preference detection
-- **Internationalization**: Turkish/English language support with react-i18next
-- **PWA Features**: Installation prompts, offline support, and native app-like experience
-
-## Quiz System Architecture
-
-Interactive quiz experience with real-time features:
-
-- **Timer System**: Countdown timer with automatic quiz submission
-- **Progress Tracking**: Visual progress indicators and score calculation
-- **Feedback System**: Immediate answer validation with explanations
-- **Results Management**: Detailed performance analytics and achievements
-- **Gamification**: Lives system, streak tracking, and point rewards
+- **AI-Powered Learning**: Integration with Claude AI for personalized study plans, smart question generation based on user weaknesses, adaptive difficulty, and an AI tutoring chatbot. AI-generated content persists and automatically queues questions for database integration.
+- **Gamification**: Extensive Duolingo-style gamification with XP, lives, streaks, achievements, daily challenges, and a leaderboard.
+- **Social Learning**: Features include a friend system, challenge system (head-to-head quizzes), weekly leagues, study groups, and a social activity feed.
+- **Analytics Dashboard**: Comprehensive personal learning dashboard with interactive charts (Recharts) for performance analysis, study pattern insights, and goal tracking.
+- **Turkish Exam Specifics**: Dedicated features for Turkish national exams (YKS, KPSS, Ehliyet, SRC) including authentic mock exam interfaces, specific scoring systems, and question banks from official sources.
+- **Admin Panel**: Advanced admin panel with multi-admin support, role-based access control, CRUD operations for content and users, bulk operations (e.g., PDF import for questions), and detailed statistics.
+- **Security & Production Readiness**: Implemented Firebase Admin SDK for server-side auth, robust security middleware, error reporting, health checks, and SEO optimization.
 
 # External Dependencies
 
 ## Database Services
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling
-- **Drizzle ORM**: Type-safe database client with schema management
-- **connect-pg-simple**: PostgreSQL session store for future authentication
+- **Neon Database**: Serverless PostgreSQL hosting.
+- **Drizzle ORM**: Type-safe database client.
+
+## Authentication
+- **Firebase Authentication**: User authentication (email/password, Google, Facebook).
+- **Firebase Admin SDK**: Server-side authentication and user management.
 
 ## UI and Design
-- **Tailwind CSS**: Utility-first CSS framework for styling
-- **shadcn/ui**: Pre-built component library based on Radix UI
-- **Radix UI**: Accessible component primitives for complex UI patterns
-- **Framer Motion**: Animation library for smooth transitions and interactions
-- **Lucide React**: Icon library for consistent iconography
+- **Tailwind CSS**: Utility-first CSS framework.
+- **shadcn/ui**: Pre-built component library based on Radix UI.
+- **Radix UI**: Accessible component primitives.
+- **Framer Motion**: Animation library.
+- **Lucide React**: Icon library.
+- **Recharts**: Charting library for data visualizations.
 
 ## Development Tools
-- **Vite**: Build tool and development server with HMR support
-- **TypeScript**: Static typing for both frontend and backend code
-- **TanStack React Query**: Server state management with caching and background updates
-- **React Hook Form**: Form validation and management
-- **Zod**: Schema validation for API requests and responses
+- **Vite**: Build tool and development server.
+- **TypeScript**: Static typing for development.
+- **TanStack React Query**: Server state management.
+- **React Hook Form**: Form validation.
+- **Zod**: Schema validation.
+- **Multer**: File upload handling (for bulk question import).
 
 ## Modern Web Features
-- **PWA Support**: Service worker, web app manifest, and installation prompts
-- **Theme System**: Dark/light mode with ThemeProvider and CSS custom properties
-- **Internationalization**: Multi-language support with react-i18next and automatic detection
-- **Animation Framework**: Custom motion components and transition variants with Framer Motion
-- **SEO Optimization**: Meta tags, Open Graph, and semantic HTML structure
+- **PWA Support**: Service worker and web app manifest.
+- **react-i18next**: Internationalization (Turkish/English).
 
-## Routing and Navigation
-- **Wouter**: Lightweight client-side routing library
-- **React Router**: Alternative routing solution (configured but not actively used)
+## AI Integration
+- **Claude AI**: For intelligent learning features (tutoring, question generation, adaptive difficulty).
 
 ## Utilities and Helpers
-- **clsx**: Conditional CSS class composition
-- **date-fns**: Date manipulation and formatting
-- **class-variance-authority**: Component variant management
-- **nanoid**: Unique ID generation for client-side operations
+- **clsx**: Conditional CSS class composition.
+- **date-fns**: Date manipulation.
+- **nanoid**: Unique ID generation.
