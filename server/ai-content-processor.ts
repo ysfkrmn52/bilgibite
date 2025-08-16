@@ -152,7 +152,10 @@ ${fileContent}`
     return parsedContent;
   } catch (error) {
     console.error('AI content processing error:', error);
-    console.error('Response text was:', responseText?.substring(0, 500));
+    const responseTextLocal = (response as any)?.content?.[0]?.text;
+    if (responseTextLocal) {
+      console.error('Response text was:', responseTextLocal.substring(0, 500));
+    }
     throw new Error('İçerik işleme sırasında hata oluştu');
   }
 }
@@ -160,29 +163,100 @@ ${fileContent}`
 export async function processContentFile(req: Request, res: Response) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'Dosya gerekli' });
+      return res.status(400).json({ 
+        error: 'Dosya gerekli',
+        message: 'Lütfen yüklemek istediğiniz dosyayı seçin.'
+      });
+    }
+
+    // File size check (50MB limit)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (req.file.size > maxSize) {
+      return res.status(400).json({ 
+        error: 'Dosya çok büyük',
+        message: `Dosya boyutu 50MB'dan küçük olmalıdır. Mevcut dosya: ${(req.file.size / 1024 / 1024).toFixed(2)}MB`
+      });
     }
 
     const { contentType } = req.body;
     if (!['questions', 'courses', 'lessons'].includes(contentType)) {
-      return res.status(400).json({ error: 'Geçersiz içerik tipi' });
+      return res.status(400).json({ 
+        error: 'Geçersiz içerik tipi',
+        message: 'Sadece sorular, kurslar veya dersler yüklenebilir.'
+      });
     }
+
+    console.log(`Processing ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)}MB) as ${contentType}`);
 
     const fileContent = req.file.buffer.toString('utf-8');
     const processedContent = await processEducationContent(fileContent, contentType);
 
-    res.json({
-      success: true,
-      data: processedContent,
-      originalFileName: req.file.originalname,
-      processedAt: new Date().toISOString()
-    });
+    // Save questions to storage if content type is questions
+    if (contentType === 'questions' && processedContent.questions) {
+      const { storage } = await import('./storage');
+      
+      // Prepare questions for insertion
+      const questionsToAdd = processedContent.questions.map((q: any) => ({
+        examCategoryId: 'yks', // Default to YKS, could be dynamic
+        subject: q.category || 'genel',
+        difficulty: q.difficulty || 'medium',
+        questionText: q.text,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || null,
+        points: 10 // Default points per question
+      }));
+
+      const addedQuestions = await storage.addQuestions(questionsToAdd);
+      const totalQuestions = await storage.getTotalQuestionCount();
+
+      console.log(`Added ${addedQuestions.length} questions to database. Total: ${totalQuestions}`);
+
+      res.json({
+        success: true,
+        message: `${addedQuestions.length} soru başarıyla yüklendi!`,
+        data: {
+          ...processedContent,
+          questionsAdded: addedQuestions.length,
+          totalQuestionsInSystem: totalQuestions
+        },
+        originalFileName: req.file.originalname,
+        fileSize: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`,
+        processedAt: new Date().toISOString()
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'İçerik başarıyla işlendi!',
+        data: processedContent,
+        originalFileName: req.file.originalname,
+        fileSize: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`,
+        processedAt: new Date().toISOString()
+      });
+    }
 
   } catch (error) {
     console.error('Content processing error:', error);
+    
+    let errorMessage = 'Dosya işleme sırasında hata oluştu';
+    let details = error instanceof Error ? error.message : 'Bilinmeyen hata';
+    
+    // Specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes('JSON')) {
+        errorMessage = 'AI yanıtı işlenirken hata oluştu';
+        details = 'AI tarafından üretilen içerik geçersiz. Lütfen tekrar deneyin.';
+      } else if (error.message.includes('İçerik işleme')) {
+        errorMessage = 'AI içerik üretimi başarısız';
+        details = 'AI servisi şu anda kullanılamıyor. Lütfen daha sonra deneyin.';
+      }
+    }
+    
     res.status(500).json({ 
-      error: 'Dosya işleme hatası',
-      details: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: errorMessage,
+      details: details,
+      fileName: req.file?.originalname,
+      timestamp: new Date().toISOString()
     });
   }
 }

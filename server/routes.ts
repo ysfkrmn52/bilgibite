@@ -47,11 +47,11 @@ import {
   asyncHandler 
 } from "./middleware/error-handler";
 
-// Configure multer for file uploads
+// Configure multer for file uploads - increased limit for educational content
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit for large educational content
   }
 });
 
@@ -396,21 +396,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Dashboard Routes
   app.get("/api/admin/stats", async (req, res) => {
     try {
-      // Mock admin stats - replace with real database queries
+      // Get dynamic question count from storage
+      const totalQuestions = await storage.getTotalQuestionCount();
+      
       const stats = {
-        totalQuestions: 1250,
+        totalQuestions,
         activeUsers: 342,
         dailyQuizzes: 89,
         successRate: 73,
         recentActivities: [
           { description: "Yeni kullanıcı kaydı: Ali M.", time: "2 dakika önce" },
-          { description: "50 yeni soru eklendi (YKS Matematik)", time: "15 dakika önce" },
+          { description: `${totalQuestions} soru sistemde mevcut`, time: "Şimdi" },
           { description: "Quiz tamamlandı: Zeynep K.", time: "28 dakika önce" },
-          { description: "Sistem güncellendi", time: "1 saat önce" }
+          { description: "AI destekli soru yükleme aktif", time: "1 saat önce" }
         ]
       };
       res.json(stats);
     } catch (error) {
+      console.error("Admin stats error:", error);
       res.status(500).json({ error: "İstatistikler alınamadı" });
     }
   });

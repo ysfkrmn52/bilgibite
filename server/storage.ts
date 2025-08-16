@@ -27,6 +27,8 @@ export interface IStorage {
   // Questions
   getQuestionsByCategory(examCategoryId: string, limit?: number): Promise<Question[]>;
   getQuestion(id: string): Promise<Question | undefined>;
+  addQuestions(questions: InsertQuestion[]): Promise<Question[]>;
+  getTotalQuestionCount(): Promise<number>;
 
   // User Progress
   getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined>;
@@ -243,6 +245,26 @@ export class MemStorage implements IStorage {
 
   async getQuestion(id: string): Promise<Question | undefined> {
     return this.questions.get(id);
+  }
+
+  async addQuestions(questions: InsertQuestion[]): Promise<Question[]> {
+    const addedQuestions: Question[] = [];
+    
+    for (const insertQuestion of questions) {
+      const id = randomUUID();
+      const question: Question = {
+        ...insertQuestion,
+        id
+      };
+      this.questions.set(id, question);
+      addedQuestions.push(question);
+    }
+    
+    return addedQuestions;
+  }
+
+  async getTotalQuestionCount(): Promise<number> {
+    return this.questions.size;
   }
 
   async getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined> {
