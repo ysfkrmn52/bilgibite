@@ -163,7 +163,7 @@ const Analytics: React.FC = () => {
             <h1 className="text-3xl font-bold text-black">
               📊 İstatistikler
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-black mt-1">
               Öğrenme sürecinizi analiz edin ve gelişim alanlarınızı keşfedin
             </p>
           </div>
@@ -195,17 +195,19 @@ const Analytics: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Decorative top stripe */}
+              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100">Toplam XP</p>
-                    <p className="text-3xl font-bold">15,420</p>
+                    <p className="text-black">Toplam XP</p>
+                    <p className="text-3xl font-bold text-blue-600">15,420</p>
                   </div>
-                  <Zap className="w-8 h-8 text-blue-200" />
+                  <Zap className="w-8 h-8 text-blue-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-blue-100">+320 bu hafta</p>
+                  <p className="text-sm text-black">+320 bu hafta</p>
                 </div>
               </CardContent>
             </Card>
@@ -216,17 +218,19 @@ const Analytics: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Decorative top stripe */}
+              <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100">Ortalama Başarı</p>
-                    <p className="text-3xl font-bold">86%</p>
+                    <p className="text-black">Ortalama Başarı</p>
+                    <p className="text-3xl font-bold text-green-600">86%</p>
                   </div>
-                  <Target className="w-8 h-8 text-green-200" />
+                  <Target className="w-8 h-8 text-green-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-green-100">+4% artış</p>
+                  <p className="text-sm text-black">+4% artış</p>
                 </div>
               </CardContent>
             </Card>
@@ -237,17 +241,19 @@ const Analytics: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <Card className="bg-gradient-to-br from-white via-purple-50 to-pink-50 border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Decorative top stripe */}
+              <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100">Çalışma Süresi</p>
-                    <p className="text-3xl font-bold">42h</p>
+                    <p className="text-black">Çalışma Süresi</p>
+                    <p className="text-3xl font-bold text-purple-600">42h</p>
                   </div>
-                  <Clock className="w-8 h-8 text-purple-200" />
+                  <Clock className="w-8 h-8 text-purple-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-purple-100">Bu ay toplam</p>
+                  <p className="text-sm text-black">Bu ay toplam</p>
                 </div>
               </CardContent>
             </Card>
@@ -258,17 +264,19 @@ const Analytics: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-red-50 border border-orange-100 shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Decorative top stripe */}
+              <div className="h-1 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"></div>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100">Güncel Seri</p>
-                    <p className="text-3xl font-bold">11</p>
+                    <p className="text-black">Güncel Seri</p>
+                    <p className="text-3xl font-bold text-orange-600">11</p>
                   </div>
-                  <Activity className="w-8 h-8 text-orange-200" />
+                  <Activity className="w-8 h-8 text-orange-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-orange-100">Günlük çalışma</p>
+                  <p className="text-sm text-black">Günlük çalışma</p>
                 </div>
               </CardContent>
             </Card>
@@ -290,10 +298,11 @@ const Analytics: React.FC = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Daily Progress Chart */}
-              <Card>
+              <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+                <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                 <CardHeader>
-                  <CardTitle>Günlük İlerleme</CardTitle>
-                  <CardDescription>Son 7 günün XP ve başarı oranı</CardDescription>
+                  <CardTitle className="text-black">Günlük İlerleme</CardTitle>
+                  <CardDescription className="text-black">Son 7 günün XP ve başarı oranı</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -312,10 +321,11 @@ const Analytics: React.FC = () => {
               </Card>
 
               {/* Category Performance */}
-              <Card>
+              <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg">
+                <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
                 <CardHeader>
-                  <CardTitle>Kategori Performansı</CardTitle>
-                  <CardDescription>Alan bazında başarı oranları</CardDescription>
+                  <CardTitle className="text-black">Kategori Performansı</CardTitle>
+                  <CardDescription className="text-black">Alan bazında başarı oranları</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -332,10 +342,11 @@ const Analytics: React.FC = () => {
             </div>
 
             {/* Study Time Distribution */}
-            <Card>
+            <Card className="bg-gradient-to-br from-white via-purple-50 to-pink-50 border border-purple-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
               <CardHeader>
-                <CardTitle>Çalışma Süresi Dağılımı</CardTitle>
-                <CardDescription>Kategorilere göre harcanan zaman</CardDescription>
+                <CardTitle className="text-black">Çalışma Süresi Dağılımı</CardTitle>
+                <CardDescription className="text-black">Kategorilere göre harcanan zaman</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>

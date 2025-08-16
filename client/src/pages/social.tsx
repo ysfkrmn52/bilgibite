@@ -208,8 +208,9 @@ export default function SocialPage() {
 
             {/* Quick Stats */}
             <div className="flex items-center gap-4">
-              <Card className="p-3 bg-white">
-                <div className="flex items-center gap-2 text-center">
+              <Card className="p-3 bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+                <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                <div className="flex items-center gap-2 text-center mt-2">
                   <Users className="h-4 w-4 text-blue-600" />
                   <div>
                     <div className="text-lg font-bold text-blue-600">{friends.length}</div>
@@ -218,8 +219,9 @@ export default function SocialPage() {
                 </div>
               </Card>
               
-              <Card className="p-3 bg-white">
-                <div className="flex items-center gap-2 text-center">
+              <Card className="p-3 bg-gradient-to-br from-white via-yellow-50 to-orange-50 border border-yellow-100 shadow-lg">
+                <div className="h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
+                <div className="flex items-center gap-2 text-center mt-2">
                   <Trophy className="h-4 w-4 text-yellow-600" />
                   <div>
                     <div className="text-lg font-bold text-yellow-600">
@@ -230,8 +232,9 @@ export default function SocialPage() {
                 </div>
               </Card>
 
-              <Card className="p-3 bg-white">
-                <div className="flex items-center gap-2 text-center">
+              <Card className="p-3 bg-gradient-to-br from-white via-purple-50 to-pink-50 border border-purple-100 shadow-lg">
+                <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
+                <div className="flex items-center gap-2 text-center mt-2">
                   <Zap className="h-4 w-4 text-purple-600" />
                   <div>
                     <div className="text-lg font-bold text-purple-600">{userChallenges.length}</div>
@@ -283,9 +286,10 @@ export default function SocialPage() {
             {/* Social Feed */}
             <TabsContent value="feed" className="space-y-6">
               <motion.div variants={itemVariants}>
-                <Card>
+                <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+                  <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-black">
                       <MessageSquare className="h-5 w-5 text-blue-600" />
                       Arkadaş Aktiviteleri
                     </CardTitle>

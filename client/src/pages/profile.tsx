@@ -83,7 +83,7 @@ const ProfilePage: React.FC = () => {
     queryFn: async () => {
       const response = await fetch('/api/user/profile');
       if (!response.ok) throw new Error('Failed to fetch profile');
-      return response.json() as UserProfile;
+      return response.json();
     }
   });
 
@@ -93,7 +93,7 @@ const ProfilePage: React.FC = () => {
     queryFn: async () => {
       const response = await fetch('/api/user/stats');
       if (!response.ok) throw new Error('Failed to fetch stats');
-      return response.json() as UserStats;
+      return response.json();
     }
   });
 
@@ -103,7 +103,7 @@ const ProfilePage: React.FC = () => {
     queryFn: async () => {
       const response = await fetch('/api/user/achievements');
       if (!response.ok) throw new Error('Failed to fetch achievements');
-      return response.json() as Achievement[];
+      return response.json();
     }
   });
 
@@ -168,7 +168,7 @@ const ProfilePage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border rounded-lg p-8"
+          className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg rounded-lg p-8"
         >
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="flex items-center gap-6">
@@ -237,7 +237,8 @@ const ProfilePage: React.FC = () => {
 
           {/* Level and XP */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600">Seviye {profile?.level}</div>
                 <div className="text-black text-sm">
@@ -247,7 +248,8 @@ const ProfilePage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-orange-50 border-orange-200">
+            <Card className="bg-gradient-to-br from-white via-orange-50 to-yellow-50 border border-orange-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-orange-500 via-yellow-500 to-red-500"></div>
               <CardContent className="p-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-orange-600">
                   <Flame className="w-5 h-5" />
@@ -257,7 +259,8 @@ const ProfilePage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-green-50 border-green-200">
+            <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-green-600">{earnedAchievements.length}</div>
                 <div className="text-black text-sm">Başarı Rozetleri</div>
@@ -276,7 +279,8 @@ const ProfilePage: React.FC = () => {
             transition={{ delay: 0.1 }}
             className="lg:col-span-2"
           >
-            <Card className="bg-white border">
+            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
               <CardHeader>
                 <CardTitle className="text-black flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -373,7 +377,8 @@ const ProfilePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-white border">
+            <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
               <CardHeader>
                 <CardTitle className="text-black flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
@@ -414,7 +419,8 @@ const ProfilePage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="bg-white border">
+          <Card className="bg-gradient-to-br from-white via-yellow-50 to-orange-50 border border-yellow-100 shadow-lg">
+            <div className="h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
             <CardHeader>
               <CardTitle className="text-black flex items-center gap-2">
                 <Award className="w-5 h-5" />

@@ -193,9 +193,10 @@ export default function Rozetler() {
             </Card>
 
             {/* Quick Actions */}
-            <Card>
+            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
+              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
               <CardHeader>
-                <CardTitle className="text-sm">Hızlı Erişim</CardTitle>
+                <CardTitle className="text-sm text-black">Hızlı Erişim</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button variant="outline" size="sm" className="w-full justify-start" asChild>
@@ -277,8 +278,8 @@ export default function Rozetler() {
                             <Card className={`
                               h-48 relative transition-all duration-300 hover:shadow-lg cursor-pointer
                               ${badge.earned 
-                                ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100' 
-                                : 'border-gray-200 bg-gray-50 opacity-75'
+                                ? 'border-green-300 bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg' 
+                                : 'border-gray-200 bg-gradient-to-br from-white via-gray-50 to-gray-100 opacity-75'
                               }
                             `}>
                               <CardContent className="p-6 h-full flex flex-col justify-between">

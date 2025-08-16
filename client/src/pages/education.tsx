@@ -219,7 +219,7 @@ export default function Education() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Konular</h2>
+          <h2 className="text-xl font-semibold mb-4 text-black">Konular</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             {subjects?.map((category) => {
               const IconComponent = iconMap[category.icon as keyof typeof iconMap] || BookOpen;
@@ -305,7 +305,9 @@ export default function Education() {
                   whileHover={{ y: -5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-200 border-0 bg-white backdrop-blur-sm">
+                  <Card className="h-full bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300">
+                    {/* Decorative top stripe */}
+                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start mb-2">
                         <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
@@ -323,7 +325,7 @@ export default function Education() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center justify-between text-sm text-black">
                           <div className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
                             <span>{course.instructor}</span>
@@ -334,7 +336,7 @@ export default function Education() {
                           </div>
                         </div>
                         
-                        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center justify-between text-sm text-black">
                           <div className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
                             <span>{course.totalStudents} öğrenci</span>

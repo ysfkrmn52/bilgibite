@@ -135,10 +135,12 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Card className="bg-gradient-to-r from-primary to-secondary text-white relative overflow-hidden">
+          <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+            {/* Decorative top stripe */}
+            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
             <CardContent className="p-6 relative z-10">
               <motion.h2 
-                className="text-2xl md:text-3xl font-bold mb-2"
+                className="text-2xl md:text-3xl font-bold mb-2 text-black"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
@@ -147,7 +149,7 @@ export default function Dashboard() {
                 Hoş geldin, {mockUser.username.split(' ')[0]}!
               </motion.h2>
               <motion.p 
-                className="text-white/90 mb-4"
+                className="text-black mb-4"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
@@ -160,13 +162,13 @@ export default function Dashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <div className="bg-white/20 rounded-lg px-3 py-1">
-                  <span className="text-sm font-medium">Seviye: </span>
-                  <span className="font-bold" data-testid="user-level">{mockUser.level}</span>
+                <div className="bg-blue-100 rounded-lg px-3 py-1 border border-blue-200">
+                  <span className="text-sm font-medium text-black">Seviye: </span>
+                  <span className="font-bold text-blue-600" data-testid="user-level">{mockUser.level}</span>
                 </div>
-                <div className="bg-white/20 rounded-lg px-3 py-1">
-                  <span className="text-sm font-medium">Puan: </span>
-                  <span className="font-bold" data-testid="user-points">{mockUser.totalPoints.toLocaleString()}</span>
+                <div className="bg-purple-100 rounded-lg px-3 py-1 border border-purple-200">
+                  <span className="text-sm font-medium text-black">Puan: </span>
+                  <span className="font-bold text-purple-600" data-testid="user-points">{mockUser.totalPoints.toLocaleString()}</span>
                 </div>
               </motion.div>
               <div className="absolute top-4 right-4 opacity-20">
@@ -193,7 +195,7 @@ export default function Dashboard() {
           transition={{ delay: 0.4, duration: 0.6 }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white" id="exams">Sınav Kategorileri</h3>
+            <h3 className="text-xl font-bold text-black" id="exams">Sınav Kategorileri</h3>
             <Button
               onClick={() => setShowCategorySelection(true)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
@@ -230,13 +232,13 @@ export default function Dashboard() {
                       🧠
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">
+                  <h3 className="text-xl font-bold text-black mb-2">
                     AI Öğrenme Merkezi
                   </h3>
-                  <p className="text-blue-600 dark:text-blue-400 text-sm mb-4">
+                  <p className="text-black text-sm mb-4">
                     AI öğretmen, kişisel analiz, akıllı soru üretimi!
                   </p>
-                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  <Badge className="bg-blue-100 text-blue-800">
                     AI Destekli!
                   </Badge>
                 </CardContent>
@@ -259,13 +261,13 @@ export default function Dashboard() {
                       👥
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
+                  <h3 className="text-xl font-bold text-black mb-2">
                     Sosyal Öğrenme
                   </h3>
-                  <p className="text-green-600 dark:text-green-400 text-sm mb-4">
+                  <p className="text-black text-sm mb-4">
                     Arkadaşlarla yarış, liglerde mücadele et!
                   </p>
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Badge className="bg-green-100 text-green-800">
                     Yeni!
                   </Badge>
                 </CardContent>
