@@ -298,8 +298,8 @@ export default function SocialPage() {
                         </p>
                       </div>
                     ) : (
-                      socialFeed.map((activity: any) => (
-                        <div key={activity.activity.id} className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                      socialFeed.map((activity: any, index: number) => (
+                        <div key={`${activity.activity.id}-${index}`} className="flex items-start gap-3 p-4 bg-white border rounded-lg">
                           <Avatar className="h-10 w-10">
                             <AvatarImage src="/avatars/user.svg" />
                             <AvatarFallback>{activity.user.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
@@ -353,8 +353,8 @@ export default function SocialPage() {
                           <p className="text-gray-600 dark:text-gray-400">Henüz arkadaşın yok</p>
                         </div>
                       ) : (
-                        friends.map((friend: any) => (
-                          <div key={friend.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        friends.map((friend: any, index: number) => (
+                          <div key={`${friend.id}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
                                 <AvatarImage src="/avatars/user.svg" />
@@ -394,8 +394,8 @@ export default function SocialPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {discoveredUsers.slice(0, 3).map((user: any) => (
-                        <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                      {discoveredUsers.slice(0, 3).map((user: any, index: number) => (
+                        <div key={`${user.id}-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
                               <AvatarImage src="/avatars/user.svg" />

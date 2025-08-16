@@ -243,12 +243,12 @@ export default function Education() {
                       selectedCategory === category.id ? 'text-white' : `text-${category.color}-600 dark:text-${category.color}-400`
                     }`} />
                     <span className={`text-xs font-medium text-center ${
-                      selectedCategory === category.id ? 'text-white' : 'text-gray-700 dark:text-gray-300'
+                      selectedCategory === category.id ? 'text-white' : 'text-black'
                     }`}>
                       {category.name}
                     </span>
                     <span className={`text-xs opacity-75 text-center ${
-                      selectedCategory === category.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+                      selectedCategory === category.id ? 'text-white' : 'text-black'
                     }`}>
                       {category.description}
                     </span>
@@ -311,13 +311,13 @@ export default function Education() {
                         <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="w-4 h-4 fill-current" />
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{(course.rating / 10).toFixed(1)}</span>
+                          <span className="text-xs font-medium text-black">{(course.rating / 10).toFixed(1)}</span>
                         </div>
                       </div>
-                      <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <CardTitle className="text-lg font-semibold text-black">
                         {course.title}
                       </CardTitle>
-                      <CardDescription className="text-sm text-gray-600 dark:text-gray-300">
+                      <CardDescription className="text-sm text-black">
                         {course.description}
                       </CardDescription>
                     </CardHeader>

@@ -1,709 +1,453 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { 
-  User, 
-  Edit3, 
-  Trophy, 
-  Target, 
+import {
+  User,
+  Trophy,
+  Star,
   Calendar,
+  Clock,
   BookOpen,
-  BarChart3,
+  Target,
   Award,
-  Flame,
-  Camera,
-  Save,
-  RefreshCw,
+  Settings,
+  Edit,
   Mail,
   Phone,
   MapPin,
-  School,
-  Users,
-  Clock
+  GraduationCap,
+  Brain,
+  Zap,
+  TrendingUp,
+  Activity,
+  Flame,
+  Save,
+  X
 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
   username: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  location: string;
-  school: string;
+  fullName: string;
   bio: string;
   avatar: string;
   level: number;
-  totalXP: number;
-  streakCount: number;
+  xp: number;
+  streak: number;
   joinDate: string;
-  lastActive: string;
-  goals: string[];
-  preferences: {
-    examFocus: string[];
-    dailyGoal: number;
-    difficulty: string;
-    notifications: boolean;
-    privacy: string;
-  };
+  location: string;
+  grade: string;
+  targetExam: string;
 }
 
 interface UserStats {
   totalQuizzesTaken: number;
   averageScore: number;
-  totalTimeSpent: number;
-  bestStreak: number;
-  completedChallenges: number;
-  achievementsCount: number;
-  weeklyProgress: number[];
-  categoryStats: { category: string; score: number; quizCount: number }[];
+  totalStudyTime: number;
+  strongestSubject: string;
+  weakestSubject: string;
+  currentStreak: number;
+  longestStreak: number;
 }
 
-export default function Profile() {
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earnedDate?: string;
+  category: string;
+}
+
+const ProfilePage: React.FC = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
 
-  // Profile form state
-  const [profileData, setProfileData] = useState<Partial<UserProfile>>({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    location: '',
-    school: '',
-    bio: '',
-    goals: [],
-    preferences: {
-      examFocus: [],
-      dailyGoal: 20,
-      difficulty: 'intermediate',
-      notifications: true,
-      privacy: 'public'
-    }
-  });
-
-  // Queries
+  // Fetch user profile
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/user/profile'],
-    queryFn: () => apiRequest('GET', '/api/user/profile').then(res => res.json()),
-    onSuccess: (data) => {
-      setProfileData(data);
+    queryFn: async () => {
+      const response = await fetch('/api/user/profile');
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      return response.json() as UserProfile;
     }
   });
 
+  // Fetch user stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/user/stats'],
-    queryFn: () => apiRequest('GET', '/api/user/stats').then(res => res.json())
+    queryFn: async () => {
+      const response = await fetch('/api/user/stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return response.json() as UserStats;
+    }
   });
 
+  // Fetch achievements
   const { data: achievements, isLoading: achievementsLoading } = useQuery({
     queryKey: ['/api/user/achievements'],
-    queryFn: () => apiRequest('GET', '/api/user/achievements').then(res => res.json())
+    queryFn: async () => {
+      const response = await fetch('/api/user/achievements');
+      if (!response.ok) throw new Error('Failed to fetch achievements');
+      return response.json() as Achievement[];
+    }
   });
 
-  // Mutations
+  // Update profile mutation
   const updateProfileMutation = useMutation({
-    mutationFn: (data: Partial<UserProfile>) => 
-      apiRequest('PUT', '/api/user/profile', data),
-    onSuccess: () => {
-      toast({
-        title: 'Başarılı',
-        description: 'Profil güncellendi',
+    mutationFn: async (updatedData: Partial<UserProfile>) => {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
       });
+      if (!response.ok) throw new Error('Failed to update profile');
+      return response.json();
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       setIsEditing(false);
+      setEditedProfile({});
+      toast({ title: 'Başarılı', description: 'Profil bilgileri güncellendi' });
     },
     onError: () => {
-      toast({
-        title: 'Hata',
-        description: 'Profil güncellenirken hata oluştu',
-        variant: 'destructive'
-      });
+      toast({ title: 'Hata', description: 'Profil güncellenirken bir hata oluştu', variant: 'destructive' });
     }
   });
 
-  const uploadAvatarMutation = useMutation({
-    mutationFn: (formData: FormData) =>
-      apiRequest('POST', '/api/user/avatar', formData),
-    onSuccess: () => {
-      toast({
-        title: 'Başarılı',
-        description: 'Profil fotoğrafı güncellendi',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-    }
-  });
-
-  // Functions
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileData);
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedProfile(profile || {});
   };
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('avatar', file);
-    uploadAvatarMutation.mutate(formData);
+  const handleSave = () => {
+    updateProfileMutation.mutate(editedProfile);
   };
 
-  const calculateLevelProgress = (xp: number) => {
-    const currentLevelXP = Math.floor(xp / 1000) * 1000;
-    const nextLevelXP = currentLevelXP + 1000;
-    return ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedProfile({});
   };
 
-  if (profileLoading) {
+  const handleInputChange = (field: keyof UserProfile, value: string) => {
+    setEditedProfile(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (profileLoading || statsLoading || achievementsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
+  const earnedAchievements = achievements?.filter(a => a.earned) || [];
+  const xpToNextLevel = ((profile?.level || 0) + 1) * 1000;
+  const currentLevelXp = profile?.xp || 0;
+  const progressToNextLevel = (currentLevelXp % 1000) / 10;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
         {/* Profile Header */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              <div className="relative">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={profile?.avatar} />
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    {profile?.firstName?.charAt(0) || profile?.username?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  size="sm"
-                  className="absolute -bottom-2 -right-2 rounded-full p-2 h-auto"
-                  onClick={() => document.getElementById('avatar-upload')?.click()}
-                  data-testid="button-upload-avatar"
-                >
-                  <Camera className="w-3 h-3" />
-                </Button>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarUpload}
-                  data-testid="input-avatar-upload"
-                />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border rounded-lg p-8"
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex items-center gap-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profile?.avatar || "/avatars/user.svg"} />
+                <AvatarFallback className="text-2xl">{profile?.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              
+              <div className="space-y-2">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="fullName" className="text-black">Ad Soyad</Label>
+                      <Input
+                        id="fullName"
+                        value={editedProfile.fullName || ''}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="bio" className="text-black">Hakkımda</Label>
+                      <Textarea
+                        id="bio"
+                        value={editedProfile.bio || ''}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h1 className="text-3xl font-bold text-black">{profile?.fullName || profile?.username}</h1>
+                    <p className="text-black text-lg">@{profile?.username}</p>
+                    {profile?.bio && <p className="text-black max-w-md">{profile.bio}</p>}
+                  </>
+                )}
               </div>
-
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold">
-                    {profile?.firstName && profile?.lastName 
-                      ? `${profile.firstName} ${profile.lastName}` 
-                      : profile?.username || 'Kullanıcı'
-                    }
-                  </h1>
-                  <Badge variant="secondary">Seviye {profile?.level || 1}</Badge>
-                </div>
-                
-                <p className="text-muted-foreground mb-4">
-                  {profile?.bio || 'Henüz bir bio eklenmemiş'}
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm">{profile?.totalXP || 0} XP</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Flame className="w-4 h-4 text-orange-500" />
-                    <span className="text-sm">{profile?.streakCount || 0} gün seri</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm">Üye: {new Date(profile?.joinDate || Date.now()).getFullYear()}</span>
-                  </div>
-                </div>
-
-                {/* Level Progress */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Seviye {profile?.level || 1}</span>
-                    <span>Seviye {(profile?.level || 1) + 1}</span>
-                  </div>
-                  <Progress value={calculateLevelProgress(profile?.totalXP || 0)} className="h-2" />
-                </div>
-              </div>
-
-              <Button 
-                variant={isEditing ? "default" : "outline"}
-                onClick={() => setIsEditing(!isEditing)}
-                data-testid="button-edit-profile"
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                {isEditing ? 'Düzenleme Modu' : 'Profili Düzenle'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Profile Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Profil
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              İstatistikler
-            </TabsTrigger>
-            <TabsTrigger value="achievements" className="flex items-center gap-2">
-              <Award className="w-4 h-4" />
-              Başarımlar
-            </TabsTrigger>
-            <TabsTrigger value="goals" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Hedefler
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Ayarlar
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Kişisel Bilgiler</CardTitle>
-                  <CardDescription>Temel profil bilgilerinizi güncelleyin</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">Ad</Label>
-                      <Input
-                        id="firstName"
-                        value={profileData.firstName || ''}
-                        onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                        disabled={!isEditing}
-                        data-testid="input-first-name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Soyad</Label>
-                      <Input
-                        id="lastName"
-                        value={profileData.lastName || ''}
-                        onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                        disabled={!isEditing}
-                        data-testid="input-last-name"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">E-posta</Label>
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        value={profile?.email || ''}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone">Telefon</Label>
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        value={profileData.phone || ''}
-                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                        disabled={!isEditing}
-                        data-testid="input-phone"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="location">Konum</Label>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="location"
-                        value={profileData.location || ''}
-                        onChange={(e) => setProfileData({...profileData, location: e.target.value})}
-                        disabled={!isEditing}
-                        placeholder="Şehir, Ülke"
-                        data-testid="input-location"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="school">Okul/Kurum</Label>
-                    <div className="flex items-center gap-2">
-                      <School className="w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="school"
-                        value={profileData.school || ''}
-                        onChange={(e) => setProfileData({...profileData, school: e.target.value})}
-                        disabled={!isEditing}
-                        data-testid="input-school"
-                      />
-                    </div>
-                  </div>
-
-                  {isEditing && (
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsEditing(false)}>
-                        İptal
-                      </Button>
-                      <Button 
-                        onClick={handleSaveProfile}
-                        disabled={updateProfileMutation.isPending}
-                        data-testid="button-save-profile"
-                      >
-                        {updateProfileMutation.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                        ) : (
-                          <Save className="w-4 h-4 mr-2" />
-                        )}
-                        Kaydet
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Hakkımda</CardTitle>
-                  <CardDescription>Kendinizi tanıtın</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="bio">Bio</Label>
-                    <textarea
-                      id="bio"
-                      className="w-full min-h-[120px] p-3 border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={profileData.bio || ''}
-                      onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                      disabled={!isEditing}
-                      placeholder="Kendiniz hakkında birkaç kelime..."
-                      data-testid="textarea-bio"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Sınav Hedefleri</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {['YKS', 'KPSS', 'Ehliyet', 'SRC'].map((exam) => (
-                        <Badge
-                          key={exam}
-                          variant={profileData.goals?.includes(exam) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => {
-                            if (!isEditing) return;
-                            const goals = profileData.goals || [];
-                            const newGoals = goals.includes(exam)
-                              ? goals.filter(g => g !== exam)
-                              : [...goals, exam];
-                            setProfileData({...profileData, goals: newGoals});
-                          }}
-                          data-testid={`badge-goal-${exam.toLowerCase()}`}
-                        >
-                          {exam}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-primary">{stats?.totalQuizzesTaken || 0}</p>
-                      <p className="text-sm text-muted-foreground">Quiz Tamamlandı</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{stats?.averageScore || 0}%</p>
-                      <p className="text-sm text-muted-foreground">Ortalama Skor</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Stats Tab */}
-          <TabsContent value="stats" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                      <BookOpen className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats?.totalQuizzesTaken || 0}</p>
-                      <p className="text-sm text-muted-foreground">Toplam Quiz</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats?.averageScore || 0}%</p>
-                      <p className="text-sm text-muted-foreground">Ortalama Skor</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                      <Clock className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{Math.floor((stats?.totalTimeSpent || 0) / 60)}h</p>
-                      <p className="text-sm text-muted-foreground">Çalışma Süresi</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Kategori Performansı</CardTitle>
-                <CardDescription>Her sınav kategorisindeki performansınız</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {stats?.categoryStats?.map((stat: any, index: number) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{stat.category}</span>
-                        <span>{stat.score}% ({stat.quizCount} quiz)</span>
-                      </div>
-                      <Progress value={stat.score} className="h-2" />
-                    </div>
-                  )) || (
-                    <p className="text-center text-muted-foreground py-8">
-                      Henüz quiz verisi bulunmuyor
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Achievements Tab */}
-          <TabsContent value="achievements" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {achievements?.map((achievement: any, index: number) => (
-                <Card key={index} className="relative overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-3 rounded-lg ${achievement.unlocked ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                        <Award className={`w-6 h-6 ${achievement.unlocked ? 'text-yellow-600' : 'text-gray-400'}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className={`font-semibold ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {achievement.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {achievement.description}
-                        </p>
-                        {achievement.unlocked && achievement.unlockedAt && (
-                          <p className="text-xs text-primary mt-2">
-                            Kazanıldı: {new Date(achievement.unlockedAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {achievement.progress !== undefined && (
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between text-xs">
-                          <span>İlerleme</span>
-                          <span>{achievement.progress}%</span>
-                        </div>
-                        <Progress value={achievement.progress} className="h-1" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )) || (
-                <div className="col-span-full text-center py-8">
-                  <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Henüz başarım kazanılmadı</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Goals Tab */}
-          <TabsContent value="goals" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Hedef Takibi</CardTitle>
-                <CardDescription>Kişisel öğrenme hedeflerinizi belirleyin ve takip edin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Günlük Çalışma Hedefi</Label>
-                  <div className="flex items-center gap-4 mt-2">
-                    <input
-                      type="range"
-                      min="5"
-                      max="100"
-                      step="5"
-                      value={profileData.preferences?.dailyGoal || 20}
-                      onChange={(e) => setProfileData({
-                        ...profileData,
-                        preferences: {
-                          ...profileData.preferences!,
-                          dailyGoal: parseInt(e.target.value)
-                        }
-                      })}
-                      className="flex-1"
-                      disabled={!isEditing}
-                    />
-                    <span className="text-sm font-medium w-12">
-                      {profileData.preferences?.dailyGoal || 20} dk
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Sınav Odağı</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {['YKS', 'KPSS', 'Ehliyet', 'SRC'].map((exam) => (
-                      <Badge
-                        key={exam}
-                        variant={profileData.preferences?.examFocus?.includes(exam) ? "default" : "outline"}
-                        className={`cursor-pointer ${!isEditing ? 'pointer-events-none' : ''}`}
-                        onClick={() => {
-                          if (!isEditing) return;
-                          const focus = profileData.preferences?.examFocus || [];
-                          const newFocus = focus.includes(exam)
-                            ? focus.filter(e => e !== exam)
-                            : [...focus, exam];
-                          setProfileData({
-                            ...profileData,
-                            preferences: {
-                              ...profileData.preferences!,
-                              examFocus: newFocus
-                            }
-                          });
-                        }}
-                      >
-                        {exam}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Bildirim Ayarları</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>E-posta Bildirimleri</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setProfileData({
-                        ...profileData,
-                        preferences: {
-                          ...profileData.preferences!,
-                          notifications: !profileData.preferences?.notifications
-                        }
-                      })}
-                      disabled={!isEditing}
-                    >
-                      {profileData.preferences?.notifications ? 'Açık' : 'Kapalı'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gizlilik Ayarları</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Profil Görünürlüğü</Label>
-                    <select
-                      value={profileData.preferences?.privacy || 'public'}
-                      onChange={(e) => setProfileData({
-                        ...profileData,
-                        preferences: {
-                          ...profileData.preferences!,
-                          privacy: e.target.value
-                        }
-                      })}
-                      className="w-full mt-1 p-2 border border-input bg-background rounded-md"
-                      disabled={!isEditing}
-                    >
-                      <option value="public">Herkese Açık</option>
-                      <option value="friends">Sadece Arkadaşlar</option>
-                      <option value="private">Özel</option>
-                    </select>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Hesap İşlemleri</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-destructive">Hesabı Sil</h4>
-                    <p className="text-sm text-muted-foreground">Bu işlem geri alınamaz</p>
-                  </div>
-                  <Button variant="destructive" size="sm">
-                    Hesabı Sil
+            <div className="flex-1 flex justify-end">
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={updateProfileMutation.isPending}
+                    className="gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Kaydet
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel} className="gap-2">
+                    <X className="w-4 h-4" />
+                    İptal
                   </Button>
                 </div>
+              ) : (
+                <Button onClick={handleEdit} className="gap-2">
+                  <Edit className="w-4 h-4" />
+                  Profili Düzenle
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Level and XP */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">Seviye {profile?.level}</div>
+                <div className="text-black text-sm">
+                  {currentLevelXp} / {xpToNextLevel} XP
+                </div>
+                <Progress value={progressToNextLevel} className="mt-2" />
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+
+            <Card className="bg-orange-50 border-orange-200">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-orange-600">
+                  <Flame className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{profile?.streak || 0}</span>
+                </div>
+                <div className="text-black text-sm">Günlük Seri</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">{earnedAchievements.length}</div>
+                <div className="text-black text-sm">Başarı Rozetleri</div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+
+        {/* Profile Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Personal Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-2"
+          >
+            <Card className="bg-white border">
+              <CardHeader>
+                <CardTitle className="text-black flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Kişisel Bilgiler
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isEditing ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email" className="text-black">E-posta</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={editedProfile.email || ''}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location" className="text-black">Konum</Label>
+                      <Input
+                        id="location"
+                        value={editedProfile.location || ''}
+                        onChange={(e) => handleInputChange('location', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="grade" className="text-black">Sınıf</Label>
+                      <Input
+                        id="grade"
+                        value={editedProfile.grade || ''}
+                        onChange={(e) => handleInputChange('grade', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="targetExam" className="text-black">Hedef Sınav</Label>
+                      <Input
+                        id="targetExam"
+                        value={editedProfile.targetExam || ''}
+                        onChange={(e) => handleInputChange('targetExam', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm text-gray-500">E-posta</div>
+                        <div className="text-black">{profile?.email || 'Belirtilmemiş'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm text-gray-500">Konum</div>
+                        <div className="text-black">{profile?.location || 'Belirtilmemiş'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <GraduationCap className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm text-gray-500">Sınıf</div>
+                        <div className="text-black">{profile?.grade || 'Belirtilmemiş'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Target className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm text-gray-500">Hedef Sınav</div>
+                        <div className="text-black">{profile?.targetExam || 'Belirtilmemiş'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm text-gray-500">Katılım Tarihi</div>
+                        <div className="text-black">{profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString('tr-TR') : 'Bilinmiyor'}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Quick Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="bg-white border">
+              <CardHeader>
+                <CardTitle className="text-black flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  İstatistikler
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{stats?.totalQuizzesTaken || 0}</div>
+                  <div className="text-black text-sm">Toplam Quiz</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{stats?.averageScore || 0}%</div>
+                  <div className="text-black text-sm">Ortalama Başarı</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">{Math.round((stats?.totalStudyTime || 0) / 60)}h</div>
+                  <div className="text-black text-sm">Toplam Çalışma</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-black text-sm">En İyi Konu:</span>
+                    <Badge variant="secondary" className="text-black">{stats?.strongestSubject || 'Yok'}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-black text-sm">Gelişim Alanı:</span>
+                    <Badge variant="outline" className="text-black">{stats?.weakestSubject || 'Yok'}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Achievements */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-white border">
+            <CardHeader>
+              <CardTitle className="text-black flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Başarı Rozetleri ({earnedAchievements.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {achievements?.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`p-4 rounded-lg border text-center transition-all ${
+                      achievement.earned
+                        ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                        : 'bg-gray-50 border-gray-200 text-gray-400'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{achievement.icon}</div>
+                    <div className="text-xs font-medium">{achievement.title}</div>
+                    {achievement.earned && achievement.earnedDate && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(achievement.earnedDate).toLocaleDateString('tr-TR')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
-}
+};
+
+export default ProfilePage;

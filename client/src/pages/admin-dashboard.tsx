@@ -137,6 +137,7 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [showManualQuestionForm, setShowManualQuestionForm] = useState(false);
   const [showSystemSettings, setShowSystemSettings] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   
@@ -146,6 +147,16 @@ export default function AdminDashboard() {
     email: '',
     role: 'admin' as const,
     permissions: [] as string[]
+  });
+
+  const [newQuestion, setNewQuestion] = useState({
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: 0,
+    category: '',
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+    explanation: '',
+    tags: [] as string[]
   });
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
@@ -515,7 +526,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <Button 
                       className="h-20 flex-col gap-2"
                       onClick={() => fileInputRef.current?.click()}
@@ -523,6 +534,14 @@ export default function AdminDashboard() {
                     >
                       <Upload className="w-6 h-6" />
                       Toplu Soru Yükle
+                    </Button>
+                    <Button 
+                      className="h-20 flex-col gap-2" 
+                      variant="outline"
+                      onClick={() => setShowManualQuestionForm(true)}
+                    >
+                      <FileText className="w-6 h-6" />
+                      Manuel Soru Ekle
                     </Button>
                     <Button className="h-20 flex-col gap-2" variant="outline">
                       <Brain className="w-6 h-6" />

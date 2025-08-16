@@ -1,664 +1,518 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { 
-  Settings as SettingsIcon, 
-  Bell, 
-  Shield, 
-  User, 
-  Moon, 
-  Sun,
-  Globe,
-  Trash2,
-  Download,
-  Upload,
-  Save,
-  RefreshCw,
-  Key,
+import {
+  Settings,
+  Bell,
   Lock,
-  Database,
+  User,
+  Palette,
+  Volume2,
+  Shield,
+  Globe,
+  Moon,
+  Sun,
   Smartphone,
   Mail,
-  Volume2,
-  Eye,
-  EyeOff
+  Database,
+  Download,
+  Upload,
+  Trash2,
+  AlertTriangle,
+  LogOut,
+  Save
 } from 'lucide-react';
 
 interface UserSettings {
   notifications: {
-    email: boolean;
     push: boolean;
-    marketing: boolean;
-    reminders: boolean;
-    achievements: boolean;
+    email: boolean;
+    sms: boolean;
+    dailyReminder: boolean;
+    achievementAlerts: boolean;
+    weeklyReport: boolean;
   };
   privacy: {
     profileVisibility: 'public' | 'friends' | 'private';
     showProgress: boolean;
     showAchievements: boolean;
     allowFriendRequests: boolean;
+    dataCollection: boolean;
   };
-  appearance: {
-    theme: 'light' | 'dark' | 'system';
+  preferences: {
     language: string;
-    fontSize: 'small' | 'medium' | 'large';
-    animationsEnabled: boolean;
+    theme: 'light' | 'dark' | 'auto';
+    soundEffects: boolean;
+    animations: boolean;
+    autoSave: boolean;
+    difficulty: 'easy' | 'medium' | 'hard';
   };
   study: {
-    dailyGoalMinutes: number;
-    difficulty: 'beginner' | 'intermediate' | 'advanced';
-    autoplaySounds: boolean;
-    showHints: boolean;
-    reviewMode: boolean;
+    dailyGoal: number;
+    reminderTime: string;
+    breakDuration: number;
+    sessionLength: number;
+    examFocus: string[];
   };
 }
 
-export default function Settings() {
+const SettingsPage: React.FC = () => {
+  const [activeSection, setActiveSection] = useState('account');
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState('general');
 
-  // Settings state
-  const [settings, setSettings] = useState<UserSettings>({
-    notifications: {
-      email: true,
-      push: true,
-      marketing: false,
-      reminders: true,
-      achievements: true,
-    },
-    privacy: {
-      profileVisibility: 'public',
-      showProgress: true,
-      showAchievements: true,
-      allowFriendRequests: true,
-    },
-    appearance: {
-      theme: 'system',
-      language: 'tr',
-      fontSize: 'medium',
-      animationsEnabled: true,
-    },
-    study: {
-      dailyGoalMinutes: 30,
-      difficulty: 'intermediate',
-      autoplaySounds: true,
-      showHints: true,
-      reviewMode: false,
-    }
-  });
-
-  // Queries
-  const { data: userSettings, isLoading } = useQuery({
+  // Fetch user settings
+  const { data: settings, isLoading } = useQuery({
     queryKey: ['/api/user/settings'],
-    queryFn: () => apiRequest('GET', '/api/user/settings').then(res => res.json()),
-    onSuccess: (data) => {
-      if (data) setSettings(data);
+    queryFn: async () => {
+      const response = await fetch('/api/user/settings');
+      if (!response.ok) throw new Error('Failed to fetch settings');
+      return response.json() as UserSettings;
     }
   });
 
-  // Mutations
+  // Update settings mutation
   const updateSettingsMutation = useMutation({
-    mutationFn: (newSettings: UserSettings) =>
-      apiRequest('PUT', '/api/user/settings', newSettings),
-    onSuccess: () => {
-      toast({
-        title: 'Başarılı',
-        description: 'Ayarlar kaydedildi',
+    mutationFn: async (updatedSettings: Partial<UserSettings>) => {
+      const response = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings)
       });
+      if (!response.ok) throw new Error('Failed to update settings');
+      return response.json();
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/settings'] });
+      toast({ title: 'Başarılı', description: 'Ayarlar güncellendi' });
     },
     onError: () => {
-      toast({
-        title: 'Hata',
-        description: 'Ayarlar kaydedilemedi',
-        variant: 'destructive'
-      });
+      toast({ title: 'Hata', description: 'Ayarlar güncellenirken bir hata oluştu', variant: 'destructive' });
     }
   });
 
-  const exportDataMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/user/export-data'),
-    onSuccess: (response) => {
-      // Dosya indirme işlemi
-      const blob = new Blob([JSON.stringify(response)], { type: 'application/json' });
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to logout');
+      return response.json();
+    },
+    onSuccess: () => {
+      window.location.href = '/';
+    },
+    onError: () => {
+      toast({ title: 'Hata', description: 'Çıkış yapılırken bir hata oluştu', variant: 'destructive' });
+    }
+  });
+
+  const handleSettingChange = (section: keyof UserSettings, key: string, value: any) => {
+    if (!settings) return;
+    
+    const updatedSettings = {
+      ...settings,
+      [section]: {
+        ...settings[section],
+        [key]: value
+      }
+    };
+    
+    updateSettingsMutation.mutate(updatedSettings);
+  };
+
+  const handleLogout = () => {
+    if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+      logoutMutation.mutate();
+    }
+  };
+
+  const handleDataExport = async () => {
+    try {
+      const response = await fetch('/api/user/export');
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'bilgibite-data-export.json';
+      a.download = 'bilgibite-verilerim.json';
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      toast({
-        title: 'Başarılı',
-        description: 'Verileriniz indirildi',
-      });
+      toast({ title: 'Başarılı', description: 'Veriler indirildi' });
+    } catch (error) {
+      toast({ title: 'Hata', description: 'Veriler indirilemedi', variant: 'destructive' });
     }
-  });
-
-  const deleteAccountMutation = useMutation({
-    mutationFn: () => apiRequest('DELETE', '/api/user/account'),
-    onSuccess: () => {
-      toast({
-        title: 'Hesap Silindi',
-        description: 'Hesabınız başarıyla silindi',
-      });
-      // Redirect to login page
-      window.location.href = '/auth';
-    },
-    onError: () => {
-      toast({
-        title: 'Hata',
-        description: 'Hesap silinirken hata oluştu',
-        variant: 'destructive'
-      });
-    }
-  });
-
-  const handleSaveSettings = () => {
-    updateSettingsMutation.mutate(settings);
   };
 
-  const handleSettingChange = (section: keyof UserSettings, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [key]: value
-      }
-    }));
+  const handleAccountDelete = () => {
+    const confirmation = prompt('Hesabınızı silmek için "SİL" yazın:');
+    if (confirmation === 'SİL') {
+      // Account deletion would be implemented here
+      toast({ title: 'Uyarı', description: 'Hesap silme özelliği henüz aktif değil', variant: 'destructive' });
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
+  const sections = [
+    { id: 'account', title: 'Hesap', icon: User },
+    { id: 'notifications', title: 'Bildirimler', icon: Bell },
+    { id: 'privacy', title: 'Gizlilik', icon: Lock },
+    { id: 'preferences', title: 'Tercihler', icon: Palette },
+    { id: 'study', title: 'Çalışma', icon: Settings },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">Ayarlar</h1>
-          <p className="text-muted-foreground">Uygulama tercihlerinizi ve hesap ayarlarınızı yönetin</p>
-        </div>
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-black">Ayarlar</h1>
+          <p className="text-gray-600 mt-2">Hesap ayarlarınızı ve tercihlerinizi yönetin</p>
+        </motion.div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <SettingsIcon className="w-4 h-4" />
-              Genel
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              Bildirimler
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Gizlilik
-            </TabsTrigger>
-            <TabsTrigger value="study" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Çalışma
-            </TabsTrigger>
-            <TabsTrigger value="account" className="flex items-center gap-2">
-              <Lock className="w-4 h-4" />
-              Hesap
-            </TabsTrigger>
-          </TabsList>
-
-          {/* General Settings */}
-          <TabsContent value="general" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Görünüm
-                  </CardTitle>
-                  <CardDescription>Uygulamanın görünümünü özelleştirin</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Tema</Label>
-                    <Select 
-                      value={settings.appearance.theme}
-                      onValueChange={(value) => handleSettingChange('appearance', 'theme', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">
-                          <div className="flex items-center gap-2">
-                            <Sun className="w-4 h-4" />
-                            Açık Tema
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="dark">
-                          <div className="flex items-center gap-2">
-                            <Moon className="w-4 h-4" />
-                            Koyu Tema
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="system">
-                          <div className="flex items-center gap-2">
-                            <Smartphone className="w-4 h-4" />
-                            Sistem Teması
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>Yazı Boyutu</Label>
-                    <Select 
-                      value={settings.appearance.fontSize}
-                      onValueChange={(value) => handleSettingChange('appearance', 'fontSize', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="small">Küçük</SelectItem>
-                        <SelectItem value="medium">Orta</SelectItem>
-                        <SelectItem value="large">Büyük</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label>Animasyonlar</Label>
-                    <Switch
-                      checked={settings.appearance.animationsEnabled}
-                      onCheckedChange={(checked) => handleSettingChange('appearance', 'animationsEnabled', checked)}
-                      data-testid="toggle-animations"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    Dil ve Bölge
-                  </CardTitle>
-                  <CardDescription>Dil tercihlerinizi belirleyin</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Uygulama Dili</Label>
-                    <Select 
-                      value={settings.appearance.language}
-                      onValueChange={(value) => handleSettingChange('appearance', 'language', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tr">Türkçe</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Notifications */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-4 h-4" />
-                  Bildirim Tercihleri
-                </CardTitle>
-                <CardDescription>Hangi bildirimleri almak istediğinizi seçin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">E-posta Bildirimleri</p>
-                        <p className="text-sm text-muted-foreground">Quiz sonuçları ve güncellemeler</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.email}
-                      onCheckedChange={(checked) => handleSettingChange('notifications', 'email', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Push Bildirimleri</p>
-                        <p className="text-sm text-muted-foreground">Mobil cihazda anlık bildirimler</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.push}
-                      onCheckedChange={(checked) => handleSettingChange('notifications', 'push', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Çalışma Hatırlatıcıları</p>
-                        <p className="text-sm text-muted-foreground">Günlük çalışma hedefi için hatırlatmalar</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.reminders}
-                      onCheckedChange={(checked) => handleSettingChange('notifications', 'reminders', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Başarım Bildirimleri</p>
-                        <p className="text-sm text-muted-foreground">Yeni başarımlar kazandığınızda</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.achievements}
-                      onCheckedChange={(checked) => handleSettingChange('notifications', 'achievements', checked)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Privacy */}
-          <TabsContent value="privacy" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Gizlilik Ayarları
-                </CardTitle>
-                <CardDescription>Profilinizin görünürlüğünü ve paylaşım tercihlerinizi belirleyin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Profil Görünürlüğü</Label>
-                  <Select 
-                    value={settings.privacy.profileVisibility}
-                    onValueChange={(value) => handleSettingChange('privacy', 'profileVisibility', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public">Herkese Açık</SelectItem>
-                      <SelectItem value="friends">Sadece Arkadaşlar</SelectItem>
-                      <SelectItem value="private">Özel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Profilinizi kimler görebileceğini belirler
-                  </p>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">İlerleme Durumunu Göster</p>
-                      <p className="text-sm text-muted-foreground">Quiz sonuçları ve istatistikler</p>
-                    </div>
-                    <Switch
-                      checked={settings.privacy.showProgress}
-                      onCheckedChange={(checked) => handleSettingChange('privacy', 'showProgress', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Başarımları Göster</p>
-                      <p className="text-sm text-muted-foreground">Kazanılan rozetler ve başarımlar</p>
-                    </div>
-                    <Switch
-                      checked={settings.privacy.showAchievements}
-                      onCheckedChange={(checked) => handleSettingChange('privacy', 'showAchievements', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Arkadaşlık İsteklerine İzin Ver</p>
-                      <p className="text-sm text-muted-foreground">Diğer kullanıcılardan arkadaşlık istekleri al</p>
-                    </div>
-                    <Switch
-                      checked={settings.privacy.allowFriendRequests}
-                      onCheckedChange={(checked) => handleSettingChange('privacy', 'allowFriendRequests', checked)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Study Settings */}
-          <TabsContent value="study" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Çalışma Tercihleri</CardTitle>
-                <CardDescription>Quiz deneyiminizi kişiselleştirin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Günlük Hedef (dakika)</Label>
-                  <div className="flex items-center gap-4 mt-2">
-                    <input
-                      type="range"
-                      min="10"
-                      max="180"
-                      step="10"
-                      value={settings.study.dailyGoalMinutes}
-                      onChange={(e) => handleSettingChange('study', 'dailyGoalMinutes', parseInt(e.target.value))}
-                      className="flex-1"
-                    />
-                    <span className="text-sm font-medium w-12">
-                      {settings.study.dailyGoalMinutes} dk
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Varsayılan Zorluk Seviyesi</Label>
-                  <Select 
-                    value={settings.study.difficulty}
-                    onValueChange={(value) => handleSettingChange('study', 'difficulty', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Başlangıç</SelectItem>
-                      <SelectItem value="intermediate">Orta</SelectItem>
-                      <SelectItem value="advanced">İleri</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Ses Efektleri</p>
-                        <p className="text-sm text-muted-foreground">Doğru/yanlış cevap sesleri</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.study.autoplaySounds}
-                      onCheckedChange={(checked) => handleSettingChange('study', 'autoplaySounds', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">İpuçlarını Göster</p>
-                      <p className="text-sm text-muted-foreground">Sorularda ipucu butonunu göster</p>
-                    </div>
-                    <Switch
-                      checked={settings.study.showHints}
-                      onCheckedChange={(checked) => handleSettingChange('study', 'showHints', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Tekrar Modu</p>
-                      <p className="text-sm text-muted-foreground">Yanlış cevaplanan soruları tekrarla</p>
-                    </div>
-                    <Switch
-                      checked={settings.study.reviewMode}
-                      onCheckedChange={(checked) => handleSettingChange('study', 'reviewMode', checked)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Account Management */}
-          <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="w-4 h-4" />
-                  Veri Yönetimi
-                </CardTitle>
-                <CardDescription>Kişisel verilerinizi yönetin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">Verilerini İndir</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Tüm kişisel verilerinizi JSON formatında indirin
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => exportDataMutation.mutate()}
-                    disabled={exportDataMutation.isPending}
-                    data-testid="button-export-data"
-                  >
-                    {exportDataMutation.isPending ? (
-                      <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    ) : (
-                      <Download className="w-4 h-4 mr-2" />
-                    )}
-                    İndir
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-destructive/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-destructive">
-                  <Trash2 className="w-4 h-4" />
-                  Tehlikeli Alan
-                </CardTitle>
-                <CardDescription>Bu işlemler geri alınamaz</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-destructive">Hesabı Kalıcı Olarak Sil</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Bu işlem hesabınızı ve tüm verilerinizi kalıcı olarak siler
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    data-testid="button-delete-account"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Hesabı Sil
-                  </Button>
-                </div>
-
-                {showDeleteConfirm && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg space-y-3">
-                    <p className="text-sm font-medium text-destructive">
-                      Bu işlemi gerçekten yapmak istiyor musunuz?
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Hesabınız, tüm quiz geçmişiniz, başarımlarınız ve kişisel verileriniz kalıcı olarak silinecektir.
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowDeleteConfirm(false)}
-                      >
-                        İptal
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteAccountMutation.mutate()}
-                        disabled={deleteAccountMutation.isPending}
-                      >
-                        {deleteAccountMutation.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                        ) : null}
-                        Evet, Hesabımı Sil
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSaveSettings}
-            disabled={updateSettingsMutation.isPending}
-            className="min-w-32"
-            data-testid="button-save-settings"
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
+          {/* Settings Navigation */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-1"
           >
-            {updateSettingsMutation.isPending ? (
-              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
+            <Card className="bg-white border">
+              <CardContent className="p-4">
+                <nav className="space-y-2">
+                  {sections.map((section) => {
+                    const IconComponent = section.icon;
+                    return (
+                      <button
+                        key={section.id}
+                        onClick={() => setActiveSection(section.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                          activeSection === section.id
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        {section.title}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Settings Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-3"
+          >
+            
+            {/* Account Settings */}
+            {activeSection === 'account' && (
+              <div className="space-y-6">
+                <Card className="bg-white border">
+                  <CardHeader>
+                    <CardTitle className="text-black flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Hesap Bilgileri
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="username" className="text-black">Kullanıcı Adı</Label>
+                        <Input id="username" defaultValue="demo_user" className="mt-1" />
+                      </div>
+                      <div>
+                        <Label htmlFor="email" className="text-black">E-posta</Label>
+                        <Input id="email" type="email" defaultValue="user@example.com" className="mt-1" />
+                      </div>
+                    </div>
+                    <Button className="gap-2">
+                      <Save className="w-4 h-4" />
+                      Değişiklikleri Kaydet
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white border">
+                  <CardHeader>
+                    <CardTitle className="text-black flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Güvenlik
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button variant="outline" className="w-full">Şifre Değiştir</Button>
+                    <Button variant="outline" className="w-full">İki Faktörlü Kimlik Doğrulama</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-red-50 border-red-200">
+                  <CardHeader>
+                    <CardTitle className="text-red-600 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Tehlikeli Bölge
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      onClick={handleLogout} 
+                      variant="outline" 
+                      className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                      disabled={logoutMutation.isPending}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Çıkış Yap
+                    </Button>
+                    <Button onClick={handleDataExport} variant="outline" className="w-full">
+                      <Download className="w-4 h-4 mr-2" />
+                      Verilerimi İndir
+                    </Button>
+                    <Button 
+                      onClick={handleAccountDelete} 
+                      variant="destructive" 
+                      className="w-full"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Hesabı Sil
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             )}
-            Kaydet
-          </Button>
+
+            {/* Notification Settings */}
+            {activeSection === 'notifications' && (
+              <Card className="bg-white border">
+                <CardHeader>
+                  <CardTitle className="text-black flex items-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Bildirim Ayarları
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { key: 'push', label: 'Push Bildirimleri', description: 'Telefona gelen bildirimler' },
+                    { key: 'email', label: 'E-posta Bildirimleri', description: 'Önemli güncellemeler' },
+                    { key: 'dailyReminder', label: 'Günlük Hatırlatıcı', description: 'Çalışma zamanı hatırlatıcısı' },
+                    { key: 'achievementAlerts', label: 'Başarı Bildirimleri', description: 'Rozet ve başarı bildirimleri' },
+                    { key: 'weeklyReport', label: 'Haftalık Rapor', description: 'İlerleme özeti' }
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="font-medium text-black">{item.label}</div>
+                        <div className="text-sm text-gray-600">{item.description}</div>
+                      </div>
+                      <Switch
+                        checked={settings?.notifications?.[item.key as keyof typeof settings.notifications] || false}
+                        onCheckedChange={(checked) => handleSettingChange('notifications', item.key, checked)}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Privacy Settings */}
+            {activeSection === 'privacy' && (
+              <Card className="bg-white border">
+                <CardHeader>
+                  <CardTitle className="text-black flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Gizlilik Ayarları
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-black">Profil Görünürlüğü</Label>
+                    <Select 
+                      value={settings?.privacy?.profileVisibility || 'public'}
+                      onValueChange={(value) => handleSettingChange('privacy', 'profileVisibility', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Herkese Açık</SelectItem>
+                        <SelectItem value="friends">Sadece Arkadaşlar</SelectItem>
+                        <SelectItem value="private">Özel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {[
+                    { key: 'showProgress', label: 'İlerlemeyi Göster', description: 'Diğerleri ilerlemenizi görebilir' },
+                    { key: 'showAchievements', label: 'Başarıları Göster', description: 'Diğerleri başarılarınızı görebilir' },
+                    { key: 'allowFriendRequests', label: 'Arkadaşlık İstekleri', description: 'Yeni arkadaşlık isteklerini kabul et' },
+                    { key: 'dataCollection', label: 'Veri Toplama', description: 'Ürün geliştirme için anonim veri toplama' }
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="font-medium text-black">{item.label}</div>
+                        <div className="text-sm text-gray-600">{item.description}</div>
+                      </div>
+                      <Switch
+                        checked={settings?.privacy?.[item.key as keyof typeof settings.privacy] || false}
+                        onCheckedChange={(checked) => handleSettingChange('privacy', item.key, checked)}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Preference Settings */}
+            {activeSection === 'preferences' && (
+              <Card className="bg-white border">
+                <CardHeader>
+                  <CardTitle className="text-black flex items-center gap-2">
+                    <Palette className="w-5 h-5" />
+                    Uygulama Tercihleri
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-black">Dil</Label>
+                      <Select 
+                        value={settings?.preferences?.language || 'tr'}
+                        onValueChange={(value) => handleSettingChange('preferences', 'language', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tr">Türkçe</SelectItem>
+                          <SelectItem value="en">English</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-black">Zorluk Seviyesi</Label>
+                      <Select 
+                        value={settings?.preferences?.difficulty || 'medium'}
+                        onValueChange={(value) => handleSettingChange('preferences', 'difficulty', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Kolay</SelectItem>
+                          <SelectItem value="medium">Orta</SelectItem>
+                          <SelectItem value="hard">Zor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {[
+                    { key: 'soundEffects', label: 'Ses Efektleri', description: 'Doğru/yanlış cevap sesleri' },
+                    { key: 'animations', label: 'Animasyonlar', description: 'Geçiş animasyonları' },
+                    { key: 'autoSave', label: 'Otomatik Kaydet', description: 'İlerlemeyi otomatik kaydet' }
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="font-medium text-black">{item.label}</div>
+                        <div className="text-sm text-gray-600">{item.description}</div>
+                      </div>
+                      <Switch
+                        checked={settings?.preferences?.[item.key as keyof typeof settings.preferences] || false}
+                        onCheckedChange={(checked) => handleSettingChange('preferences', item.key, checked)}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Study Settings */}
+            {activeSection === 'study' && (
+              <Card className="bg-white border">
+                <CardHeader>
+                  <CardTitle className="text-black flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Çalışma Ayarları
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dailyGoal" className="text-black">Günlük Hedef (dakika)</Label>
+                      <Input
+                        id="dailyGoal"
+                        type="number"
+                        value={settings?.study?.dailyGoal || 30}
+                        onChange={(e) => handleSettingChange('study', 'dailyGoal', parseInt(e.target.value))}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="reminderTime" className="text-black">Hatırlatıcı Saati</Label>
+                      <Input
+                        id="reminderTime"
+                        type="time"
+                        value={settings?.study?.reminderTime || '19:00'}
+                        onChange={(e) => handleSettingChange('study', 'reminderTime', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sessionLength" className="text-black">Çalışma Süresi (dakika)</Label>
+                      <Input
+                        id="sessionLength"
+                        type="number"
+                        value={settings?.study?.sessionLength || 25}
+                        onChange={(e) => handleSettingChange('study', 'sessionLength', parseInt(e.target.value))}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="breakDuration" className="text-black">Mola Süresi (dakika)</Label>
+                      <Input
+                        id="breakDuration"
+                        type="number"
+                        value={settings?.study?.breakDuration || 5}
+                        onChange={(e) => handleSettingChange('study', 'breakDuration', parseInt(e.target.value))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default SettingsPage;
