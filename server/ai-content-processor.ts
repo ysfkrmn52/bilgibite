@@ -133,12 +133,26 @@ ${fileContent}`
       }]
     });
 
-    const responseText = response.content[0].text;
-    const parsedContent = JSON.parse(responseText);
+    const responseText = (response.content[0] as any).text;
+    
+    // Clean up the response text by removing markdown code blocks
+    let cleanedText = responseText.trim();
+    
+    // Remove markdown code blocks more comprehensively
+    cleanedText = cleanedText.replace(/^```(?:json)?\s*/gm, '').replace(/\s*```$/gm, '');
+    
+    // Try to extract JSON from the response
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedText = jsonMatch[0];
+    }
+    
+    const parsedContent = JSON.parse(cleanedText);
     
     return parsedContent;
   } catch (error) {
     console.error('AI content processing error:', error);
+    console.error('Response text was:', responseText?.substring(0, 500));
     throw new Error('İçerik işleme sırasında hata oluştu');
   }
 }
