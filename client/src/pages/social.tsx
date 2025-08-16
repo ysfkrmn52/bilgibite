@@ -17,7 +17,11 @@ import {
   Filter,
   Clock,
   TrendingUp,
-  Star
+  Star,
+  Brain,
+  Flame,
+  MessageCircle,
+  Share2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -299,35 +303,94 @@ export default function SocialPage() {
                       </div>
                     ) : (
                       socialFeed.map((activity: any, index: number) => (
-                        <div key={`${activity.activity.id}-${index}`} className="flex items-start gap-3 p-4 bg-white border rounded-lg">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src="/avatars/user.svg" />
-                            <AvatarFallback>{activity.user.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium">{activity.user.username}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                Seviye {activity.user.level}
-                              </Badge>
-                            </div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {activity.activity.title}
-                            </p>
-                            {activity.activity.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {activity.activity.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                              <span>{new Date(activity.activity.createdAt).toLocaleDateString('tr-TR')}</span>
-                              <button className="flex items-center gap-1 hover:text-red-600 transition-colors">
-                                <Heart className="h-3 w-3" />
-                                {activity.activity.likeCount}
-                              </button>
+                        <motion.div 
+                          key={`${activity.activity.id}-${index}`} 
+                          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                          whileHover={{ y: -2 }}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          {/* Decorative top stripe */}
+                          <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                          
+                          <div className="p-5">
+                            <div className="flex items-start gap-4">
+                              {/* Enhanced Avatar */}
+                              <div className="relative">
+                                <Avatar className="h-12 w-12 ring-2 ring-blue-200 ring-offset-2">
+                                  <AvatarImage src="/avatars/user.svg" />
+                                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
+                                    {activity.user.username?.charAt(0)?.toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {/* Status indicator */}
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                {/* User info with enhanced styling */}
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="font-semibold text-black text-lg">{activity.user.username}</span>
+                                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs font-medium px-2 py-1">
+                                    Seviye {activity.user.level}
+                                  </Badge>
+                                  <div className="flex items-center gap-1 text-yellow-500">
+                                    <Star className="h-3 w-3 fill-current" />
+                                    <span className="text-xs font-medium">{activity.user.xp || 0} XP</span>
+                                  </div>
+                                </div>
+
+                                {/* Activity content with icon */}
+                                <div className="mb-3">
+                                  <div className="flex items-start gap-2">
+                                    <div className="mt-1">
+                                      {activity.activity.type === 'quiz_completed' && <Brain className="h-4 w-4 text-green-500" />}
+                                      {activity.activity.type === 'achievement_unlocked' && <Trophy className="h-4 w-4 text-yellow-500" />}
+                                      {activity.activity.type === 'streak_milestone' && <Flame className="h-4 w-4 text-orange-500" />}
+                                      {activity.activity.type === 'level_up' && <TrendingUp className="h-4 w-4 text-blue-500" />}
+                                      {!['quiz_completed', 'achievement_unlocked', 'streak_milestone', 'level_up'].includes(activity.activity.type) && 
+                                        <MessageSquare className="h-4 w-4 text-purple-500" />}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-black font-medium text-base leading-relaxed">
+                                        {activity.activity.title}
+                                      </p>
+                                      {activity.activity.description && (
+                                        <p className="text-black text-sm mt-1 leading-relaxed">
+                                          {activity.activity.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Enhanced interaction bar */}
+                                <div className="flex items-center justify-between pt-3 border-t border-blue-100">
+                                  <div className="flex items-center gap-4">
+                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors group">
+                                      <Heart className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                      <span className="text-sm font-medium">{activity.activity.likeCount || 0}</span>
+                                    </button>
+                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors group">
+                                      <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                      <span className="text-sm font-medium">{activity.activity.commentsCount || 0}</span>
+                                    </button>
+                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-colors group">
+                                      <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                      <span className="text-sm font-medium">Paylaş</span>
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 text-black text-sm">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{new Date(activity.activity.createdAt).toLocaleDateString('tr-TR')}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))
                     )}
                   </CardContent>
@@ -403,7 +466,7 @@ export default function SocialPage() {
                             </Avatar>
                             <div>
                               <div className="font-medium">{user.username}</div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                              <div className="text-sm text-black">
                                 Seviye {user.level}
                               </div>
                             </div>
@@ -442,21 +505,21 @@ export default function SocialPage() {
                       <h3 className="text-xl font-bold mb-2">
                         {currentLeague?.league?.name || 'Bronze'} Ligi
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      <p className="text-black mb-4">
                         Bu hafta {currentLeague?.participation?.weeklyXP || 0} XP kazandın
                       </p>
                       <div className="flex items-center justify-center gap-4 text-sm">
                         <div className="text-center">
                           <div className="font-bold text-green-600">Top 5</div>
-                          <div className="text-gray-600 dark:text-gray-400">Yükselme</div>
+                          <div className="text-black">Yükselme</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-bold text-gray-600">6-25</div>
-                          <div className="text-gray-600 dark:text-gray-400">Sabit</div>
+                          <div className="font-bold text-black">6-25</div>
+                          <div className="text-black">Sabit</div>
                         </div>
                         <div className="text-center">
                           <div className="font-bold text-red-600">Son 5</div>
-                          <div className="text-gray-600 dark:text-gray-400">Düşme</div>
+                          <div className="text-black">Düşme</div>
                         </div>
                       </div>
                     </div>
@@ -479,10 +542,10 @@ export default function SocialPage() {
                     {userChallenges.length === 0 ? (
                       <div className="text-center py-8">
                         <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-black">
                           Henüz aktif meydan okuman yok
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                        <p className="text-sm text-black mt-2">
                           Arkadaşlarını meydan okumaya çağır!
                         </p>
                       </div>
@@ -493,7 +556,7 @@ export default function SocialPage() {
                             <div className="flex items-center justify-between mb-3">
                               <div>
                                 <div className="font-medium">{challenge.challenge.challengeType}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div className="text-sm text-black">
                                   vs {challenge.challenger.username}
                                 </div>
                               </div>
@@ -504,7 +567,7 @@ export default function SocialPage() {
                             <div className="flex items-center gap-4 text-sm">
                               <div>Sen: {challenge.challenge.challengedScore}</div>
                               <div>Rakip: {challenge.challenge.challengerScore}</div>
-                              <div className="flex items-center gap-1 text-gray-500">
+                              <div className="flex items-center gap-1 text-black">
                                 <Clock className="h-3 w-3" />
                                 {Math.floor((new Date(challenge.challenge.endsAt).getTime() - Date.now()) / (1000 * 60 * 60))} saat kaldı
                               </div>
@@ -532,7 +595,7 @@ export default function SocialPage() {
                     {userGroups.length === 0 ? (
                       <div className="text-center py-8">
                         <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-black">
                           Henüz bir çalışma grubunda değilsin
                         </p>
                         <Button 
@@ -554,12 +617,12 @@ export default function SocialPage() {
                               </div>
                               <div>
                                 <div className="font-medium">{groupData.group.name}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div className="text-sm text-black">
                                   {groupData.group.currentMembers} üye
                                 </div>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <p className="text-sm text-black mb-3">
                               {groupData.group.description}
                             </p>
                             <div className="flex items-center justify-between text-sm">
@@ -605,7 +668,7 @@ export default function SocialPage() {
                           </AvatarFallback>
                         </Avatar>
                         <h3 className="font-medium mb-1">{user.username}</h3>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <div className="text-sm text-black mb-3">
                           Seviye {user.level} • {user.xp} XP
                         </div>
                         <div className="flex gap-2">
