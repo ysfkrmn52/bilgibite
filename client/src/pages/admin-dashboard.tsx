@@ -137,6 +137,8 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [showCreateQuestion, setShowCreateQuestion] = useState(false);
+  const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [showManualQuestionForm, setShowManualQuestionForm] = useState(false);
   const [showSystemSettings, setShowSystemSettings] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -157,6 +159,16 @@ export default function AdminDashboard() {
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     explanation: '',
     tags: [] as string[]
+  });
+
+  const [newCourse, setNewCourse] = useState({
+    title: '',
+    description: '',
+    category: '',
+    level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
+    duration: 0,
+    price: 0,
+    isPublished: false
   });
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
@@ -241,12 +253,66 @@ export default function AdminDashboard() {
     }
   });
 
+  const createQuestionMutation = useMutation({
+    mutationFn: (questionData: typeof newQuestion) => 
+      apiRequest('POST', '/api/admin/questions', questionData),
+    onSuccess: () => {
+      toast({ title: 'Başarılı', description: 'Soru başarıyla oluşturuldu' });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      setShowCreateQuestion(false);
+      setNewQuestion({
+        question: '',
+        options: ['', '', '', ''],
+        correctAnswer: 0,
+        category: '',
+        difficulty: 'medium',
+        explanation: '',
+        tags: []
+      });
+    }
+  });
+
+  const createCourseMutation = useMutation({
+    mutationFn: (courseData: typeof newCourse) => 
+      apiRequest('POST', '/api/admin/courses', courseData),
+    onSuccess: () => {
+      toast({ title: 'Başarılı', description: 'Kurs başarıyla oluşturuldu' });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+      setShowCreateCourse(false);
+      setNewCourse({
+        title: '',
+        description: '',
+        category: '',
+        level: 'beginner',
+        duration: 0,
+        price: 0,
+        isPublished: false
+      });
+    }
+  });
+
   const handleCreateAdmin = () => {
     if (!newAdmin.username || !newAdmin.email || !newAdmin.role) {
       toast({ title: 'Hata', description: 'Tüm alanlar doldurulmalıdır', variant: 'destructive' });
       return;
     }
     createAdminMutation.mutate(newAdmin);
+  };
+
+  const handleCreateQuestion = () => {
+    if (!newQuestion.question || !newQuestion.category || newQuestion.options.some(opt => !opt.trim())) {
+      toast({ title: 'Hata', description: 'Tüm alanlar doldurulmalıdır', variant: 'destructive' });
+      return;
+    }
+    createQuestionMutation.mutate(newQuestion);
+  };
+
+  const handleCreateCourse = () => {
+    if (!newCourse.title || !newCourse.description || !newCourse.category) {
+      toast({ title: 'Hata', description: 'Tüm alanlar doldurulmalıdır', variant: 'destructive' });
+      return;
+    }
+    createCourseMutation.mutate(newCourse);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -538,7 +604,7 @@ export default function AdminDashboard() {
                     <Button 
                       className="h-20 flex-col gap-2" 
                       variant="outline"
-                      onClick={() => setShowManualQuestionForm(true)}
+                      onClick={() => setShowCreateQuestion(true)}
                     >
                       <FileText className="w-6 h-6" />
                       Manuel Soru Ekle
@@ -571,7 +637,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Kurs Yönetimi</CardTitle>
-                  <Button>
+                  <Button onClick={() => setShowCreateCourse(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Yeni Kurs
                   </Button>
@@ -810,6 +876,206 @@ export default function AdminDashboard() {
                   disabled={createAdminMutation.isPending}
                 >
                   {createAdminMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Question Dialog */}
+        <Dialog open={showCreateQuestion} onOpenChange={setShowCreateQuestion}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Yeni Soru Oluştur</DialogTitle>
+              <DialogDescription>
+                Manuel olarak yeni soru ekleyin
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Soru Metni</Label>
+                <Textarea 
+                  value={newQuestion.question}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, question: e.target.value }))}
+                  placeholder="Sorunuzu buraya yazın..."
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Seçenekler</Label>
+                {newQuestion.options.map((option, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    <Input
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [...newQuestion.options];
+                        newOptions[index] = e.target.value;
+                        setNewQuestion(prev => ({ ...prev, options: newOptions }));
+                      }}
+                      placeholder={`Seçenek ${String.fromCharCode(65 + index)}`}
+                    />
+                    <input
+                      type="radio"
+                      name="correctAnswer"
+                      checked={newQuestion.correctAnswer === index}
+                      onChange={() => setNewQuestion(prev => ({ ...prev, correctAnswer: index }))}
+                      className="w-4 h-4"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Kategori</Label>
+                  <Select value={newQuestion.category} onValueChange={(value) => setNewQuestion(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Kategori seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yks">YKS</SelectItem>
+                      <SelectItem value="kpss">KPSS</SelectItem>
+                      <SelectItem value="ehliyet">Ehliyet</SelectItem>
+                      <SelectItem value="matematik">Matematik</SelectItem>
+                      <SelectItem value="fen">Fen Bilimleri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Zorluk</Label>
+                  <Select value={newQuestion.difficulty} onValueChange={(value: any) => setNewQuestion(prev => ({ ...prev, difficulty: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Kolay</SelectItem>
+                      <SelectItem value="medium">Orta</SelectItem>
+                      <SelectItem value="hard">Zor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Açıklama</Label>
+                <Textarea 
+                  value={newQuestion.explanation}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, explanation: e.target.value }))}
+                  placeholder="Cevabın açıklaması..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowCreateQuestion(false)}>
+                  İptal
+                </Button>
+                <Button 
+                  onClick={handleCreateQuestion}
+                  disabled={createQuestionMutation.isPending}
+                >
+                  {createQuestionMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Course Dialog */}
+        <Dialog open={showCreateCourse} onOpenChange={setShowCreateCourse}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Yeni Kurs Oluştur</DialogTitle>
+              <DialogDescription>
+                Yeni bir kurs oluşturun ve detaylarını belirleyin
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Kurs Adı</Label>
+                <Input 
+                  value={newCourse.title}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Kurs adını girin..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Açıklama</Label>
+                <Textarea 
+                  value={newCourse.description}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Kurs açıklaması..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Kategori</Label>
+                  <Select value={newCourse.category} onValueChange={(value) => setNewCourse(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Kategori seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yks">YKS</SelectItem>
+                      <SelectItem value="kpss">KPSS</SelectItem>
+                      <SelectItem value="ehliyet">Ehliyet</SelectItem>
+                      <SelectItem value="matematik">Matematik</SelectItem>
+                      <SelectItem value="fen">Fen Bilimleri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Seviye</Label>
+                  <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse(prev => ({ ...prev, level: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Başlangıç</SelectItem>
+                      <SelectItem value="intermediate">Orta</SelectItem>
+                      <SelectItem value="advanced">İleri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Süre (Saat)</Label>
+                  <Input 
+                    type="number"
+                    value={newCourse.duration}
+                    onChange={(e) => setNewCourse(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fiyat (₺)</Label>
+                  <Input 
+                    type="number"
+                    value={newCourse.price}
+                    onChange={(e) => setNewCourse(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isPublished"
+                  checked={newCourse.isPublished}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, isPublished: e.target.checked }))}
+                />
+                <Label htmlFor="isPublished">Hemen yayınla</Label>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowCreateCourse(false)}>
+                  İptal
+                </Button>
+                <Button 
+                  onClick={handleCreateCourse}
+                  disabled={createCourseMutation.isPending}
+                >
+                  {createCourseMutation.isPending ? 'Oluşturuluyor...' : 'Oluştur'}
                 </Button>
               </div>
             </div>

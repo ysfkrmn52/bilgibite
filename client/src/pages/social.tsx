@@ -195,7 +195,7 @@ export default function SocialPage() {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent">
                     Sosyal Öğrenme
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-black">
                     Arkadaşlarınla birlikte öğren ve yarış!
                   </p>
                 </div>
@@ -209,7 +209,7 @@ export default function SocialPage() {
                   <Users className="h-4 w-4 text-blue-600" />
                   <div>
                     <div className="text-lg font-bold text-blue-600">{friends.length}</div>
-                    <div className="text-xs text-gray-600">Arkadaş</div>
+                    <div className="text-xs text-black">Arkadaş</div>
                   </div>
                 </div>
               </Card>
@@ -221,7 +221,7 @@ export default function SocialPage() {
                     <div className="text-lg font-bold text-yellow-600">
                       {currentLeague?.league?.name || 'Bronze'}
                     </div>
-                    <div className="text-xs text-gray-600">Lig</div>
+                    <div className="text-xs text-black">Lig</div>
                   </div>
                 </div>
               </Card>
@@ -231,7 +231,7 @@ export default function SocialPage() {
                   <Zap className="h-4 w-4 text-purple-600" />
                   <div>
                     <div className="text-lg font-bold text-purple-600">{userChallenges.length}</div>
-                    <div className="text-xs text-gray-600">Meydan Okuma</div>
+                    <div className="text-xs text-black">Meydan Okuma</div>
                   </div>
                 </div>
               </Card>
@@ -290,10 +290,10 @@ export default function SocialPage() {
                     {socialFeed.length === 0 ? (
                       <div className="text-center py-8">
                         <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-black">
                           Henüz arkadaş aktivitesi yok
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                        <p className="text-sm text-black mt-2">
                           Arkadaş ekleyerek onların başarılarını takip edebilirsin!
                         </p>
                       </div>
@@ -350,7 +350,7 @@ export default function SocialPage() {
                       {friends.length === 0 ? (
                         <div className="text-center py-6">
                           <UserPlus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-600 dark:text-gray-400">Henüz arkadaşın yok</p>
+                          <p className="text-black">Henüz arkadaşın yok</p>
                         </div>
                       ) : (
                         friends.map((friend: any, index: number) => (
@@ -362,7 +362,7 @@ export default function SocialPage() {
                               </Avatar>
                               <div>
                                 <div className="font-medium">{friend.username}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div className="text-sm text-black">
                                   Seviye {friend.level} • {friend.xp} XP
                                 </div>
                               </div>
