@@ -20,6 +20,9 @@ import {
   updateUserXP
 } from "./gamification";
 import { registerSubscriptionRoutes } from "./subscription-routes";
+import { db } from "./db";
+import { questions, users, quizSessions } from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 // Security middleware imports
 import { 
@@ -394,21 +397,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerEnterpriseRoutes } = await import('./enterprise-routes');
   registerEnterpriseRoutes(app);
 
-  // Note: Error handling middleware moved to index.ts after Vite setup
-
-  const httpServer = createServer(app);
-  // Admin Dashboard Routes - Real Database Statistics
+  // Admin Dashboard Routes - Real Database Statistics  
   app.get("/api/admin/stats", async (req, res) => {
+    console.log("Admin stats endpoint reached!");
     try {
+      console.log("Trying to get database stats...");
+      
       // Gerçek veritabanı verilerini al
       const [totalQuestionsResult] = await db.select({ count: sql`count(*)` }).from(questions);
       const totalQuestions = Number(totalQuestionsResult.count);
+      console.log("Total questions:", totalQuestions);
       
       const [totalUsersResult] = await db.select({ count: sql`count(*)` }).from(users);
       const totalUsers = Number(totalUsersResult.count);
+      console.log("Total users:", totalUsers);
       
       const [totalQuizSessionsResult] = await db.select({ count: sql`count(*)` }).from(quizSessions);
       const totalQuizSessions = Number(totalQuizSessionsResult.count);
+      console.log("Total quiz sessions:", totalQuizSessions);
       
       // Kategori dağılımını al
       const categoryStats = await db.select({
@@ -420,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let kpssQuestions = 0; 
       let educationQuestions = 0;
       
-      categoryStats.forEach(stat => {
+      categoryStats.forEach((stat: any) => {
         if (stat.category && stat.category.includes('tyt')) {
           tytQuestions += Number(stat.count);
         } else if (stat.category && stat.category.includes('kpss')) {
@@ -445,40 +451,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]
       };
       
+      console.log("Sending stats:", JSON.stringify(stats, null, 2));
       res.json(stats);
     } catch (error) {
-      console.error("Admin stats error:", error);
-      res.status(500).json({ error: "İstatistikler alınamadı" });
+      console.error("Admin stats detailed error:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      res.status(500).json({ error: "İstatistikler alınamadı", details: error?.message });
     }
   });
 
   app.get("/api/admin/questions", async (req, res) => {
     try {
-      // Mock questions data - replace with database query
-      const questions = [
-        {
-          id: "1",
-          question: "Türkiye'nin başkenti neresidir?",
-          options: ["İstanbul", "Ankara", "İzmir", "Bursa"],
-          correctAnswer: 1,
-          explanation: "Türkiye Cumhuriyeti'nin başkenti Ankara'dır.",
-          category: "Genel Kültür",
-          difficulty: "beginner",
-          tags: ["coğrafya", "temel"]
-        },
-        {
-          id: "2", 
-          question: "2x + 5 = 15 denkleminin çözümü nedir?",
-          options: ["x = 3", "x = 5", "x = 7", "x = 10"],
-          correctAnswer: 1,
-          explanation: "2x = 15 - 5 = 10, x = 5",
-          category: "Matematik",
-          difficulty: "intermediate",
-          tags: ["algebra", "denklem"]
-        }
-      ];
-      res.json(questions);
+      // Gerçek veritabanından soruları al
+      const allQuestions = await db.select().from(questions).limit(50);
+      res.json(allQuestions);
     } catch (error) {
+      console.error("Admin questions error:", error);
       res.status(500).json({ error: "Sorular alınamadı" });
     }
   });
@@ -1160,7 +1149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfText = '';
       try {
         const pdfParse = await import('pdf-parse');
-        const pdf = pdfParse.default;
+        const pdf = (pdfParse as any).default;
         const pdfData = await pdf(file.buffer);
         pdfText = pdfData.text;
         
@@ -1206,6 +1195,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  // PDF Analiz Endpoint'i - examType parametreli
+  app.post("/api/admin/upload-pdf/analyze/:examType", upload.single('file'), async (req, res) => {
+    try {
+      const examType = req.params.examType || 'tyt';
+      
+      if (!req.file) {
+        return res.status(400).json({ 
+          error: 'PDF dosyası gerekli',
+          message: 'Lütfen bir PDF dosyası yükleyin.' 
+        });
+      }
+
+      const file = req.file;
+      
+      // Check file type
+      if (file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ 
+          error: 'Geçersiz dosya tipi',
+          message: 'Sadece PDF dosyaları desteklenir.' 
+        });
+      }
+
+      // Check file size (200MB limit)
+      if (file.size > 200 * 1024 * 1024) {
+        return res.status(413).json({ 
+          error: 'Dosya çok büyük',
+          message: 'Dosya boyutu 200MB sınırını aşıyor.' 
+        });
+      }
+
+      console.log(`${examType.toUpperCase()} PDF analizi başlıyor...`);
+      
+      // Extract text from PDF buffer
+      let pdfText = '';
+      try {
+        const pdfParse = await import('pdf-parse');
+        const pdf = (pdfParse as any).default;
+        const pdfData = await pdf(file.buffer);
+        pdfText = pdfData.text;
+        
+        if (!pdfText || pdfText.trim().length === 0) {
+          return res.status(400).json({ 
+            error: 'PDF boş veya okunamadı',
+            message: 'PDF dosyasında metin içeriği bulunamadı.' 
+          });
+        }
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        return res.status(400).json({ 
+          error: 'PDF işleme hatası',
+          message: 'PDF dosyası işlenirken hata oluştu.'
+        });
+      }
+
+      // AI ile PDF içeriğini analiz et ve soruları çıkar
+      const { processTYTPDFContent } = await import("./ai-content-processor");
+      const result = await processTYTPDFContent(pdfText);
+
+      if (!result.questions || result.questions.length === 0) {
+        return res.status(400).json({
+          error: 'Soru bulunamadı',
+          message: 'PDF dosyasından geçerli soru formatı bulunamadı. Lütfen uygun formatta bir PDF yükleyin.'
+        });
+      }
+
+      console.log(`${result.questions.length} soru tespit edildi - ${examType.toUpperCase()}`);
+
+      // Sadece analiz sonucunu döndür, henüz veritabanına kaydetme
+      res.json({
+        success: true,
+        questionsFound: result.questions.length,
+        examType: examType.toUpperCase(),
+        preview: result.questions.slice(0, 3), // İlk 3 soruyu önizleme için göster
+        message: `${result.questions.length} ${examType.toUpperCase()} sorusu tespit edildi`,
+        tempId: `temp_${examType}_${Date.now()}` // Geçici ID
+      });
+
+    } catch (error) {
+      console.error(`${req.params.examType || 'PDF'} analyze error:`, error);
+      res.status(500).json({ 
+        error: 'PDF analiz hatası',
+        message: 'PDF dosyası analiz edilirken bir hata oluştu.' 
+      });
+    }
+  });
+
   // PDF onay endpoint'i - kullanıcı onayladıktan sonra veritabanına kaydet
   app.post("/api/admin/confirm-pdf-questions", async (req, res) => {
     try {
@@ -1277,7 +1352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfText = '';
       try {
         const pdfParse = await import('pdf-parse');
-        const pdf = pdfParse.default;
+        const pdf = (pdfParse as any).default;
         const pdfData = await pdf(file.buffer);
         pdfText = pdfData.text;
         
