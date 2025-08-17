@@ -41,6 +41,11 @@ export const questions = pgTable("questions", {
   correctAnswer: integer("correct_answer").notNull(), // Index of correct option
   explanation: text("explanation"),
   points: integer("points").notNull().default(10),
+  topic: text("topic"),
+  year: integer("year"),
+  questionNumber: integer("question_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const userProgress = pgTable("user_progress", {

@@ -9,9 +9,18 @@ import {
   type QuizSession,
   type InsertQuizSession,
   type Achievement,
-  type UserAchievement
+  type UserAchievement,
+  users,
+  examCategories,
+  questions,
+  userProgress,
+  quizSessions,
+  achievements,
+  userAchievements
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from './db';
+import { eq, count } from 'drizzle-orm';
 
 export interface IStorage {
   // Users
@@ -265,26 +274,38 @@ export class MemStorage implements IStorage {
   }
 
   async createQuestion(questionData: any): Promise<Question> {
-    const id = randomUUID();
-    const question: Question = {
-      id,
-      examCategoryId: questionData.examCategoryId,
-      subject: questionData.subject,
-      difficulty: questionData.difficulty,
-      questionText: questionData.questionText,
-      options: questionData.options,
-      correctAnswer: questionData.correctAnswer,
-      explanation: questionData.explanation || null,
-      points: questionData.points || 10,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.questions.set(id, question);
-    return question;
+    try {
+      const [question] = await db
+        .insert(questions)
+        .values({
+          examCategoryId: questionData.examCategoryId || 'tyt',
+          subject: questionData.subject || questionData.category || 'Genel',
+          difficulty: questionData.difficulty || 'medium',
+          questionText: questionData.text || questionData.questionText,
+          options: questionData.options,
+          correctAnswer: questionData.correctAnswer,
+          explanation: questionData.explanation || null,
+          points: questionData.points || 10,
+          topic: questionData.topic || null,
+          year: questionData.year || null,
+          questionNumber: questionData.questionNumber || null
+        })
+        .returning();
+      return question;
+    } catch (error) {
+      console.error('Error creating question:', error);
+      throw error;
+    }
   }
 
   async getTotalQuestionCount(): Promise<number> {
-    return this.questions.size;
+    try {
+      const [result] = await db.select({ count: count() }).from(questions);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting question count:', error);
+      return 0;
+    }
   }
 
   async getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined> {
@@ -385,4 +406,267 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Create DatabaseStorage class that implements IStorage with real PostgreSQL
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by username:', error);
+      return undefined;
+    }
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    try {
+      const [user] = await db
+        .insert(users)
+        .values(insertUser)
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+      return user || undefined;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return undefined;
+    }
+  }
+
+  async getExamCategories(): Promise<ExamCategory[]> {
+    try {
+      return await db.select().from(examCategories).where(eq(examCategories.isActive, true));
+    } catch (error) {
+      console.error('Error getting exam categories:', error);
+      return [];
+    }
+  }
+
+  async getExamCategory(id: string): Promise<ExamCategory | undefined> {
+    try {
+      const [category] = await db.select().from(examCategories).where(eq(examCategories.id, id));
+      return category || undefined;
+    } catch (error) {
+      console.error('Error getting exam category:', error);
+      return undefined;
+    }
+  }
+
+  async getQuestionsByCategory(examCategoryId: string, limit = 20): Promise<Question[]> {
+    try {
+      return await db
+        .select()
+        .from(questions)
+        .where(eq(questions.examCategoryId, examCategoryId))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error getting questions by category:', error);
+      return [];
+    }
+  }
+
+  async getQuestion(id: string): Promise<Question | undefined> {
+    try {
+      const [question] = await db.select().from(questions).where(eq(questions.id, id));
+      return question || undefined;
+    } catch (error) {
+      console.error('Error getting question:', error);
+      return undefined;
+    }
+  }
+
+  async addQuestions(questionsData: InsertQuestion[]): Promise<Question[]> {
+    try {
+      const newQuestions: Question[] = [];
+      for (const questionData of questionsData) {
+        const question = await this.createQuestion(questionData);
+        newQuestions.push(question);
+      }
+      return newQuestions;
+    } catch (error) {
+      console.error('Error adding multiple questions:', error);
+      throw error;
+    }
+  }
+
+  async createQuestion(questionData: any): Promise<Question> {
+    try {
+      const [question] = await db
+        .insert(questions)
+        .values({
+          examCategoryId: questionData.examCategoryId || 'tyt',
+          subject: questionData.subject || questionData.category || 'Genel',
+          difficulty: questionData.difficulty || 'medium',
+          questionText: questionData.text || questionData.questionText,
+          options: questionData.options,
+          correctAnswer: questionData.correctAnswer,
+          explanation: questionData.explanation || null,
+          points: questionData.points || 10,
+          topic: questionData.topic || null,
+          year: questionData.year || null,
+          questionNumber: questionData.questionNumber || null
+        })
+        .returning();
+      return question;
+    } catch (error) {
+      console.error('Error creating question:', error);
+      throw error;
+    }
+  }
+
+  async getTotalQuestionCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(questions);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting question count:', error);
+      return 0;
+    }
+  }
+
+  async getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined> {
+    try {
+      const [progress] = await db.select().from(userProgress)
+        .where(eq(userProgress.userId, userId) && eq(userProgress.examCategoryId, examCategoryId));
+      return progress || undefined;
+    } catch (error) {
+      console.error('Error getting user progress:', error);
+      return undefined;
+    }
+  }
+
+  async createOrUpdateUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
+    try {
+      const existing = await this.getUserProgress(progress.userId, progress.examCategoryId);
+      
+      if (existing) {
+        const [updated] = await db
+          .update(userProgress)
+          .set({
+            questionsAnswered: existing.questionsAnswered + (progress.questionsAnswered || 0),
+            correctAnswers: existing.correctAnswers + (progress.correctAnswers || 0),
+            totalPoints: existing.totalPoints + (progress.totalPoints || 0),
+            studyTimeMinutes: existing.studyTimeMinutes + (progress.studyTimeMinutes || 0),
+            lastStudyDate: new Date()
+          })
+          .where(eq(userProgress.id, existing.id))
+          .returning();
+        return updated;
+      } else {
+        const [newProgress] = await db
+          .insert(userProgress)
+          .values(progress)
+          .returning();
+        return newProgress;
+      }
+    } catch (error) {
+      console.error('Error creating or updating user progress:', error);
+      throw error;
+    }
+  }
+
+  async getUserProgressAll(userId: string): Promise<UserProgress[]> {
+    try {
+      return await db.select().from(userProgress).where(eq(userProgress.userId, userId));
+    } catch (error) {
+      console.error('Error getting all user progress:', error);
+      return [];
+    }
+  }
+
+  async createQuizSession(session: InsertQuizSession): Promise<QuizSession> {
+    try {
+      const [newSession] = await db
+        .insert(quizSessions)
+        .values(session)
+        .returning();
+      return newSession;
+    } catch (error) {
+      console.error('Error creating quiz session:', error);
+      throw error;
+    }
+  }
+
+  async updateQuizSession(id: string, updates: Partial<QuizSession>): Promise<QuizSession | undefined> {
+    try {
+      const [updatedSession] = await db
+        .update(quizSessions)
+        .set(updates)
+        .where(eq(quizSessions.id, id))
+        .returning();
+      return updatedSession || undefined;
+    } catch (error) {
+      console.error('Error updating quiz session:', error);
+      return undefined;
+    }
+  }
+
+  async getQuizSession(id: string): Promise<QuizSession | undefined> {
+    try {
+      const [session] = await db.select().from(quizSessions).where(eq(quizSessions.id, id));
+      return session || undefined;
+    } catch (error) {
+      console.error('Error getting quiz session:', error);
+      return undefined;
+    }
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    try {
+      return await db.select().from(achievements);
+    } catch (error) {
+      console.error('Error getting achievements:', error);
+      return [];
+    }
+  }
+
+  async getUserAchievements(userId: string): Promise<UserAchievement[]> {
+    try {
+      return await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+    } catch (error) {
+      console.error('Error getting user achievements:', error);
+      return [];
+    }
+  }
+
+  async addUserAchievement(userId: string, achievementId: string): Promise<UserAchievement> {
+    try {
+      const [userAchievement] = await db
+        .insert(userAchievements)
+        .values({
+          userId,
+          achievementId,
+          earnedAt: new Date()
+        })
+        .returning();
+      return userAchievement;
+    } catch (error) {
+      console.error('Error adding user achievement:', error);
+      throw error;
+    }
+  }
+}
+
+export const storage = new DatabaseStorage();
