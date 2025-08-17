@@ -1091,7 +1091,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI-powered content processing endpoint with PDF support
-  app.post("/api/exam/:examType/process-pdf", upload.single('file'), async (req, res) => {
+  app.post("/api/exam/:examType/process-pdf", (req, res) => {
+    upload.single('file')(req, res, async (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        return res.status(400).json({ 
+          error: 'Dosya yükleme hatası',
+          message: err.message 
+        });
+      }
     try {
       const examType = req.params.examType || 'tyt';
       const file = req.file;
@@ -1124,6 +1132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract text from PDF buffer
       let pdfText = '';
       try {
+        const pdfParse = await import('pdf-parse');
+        const pdf = pdfParse.default;
         const pdfData = await pdf(file.buffer);
         pdfText = pdfData.text;
         
@@ -1240,6 +1250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'PDF dosyası işlenirken bir hata oluştu.' 
       });
     }
+    });
   });
 
   // Existing admin file upload endpoint (for compatibility)
@@ -1269,5 +1280,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  return httpServer;
+  return createServer(app);
 }

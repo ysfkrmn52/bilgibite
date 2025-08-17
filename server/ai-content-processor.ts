@@ -49,29 +49,49 @@ export async function processTYTPDFContent(
   fileContent: string
 ): Promise<ProcessedContent> {
   try {
-    const response = await anthropic.messages.create({
+    // İlk olarak PDF içeriğini analiz et
+    const analysisResponse = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
+      max_tokens: 2000,
       messages: [{
         role: 'user',
-        content: `Bu TYT (Temel Yeterlilik Testi) PDF dosyasını analiz et ve içindeki tüm soruları konularına göre kategorize et. Her soru için:
+        content: `Bu TYT PDF'ini analiz et. İçerikte:
+1. Kaç soru var?
+2. Hangi konulardan sorular var?
+3. Sorular nasıl formatlanmış?
+4. Doğru cevaplar nasıl belirtilmiş?
 
-1. Soru metni (tam metin)
-2. 4 seçenek (A, B, C, D) 
-3. Doğru cevap (0-3 arası index - metnde belirtilen doğru şıkka göre)
-4. Detaylı açıklama (varsa)
-5. Zorluk seviyesi (easy/medium/hard)
-6. Ana kategori (türkçe, matematik, fizik, kimya, biyoloji, tarih, coğrafya, felsefe)
-7. Alt konu/konu başlığı
+İçerik preview (ilk 2000 karakter):
+${fileContent.slice(0, 2000)}
 
-ÖZEL KURALLAR:
-- Her soru için kategoriyi PDF'teki bölüm başlığına göre belirle
-- TYT kategorileri: türkçe, matematik, fizik, kimya, biyoloji, tarih, coğrafya, felsefe
-- Alt konuları PDF'te belirtilen konu başlıklarından al
-- Soru numaralarını ve yıllarını (2018-2024) takip et
-- Sadece tam sorular işle, eksik olanları atla
+Analiz sonucu JSON formatında ver:
+{
+  "analysis": {
+    "total_questions": sayı,
+    "subjects": ["konu1", "konu2"],
+    "format_notes": "format açıklaması"
+  }
+}`
+      }]
+    });
 
-JSON formatında döndür:
+    console.log('PDF Analysis:', analysisResponse.content[0].text);
+
+    // Şimdi sorular çıkar
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000,
+      messages: [{
+        role: 'user',
+        content: `Bu TYT PDF içeriğinden soruları çıkar. SADECE TAM ve EKSİKSİZ soruları al:
+
+GEREKSINIMLER:
+- Soru metni tam olmalı
+- 4 şık (A,B,C,D) olmalı  
+- Doğru cevap belirtilmeli
+- Eksik sorular ekleme
+
+ÇIKTI FORMATI:
 {
   "questions": [
     {
