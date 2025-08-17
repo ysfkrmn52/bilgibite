@@ -52,7 +52,8 @@ import {
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit for large educational content
+    fileSize: 100 * 1024 * 1024, // 100MB limit for large educational content
+    fieldSize: 100 * 1024 * 1024 // 100MB for field data
   }
 });
 
@@ -71,11 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(loggingMiddleware);
   app.use(apiRateLimiter); // Global rate limiting
 
-  // Parse JSON with increased limit for large content files
-  app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ limit: '50mb', extended: true }));
-  app.use(express.raw({ limit: '50mb', type: 'application/octet-stream' }));
-  app.use(express.text({ limit: '50mb' }));
+  // Body parsers are already configured in index.ts - no need to re-configure here
 
   // Public routes (no authentication required)
   app.get("/health", (req: Request, res: Response) => {
