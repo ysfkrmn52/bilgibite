@@ -1123,6 +1123,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`${examType.toUpperCase()} PDF işleniyor...`);
       const processedContent = await processTYTPDFContent(fileContent);
       
+      // Check if processing failed
+      if (processedContent.error) {
+        return res.status(400).json({
+          error: processedContent.error,
+          message: processedContent.message
+        });
+      }
+      
       if (!processedContent.questions || processedContent.questions.length === 0) {
         return res.status(400).json({
           error: 'Soru bulunamadı',

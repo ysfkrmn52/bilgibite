@@ -101,12 +101,29 @@ ${fileContent.substring(0, 50000)}`
       cleanedText = jsonMatch[0];
     }
     
-    const parsedContent = JSON.parse(cleanedText);
-    
-    return parsedContent;
+    try {
+      const parsedContent = JSON.parse(cleanedText);
+      return parsedContent;
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('AI Response:', responseText.substring(0, 500) + '...');
+      
+      // Return a structured error response instead of throwing
+      return {
+        error: 'PDF içeriği işlenemedi',
+        message: 'AI tarafından geçerli soru formatı üretilemedi. PDF\'deki içeriği kontrol edin.',
+        questions: []
+      };
+    }
   } catch (error) {
     console.error('TYT PDF processing error:', error);
-    throw new Error('TYT PDF işleme sırasında hata oluştu');
+    
+    // Return a structured error response instead of throwing
+    return {
+      error: 'PDF işleme hatası',
+      message: 'PDF dosyası işlenirken bir hata oluştu.',
+      questions: []
+    };
   }
 }
 
