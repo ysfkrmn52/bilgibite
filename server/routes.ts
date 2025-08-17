@@ -1090,30 +1090,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI-powered content processing endpoint
-  // General exam PDF processing endpoint
-  app.post("/api/exam/:examType/process-pdf", async (req, res) => {
+  // AI-powered content processing endpoint with PDF support
+  app.post("/api/exam/:examType/process-pdf", upload.single('file'), async (req, res) => {
     try {
-      const { fileContent, examType: bodyExamType } = req.body;
-      const examType = req.params.examType || bodyExamType || 'tyt';
+      const examType = req.params.examType || 'tyt';
+      const file = req.file;
       
-      if (!fileContent) {
+      if (!file) {
         return res.status(400).json({ 
-          error: 'PDF içeriği gerekli',
-          message: 'PDF dosyasının metin içeriğini gönderin.' 
+          error: 'PDF dosyası gerekli',
+          message: 'Lütfen bir PDF dosyası yükleyin.' 
         });
       }
 
-      // Check if content is HTML (common issue with file uploads)
-      if (typeof fileContent === 'string' && fileContent.trim().startsWith('<')) {
+      // Check file type
+      if (file.mimetype !== 'application/pdf') {
         return res.status(400).json({ 
-          error: 'HTML dosyalar desteklenmez',
-          message: 'Lütfen PDF veya TXT dosyası yükleyin. HTML dosyalar işlenemez.' 
+          error: 'Geçersiz dosya tipi',
+          message: 'Sadece PDF dosyaları desteklenir.' 
         });
       }
 
-      // Check content size - reject very large content
-      if (typeof fileContent === 'string' && fileContent.length > 70000000) {
+      // Check file size (50MB limit)
+      if (file.size > 52428800) {
         return res.status(413).json({ 
           error: 'Dosya çok büyük',
           message: 'Dosya boyutu 50MB sınırını aşıyor.' 
@@ -1121,7 +1120,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`${examType.toUpperCase()} PDF işleniyor...`);
-      const processedContent = await processTYTPDFContent(fileContent);
+      
+      // Extract text from PDF buffer
+      let pdfText = '';
+      try {
+        const pdfData = await pdf(file.buffer);
+        pdfText = pdfData.text;
+        
+        if (!pdfText || pdfText.trim().length === 0) {
+          return res.status(400).json({ 
+            error: 'PDF boş veya okunamadı',
+            message: 'PDF dosyasında metin içeriği bulunamadı.' 
+          });
+        }
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        return res.status(400).json({ 
+          error: 'PDF işleme hatası',
+          message: 'PDF dosyası işlenirken hata oluştu.' 
+        });
+      }
+
+      const processedContent = await processTYTPDFContent(pdfText);
       
       // Check if processing failed
       if (processedContent.error) {

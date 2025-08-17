@@ -384,22 +384,44 @@ export default function AdminDashboard() {
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('contentType', 'questions');
 
     try {
-      const response = await fetch('/api/admin/process-content', {
+      // Determine exam type from filename or set default
+      let examType = 'tyt';
+      if (file.name.toLowerCase().includes('kpss')) {
+        examType = 'kpss';
+      } else if (file.name.toLowerCase().includes('ehliyet')) {
+        examType = 'ehliyet';
+      } else if (file.name.toLowerCase().includes('ale')) {
+        examType = 'ale';
+      } else if (file.name.toLowerCase().includes('dgs')) {
+        examType = 'dgs';
+      }
+
+      const response = await fetch(`/api/exam/${examType}/process-pdf`, {
         method: 'POST',
         body: formData
       });
       
       const result = await response.json();
       
-      if (result.success) {
-        toast({ title: 'Başarılı', description: 'Dosya başarıyla işlendi' });
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      if (response.ok && !result.error) {
+        const questionCount = result.addedQuestions?.length || 0;
+        toast({ 
+          title: 'Başarılı', 
+          description: `PDF başarıyla işlendi. ${questionCount} soru eklendi.` 
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      } else {
+        toast({ 
+          title: 'Hata', 
+          description: result.message || 'PDF işlenirken hata oluştu', 
+          variant: 'destructive' 
+        });
       }
     } catch (error) {
-      toast({ title: 'Hata', description: 'Dosya işlenirken hata oluştu', variant: 'destructive' });
+      console.error('Upload error:', error);
+      toast({ title: 'Hata', description: 'Dosya yüklenirken hata oluştu', variant: 'destructive' });
     } finally {
       setIsUploading(false);
     }

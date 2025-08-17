@@ -1,5 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { createRequire } from 'module';
 import type { Request, Response } from 'express';
+
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
 
 if (!process.env.ANTHROPIC_API_KEY) {
   throw new Error('ANTHROPIC_API_KEY environment variable is required');
