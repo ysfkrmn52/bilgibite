@@ -1184,6 +1184,34 @@ export default function AdminDashboard() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      // Dosya formatı kontrolü
+                      const allowedTypes = ['application/pdf', 'text/plain'];
+                      const isValidExtension = file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.txt');
+                      
+                      if (!allowedTypes.includes(file.type) && !isValidExtension) {
+                        toast({
+                          title: "Desteklenmeyen Dosya Formatı",
+                          description: "Lütfen sadece PDF veya TXT dosyası yükleyin. HTML dosyalar desteklenmez.",
+                          variant: "destructive"
+                        });
+                        // Input'u temizle
+                        e.target.value = '';
+                        return;
+                      }
+                      
+                      // Dosya boyutu kontrolü (50MB = 52,428,800 bytes)
+                      if (file.size > 52428800) {
+                        toast({
+                          title: "Dosya Çok Büyük",
+                          description: `Dosya boyutu: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maksimum 50MB yükleyebilirsiniz.`,
+                          variant: "destructive"
+                        });
+                        // Input'u temizle
+                        e.target.value = '';
+                        return;
+                      }
+                      
+                      console.log(`Geçerli dosya: ${file.name}, Tip: ${file.type}, Boyut: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
                       processPDFMutation.mutate({ file, examType: selectedExamType });
                     }
                   }}

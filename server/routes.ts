@@ -74,6 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Parse JSON with increased limit for large content files
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
+  app.use(express.raw({ limit: '50mb', type: 'application/octet-stream' }));
+  app.use(express.text({ limit: '50mb' }));
 
   // Public routes (no authentication required)
   app.get("/health", (req: Request, res: Response) => {
@@ -1102,6 +1104,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           error: 'PDF içeriği gerekli',
           message: 'PDF dosyasının metin içeriğini gönderin.' 
+        });
+      }
+
+      // Check if content is HTML (common issue with file uploads)
+      if (typeof fileContent === 'string' && fileContent.trim().startsWith('<')) {
+        return res.status(400).json({ 
+          error: 'HTML dosyalar desteklenmez',
+          message: 'Lütfen PDF veya TXT dosyası yükleyin. HTML dosyalar işlenemez.' 
+        });
+      }
+
+      // Check content size - reject very large content
+      if (typeof fileContent === 'string' && fileContent.length > 70000000) {
+        return res.status(413).json({ 
+          error: 'Dosya çok büyük',
+          message: 'Dosya boyutu 50MB sınırını aşıyor.' 
         });
       }
 
