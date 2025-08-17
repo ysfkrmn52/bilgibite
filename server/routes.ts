@@ -148,10 +148,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Questions
+  // Get questions by category (support both URL param and query param)
   app.get("/api/questions/:categoryId", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const questions = await storage.getQuestionsByCategory(req.params.categoryId, limit);
+      res.json(questions);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/questions", async (req, res) => {
+    try {
+      const categoryId = req.query.category as string;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      if (!categoryId) {
+        // Return all questions if no category specified
+        const questions = await storage.getAllQuestions(limit);
+        res.json(questions);
+        return;
+      }
+      
+      const questions = await storage.getQuestionsByCategory(categoryId, limit);
       res.json(questions);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });

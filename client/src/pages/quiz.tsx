@@ -21,8 +21,9 @@ export default function Quiz() {
   const [quizSession, setQuizSession] = useState<QuizSession | null>(null);
   const [quizMetrics, setQuizMetrics] = useState<any>(null);
 
-  // Get category ID from URL
-  const categoryId = window.location.pathname.split('/quiz/')[1];
+  // Get category ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoryId = urlParams.get('category');
 
   // Fetch questions for the category
   const { data: questions = [], isLoading, error } = useQuery<Question[]>({

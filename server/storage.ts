@@ -93,9 +93,9 @@ export class MemStorage implements IStorage {
         isActive: true
       },
       {
-        id: "driving",
+        id: "ehliyet",
         name: "Ehliyet",
-        slug: "driving",
+        slug: "ehliyet",
         description: "Sürücü Kursu Sınavı",
         icon: "fas fa-car",
         color: "orange",
@@ -157,7 +157,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: randomUUID(),
-        examCategoryId: "driving",
+        examCategoryId: "ehliyet",
         subject: "Trafik Kuralları",
         difficulty: "easy",
         questionText: "Şehir içinde azami hız sınırı kaç km/saat'tir?",
@@ -244,6 +244,13 @@ export class MemStorage implements IStorage {
 
   async getExamCategory(id: string): Promise<ExamCategory | undefined> {
     return this.examCategories.get(id);
+  }
+
+  async getAllQuestions(limit = 100): Promise<Question[]> {
+    const questions = Array.from(this.questions.values());
+    // Shuffle and limit
+    const shuffled = questions.sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, limit);
   }
 
   async getQuestionsByCategory(examCategoryId: string, limit = 20): Promise<Question[]> {
