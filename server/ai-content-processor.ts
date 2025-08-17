@@ -37,6 +37,8 @@ interface ProcessedContent {
     objectives: string[];
     estimatedTime: number;
   }>;
+  error?: string;
+  message?: string;
 }
 
 export async function processTYTPDFContent(

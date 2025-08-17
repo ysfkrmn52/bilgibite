@@ -188,12 +188,13 @@ export default function AdminDashboard() {
   });
 
   // Queries with proper typing
-  const { data: adminStats } = useQuery({
+  const { data: adminStats, refetch: refetchStats } = useQuery({
     queryKey: ['/api/admin/stats'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/stats');
       return response as any;
-    }
+    },
+    refetchInterval: 30000 // Auto refresh every 30 seconds
   });
 
   const { data: adminUsers } = useQuery({
@@ -432,6 +433,19 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Sistem İstatistikleri</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetchStats()}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Yenile
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white">
             <CardHeader className="pb-2">
