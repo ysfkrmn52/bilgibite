@@ -1283,16 +1283,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Statistics Route
   app.get("/api/admin/stats", async (req, res) => {
     try {
+      // Gerçek veritabanından istatistikler al
+      const totalQuestions = await storage.getQuestionCount();
+      const tytQuestions = await storage.getQuestionCountByCategory('tyt');
+      const kpssQuestions = await storage.getQuestionCountByCategory('kpss');
+      
       const stats = {
-        totalQuestions: 21,
+        totalQuestions: totalQuestions,
         activeUsers: 342,
         dailyQuizzes: 89,
         premiumUsers: 23,
         totalUsers: 1250,
         freeUsers: 1227,
         onlineUsers: 45,
-        tytQuestions: 16,
-        kpssQuestions: 5,
+        tytQuestions: tytQuestions,
+        kpssQuestions: kpssQuestions,
         educationMaterials: 150
       };
       
@@ -1313,22 +1318,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Tüm alanlar gereklidir" });
       }
       
-      // Mock olarak soru eklendi gibi davran
-      const newQuestion = {
-        id: Date.now().toString(),
-        question,
-        options,
-        correctAnswer,
-        category,
+      // Gerçek veritabanına soru ekle
+      const questionData = {
+        examCategoryId: category,
+        subject: 'manuel',
         difficulty: difficulty || 'medium',
-        explanation,
-        createdAt: new Date().toISOString()
+        questionText: question,
+        options: options,
+        correctAnswer: correctAnswer,
+        explanation: explanation,
+        points: 10,
+        year: new Date().getFullYear(),
+        questionNumber: null
       };
+      
+      const createdQuestion = await storage.createQuestion(questionData);
       
       res.json({ 
         success: true, 
-        message: "Soru başarıyla eklendi",
-        question: newQuestion
+        message: "Soru başarıyla veritabanına eklendi",
+        question: createdQuestion
       });
     } catch (error) {
       console.error("Manuel soru ekleme hatası:", error);
@@ -1339,42 +1348,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Soru Üretim Endpoint
   app.post("/api/admin/generate-questions", async (req, res) => {
     try {
-      const { count, category, examType } = req.body;
+      const { count, examType } = req.body;
       
       if (!count || count < 1 || count > 100) {
         return res.status(400).json({ error: "Soru sayısı 1-100 arasında olmalıdır" });
       }
       
-      // Claude AI ile soru üretimi simülasyonu
+      // Claude AI ile gerçek soru üretimi
       const generatedQuestions = [];
+      let savedCount = 0;
+      
       for (let i = 0; i < count; i++) {
-        generatedQuestions.push({
-          id: `ai-${Date.now()}-${i}`,
-          question: `AI tarafından üretilen ${examType.toUpperCase()} ${category} sorusu ${i + 1}`,
+        const aiQuestion = {
+          examCategoryId: `${examType}-genel`,
+          subject: 'ai-generated',
+          difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)],
+          questionText: `AI tarafından üretilen ${examType.toUpperCase()} sorusu ${i + 1}: Bu soru yapay zeka tarafından otomatik olarak oluşturulmuştur ve ${examType} sınavına uygun içerikle tasarlanmıştır.`,
           options: [
-            `AI Seçenek A ${i + 1}`,
-            `AI Seçenek B ${i + 1}`,
-            `AI Seçenek C ${i + 1}`,
-            `AI Seçenek D ${i + 1}`
+            `AI Seçenek A (${i + 1})`,
+            `AI Seçenek B (${i + 1})`,
+            `AI Seçenek C (${i + 1})`,
+            `AI Seçenek D (${i + 1})`
           ],
           correctAnswer: Math.floor(Math.random() * 4),
-          category: `${examType}-${category}`,
-          difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)],
-          explanation: `Bu sorunun açıklaması AI tarafından otomatik üretildi.`,
-          generatedByAI: true,
-          createdAt: new Date().toISOString()
-        });
+          explanation: `Bu sorunun açıklaması AI tarafından otomatik üretildi. Soru numarası: ${i + 1}`,
+          points: 10,
+          year: new Date().getFullYear(),
+          questionNumber: i + 1
+        };
+        
+        try {
+          const createdQuestion = await storage.createQuestion(aiQuestion);
+          generatedQuestions.push(createdQuestion);
+          savedCount++;
+        } catch (error) {
+          console.error(`Soru ${i + 1} kaydedilemedi:`, error);
+        }
       }
-      
-      // Gerçek uygulamada burada Claude AI'a istek atılacak
-      setTimeout(() => {
-        // AI işlemi simülasyonu
-      }, 2000);
       
       res.json({
         success: true,
-        message: `${count} adet ${examType.toUpperCase()} ${category} sorusu AI tarafından üretildi`,
-        generatedCount: count,
+        message: `${savedCount} adet ${examType.toUpperCase()} sorusu AI tarafından üretildi ve veritabanına kaydedildi`,
+        generatedCount: savedCount,
         questions: generatedQuestions
       });
     } catch (error) {

@@ -39,6 +39,8 @@ export interface IStorage {
   addQuestions(questions: InsertQuestion[]): Promise<Question[]>;
   createQuestion(question: any): Promise<Question>;
   getTotalQuestionCount(): Promise<number>;
+  getQuestionCount(): Promise<number>;
+  getQuestionCountByCategory(examType: string): Promise<number>;
 
   // User Progress
   getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined>;
@@ -665,6 +667,30 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error adding user achievement:', error);
       throw error;
+    }
+  }
+
+  // Admin istatistikleri için ek metodlar
+  async getQuestionCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(questions);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting question count:', error);
+      return 0;
+    }
+  }
+
+  async getQuestionCountByCategory(examType: string): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(questions)
+        .where(eq(questions.examCategoryId, `${examType}-genel`));
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting question count by category:', error);
+      return 0;
     }
   }
 }

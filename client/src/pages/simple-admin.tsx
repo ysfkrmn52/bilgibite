@@ -34,7 +34,10 @@ export default function SimpleAdmin() {
   // Admin istatistikleri query
   const { data: adminStats } = useQuery({
     queryKey: ['/api/admin/stats'],
-    queryFn: () => apiRequest('GET', '/api/admin/stats')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/stats');
+      return response;
+    }
   });
 
   const uploadPDFMutation = useMutation({
@@ -100,14 +103,13 @@ export default function SimpleAdmin() {
   });
 
   const generateQuestionsMutation = useMutation({
-    mutationFn: async ({ count, category }: { count: number; category: string }) => {
+    mutationFn: async ({ count, examType }: { count: number; examType: string }) => {
       return await apiRequest('POST', '/api/admin/generate-questions', { 
         count, 
-        category,
-        examType: selectedExamType
+        examType
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Sorular Başarıyla Üretildi!",
         description: `${data.generatedCount} soru AI tarafından üretildi ve veritabanına eklendi`,
@@ -167,7 +169,7 @@ export default function SimpleAdmin() {
     setIsGenerating(true);
     generateQuestionsMutation.mutate({ 
       count: questionCount, 
-      category: selectedCategory 
+      examType: selectedExamType 
     });
   };
 
@@ -265,38 +267,20 @@ export default function SimpleAdmin() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="exam-type">Sınav Türü</Label>
-                    <Select value={selectedExamType} onValueChange={setSelectedExamType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sınav türü seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {examTypes.map(type => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="category">Kategori</Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kategori seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(cat => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="max-w-md">
+                  <Label htmlFor="exam-type">Sınav Türü</Label>
+                  <Select value={selectedExamType} onValueChange={setSelectedExamType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sınav türü seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {examTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -315,7 +299,7 @@ export default function SimpleAdmin() {
                     <Upload className="w-12 h-12 text-gray-400" />
                     <div>
                       <p className="text-lg font-medium mb-2">
-                        {isUploading ? "PDF İşleniyor..." : `${selectedExamType.toUpperCase()} - ${selectedCategory} PDF Dosyası Seçin`}
+                        {isUploading ? "PDF İşleniyor..." : `${selectedExamType.toUpperCase()} PDF Dosyası Seçin`}
                       </p>
                       <p className="text-sm text-gray-500">
                         Maksimum dosya boyutu: 50MB
@@ -463,7 +447,7 @@ export default function SimpleAdmin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="ai-exam-type">Sınav Türü</Label>
                   <Select value={selectedExamType} onValueChange={setSelectedExamType}>
@@ -474,22 +458,6 @@ export default function SimpleAdmin() {
                       {examTypes.map(type => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="ai-category">Kategori</Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Kategori seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -514,7 +482,7 @@ export default function SimpleAdmin() {
                 <Zap className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">AI Soru Üretimi</h3>
                 <p className="text-gray-600 mb-4">
-                  {questionCount} adet {selectedExamType.toUpperCase()} - {selectedCategory} sorusu üretilecek
+                  {questionCount} adet {selectedExamType.toUpperCase()} sorusu üretilecek
                 </p>
                 <Button 
                   onClick={handleGenerateQuestions}
