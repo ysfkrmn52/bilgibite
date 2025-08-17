@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DuolingoQuizInterface } from "@/components/quiz/DuolingoQuizInterface";
 import { QuizResults } from "@/components/quiz/QuizResults";
+import QuizLanding from "@/components/quiz/QuizLanding";
 import { Question, QuizSession } from "@shared/schema";
 import { MOCK_USER_ID } from "@/lib/quiz-data";
 import { convertToQuizEngineQuestion } from "@/lib/quiz-engine";
@@ -20,6 +21,7 @@ export default function Quiz() {
   const [showResults, setShowResults] = useState(false);
   const [quizSession, setQuizSession] = useState<QuizSession | null>(null);
   const [quizMetrics, setQuizMetrics] = useState<any>(null);
+  const [quizStarted, setQuizStarted] = useState(false);
 
   // Get category ID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -28,7 +30,7 @@ export default function Quiz() {
   // Fetch questions for the category
   const { data: questions = [], isLoading, error } = useQuery<Question[]>({
     queryKey: ["/api/questions", categoryId],
-    enabled: !!categoryId,
+    enabled: !!categoryId && quizStarted,
   });
 
   // Create quiz session mutation
@@ -142,31 +144,73 @@ export default function Quiz() {
     }
   };
 
-  const handleBackToDashboard = () => {
-    setLocation("/");
+  // Handle quiz start
+  const handleStartQuiz = () => {
+    setQuizStarted(true);
   };
+
+  const handleBackToDashboard = () => {
+    setLocation("/exams");
+  };
+
+  // Show landing page if quiz hasn't started
+  if (!quizStarted) {
+    if (!categoryId) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Kategori seçilmedi</p>
+            <button 
+              onClick={() => setLocation("/exams")}
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md"
+            >
+              Sınavlara Dön
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return <QuizLanding categoryId={categoryId} onStartQuiz={handleStartQuiz} />;
+  }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bg-soft flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-dark">Quiz yükleniyor...</p>
+          <p className="text-muted-foreground">Quiz yükleniyor...</p>
         </div>
       </div>
     );
   }
 
-  if (error || questions.length === 0) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-bg-soft flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-text-dark mb-4">Quiz soruları yüklenemedi.</p>
-          <button
-            onClick={handleBackToDashboard}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+          <p className="text-red-600 mb-4">Quiz yüklenirken hata oluştu</p>
+          <button 
+            onClick={() => setLocation("/exams")}
+            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md"
           >
-            Ana Sayfaya Dön
+            Sınavlara Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Bu kategori için soru bulunamadı</p>
+          <button 
+            onClick={() => setLocation("/exams")}
+            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md"
+          >
+            Sınavlara Dön
           </button>
         </div>
       </div>

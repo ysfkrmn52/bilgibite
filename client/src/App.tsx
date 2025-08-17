@@ -70,6 +70,9 @@ function Router() {
         <Route path="/exams" component={() => (
           <Suspense fallback={<PageLoader />}><TurkishExams /></Suspense>
         )} />
+        <Route path="/quiz" component={() => (
+          <Suspense fallback={<PageLoader />}><Quiz /></Suspense>
+        )} />
         <Route path="/education" component={() => (
           <Suspense fallback={<PageLoader />}><Education /></Suspense>
         )} />

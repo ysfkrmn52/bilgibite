@@ -170,6 +170,70 @@ export class MemStorage implements IStorage {
         correctAnswer: 0,
         explanation: "Şehir içinde azami hız sınırı 50 km/saat'tir.",
         points: 10
+      },
+      {
+        id: randomUUID(),
+        examCategoryId: "ehliyet",
+        subject: "Trafik İşaretleri",
+        difficulty: "easy",
+        questionText: "Kırmızı ışık yanıyorken araç ne yapmalıdır?",
+        options: [
+          { text: "Durmalı", letter: "A" },
+          { text: "Yavaşlamalı", letter: "B" },
+          { text: "Geçebilir", letter: "C" },
+          { text: "Kornaya basmalı", letter: "D" }
+        ],
+        correctAnswer: 0,
+        explanation: "Kırmızı ışık yanıyorken araçlar tamamen durmalıdır.",
+        points: 10
+      },
+      {
+        id: randomUUID(),
+        examCategoryId: "ehliyet",
+        subject: "Yol Güvenliği",
+        difficulty: "medium",
+        questionText: "Emniyet kemeri takmak hangi durumlarda zorunludur?",
+        options: [
+          { text: "Sadece otoyolda", letter: "A" },
+          { text: "Sadece şehir dışında", letter: "B" },
+          { text: "Her zaman", letter: "C" },
+          { text: "Sadece gece", letter: "D" }
+        ],
+        correctAnswer: 2,
+        explanation: "Emniyet kemeri tüm sürüşlerde takılması zorunlu olan güvenlik ekipmanıdır.",
+        points: 10
+      },
+      {
+        id: randomUUID(),
+        examCategoryId: "ehliyet",
+        subject: "Park Etme",
+        difficulty: "medium",
+        questionText: "Araç park ederken bordürden en fazla kaç cm uzakta olabilir?",
+        options: [
+          { text: "20 cm", letter: "A" },
+          { text: "30 cm", letter: "B" },
+          { text: "40 cm", letter: "C" },
+          { text: "50 cm", letter: "D" }
+        ],
+        correctAnswer: 1,
+        explanation: "Araç park ederken bordürden en fazla 30 cm uzakta olabilir.",
+        points: 10
+      },
+      {
+        id: randomUUID(),
+        examCategoryId: "ehliyet",
+        subject: "Alkol ve Trafik",
+        difficulty: "easy",
+        questionText: "Alkollü araç kullanmanın cezası nedir?",
+        options: [
+          { text: "Sadece para cezası", letter: "A" },
+          { text: "Ehliyete el koyma", letter: "B" },
+          { text: "Para cezası ve ehliyete el koyma", letter: "C" },
+          { text: "Sadece uyarı", letter: "D" }
+        ],
+        correctAnswer: 2,
+        explanation: "Alkollü araç kullanma hem para cezası hem de ehliyete el koyma cezası getirir.",
+        points: 10
       }
     ];
 
