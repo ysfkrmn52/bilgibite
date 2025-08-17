@@ -49,35 +49,124 @@ export async function processTYTPDFContent(
   fileContent: string
 ): Promise<ProcessedContent> {
   try {
-    // İlk olarak PDF içeriğini analiz et
-    const analysisResponse = await anthropic.messages.create({
+    console.log('PDF content length:', fileContent.length);
+    console.log('PDF content preview:', fileContent.slice(0, 500));
+
+    // Gelişmiş soru çıkarma prompt'u
+    const questionExtractionResponse = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
+      max_tokens: 8000,
       messages: [{
         role: 'user',
-        content: `Bu TYT PDF'ini analiz et. İçerikte:
-1. Kaç soru var?
-2. Hangi konulardan sorular var?
-3. Sorular nasıl formatlanmış?
-4. Doğru cevaplar nasıl belirtilmiş?
+        content: `Bu PDF'den TÜM soruları çıkarıp JSON formatında döndür. Bu AYT Din Kültürü ve Ahlak Bilgisi soru bankası 42 soru içeriyor.
 
-İçerik preview (ilk 2000 karakter):
-${fileContent.slice(0, 2000)}
+ÖNEMLI KURALLAR:
+1. Her soruyu tam metin olarak çıkar
+2. A, B, C, D, E şıklarını ayır
+3. Soru numaralarını bul
+4. Hangi yıldan olduğunu tespit et (2018-AYT, 2019-AYT, vb.)
+5. Doğru cevabı tahmin et (genellikle A=0, B=1, C=2, D=3, E=4)
 
-Analiz sonucu JSON formatında ver:
+PDF İçeriği:
+${fileContent}
+
+İstediğim JSON format:
 {
-  "analysis": {
-    "total_questions": sayı,
-    "subjects": ["konu1", "konu2"],
-    "format_notes": "format açıklaması"
-  }
-}`
+  "questions": [
+    {
+      "text": "Soru metni buraya...",
+      "options": ["A şıkkı", "B şıkkı", "C şıkkı", "D şıkkı", "E şıkkı"],
+      "correctAnswer": 0,
+      "explanation": "",
+      "difficulty": "medium",
+      "category": "din kültürü ve ahlak bilgisi",
+      "topic": "konu başlığı",
+      "year": 2023,
+      "questionNumber": 1
+    }
+  ]
+}
+
+Tüm 42 soruyu çıkarman çok önemli. Hiçbirini atlamayacaksın!`
       }]
     });
 
-    console.log('PDF Analysis:', (analysisResponse.content[0] as any).text);
+    const questionsText = questionExtractionResponse.content[0]?.text || '';
+    console.log('AI Response length:', questionsText.length);
+    console.log('AI Response preview:', questionsText.slice(0, 1000));
 
-    // Şimdi sorular çıkar
+    // JSON parse işlemi
+    try {
+      const jsonMatch = questionsText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.log('JSON formatında yanıt alınamadı');
+        return {
+          error: 'JSON formatında yanıt alınamadı',
+          message: 'AI yanıtı uygun formatta değil'
+        };
+      }
+
+      const questionsData = JSON.parse(jsonMatch[0]);
+      
+      if (!questionsData.questions || !Array.isArray(questionsData.questions)) {
+        console.log('Sorular array olarak bulunamadı');
+        return {
+          error: 'Sorular bulunamadı',
+          message: 'PDF içinde soru formatı tanınamadı'
+        };
+      }
+
+      const questions = questionsData.questions.map((q: any, index: number) => ({
+        text: q.text || '',
+        options: Array.isArray(q.options) ? q.options : [],
+        correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
+        explanation: q.explanation || '',
+        difficulty: q.difficulty || 'medium',
+        category: q.category || 'din kültürü ve ahlak bilgisi',
+        topic: q.topic || 'bilinmeyen',
+        year: q.year || 2023,
+        questionNumber: q.questionNumber || (index + 1)
+      })).filter((q: any) => q.text && q.options.length >= 4);
+
+      console.log(`${questions.length} soru başarıyla çıkarıldı`);
+
+      if (questions.length === 0) {
+        return {
+          error: 'Hiçbir soru çıkarılamadı',
+          message: 'PDF formatı tanınmadı veya sorular okunamadı'
+        };
+      }
+
+      return { questions };
+
+    } catch (parseError) {
+      console.error('JSON parse hatası:', parseError);
+      console.log('Ham AI yanıtı:', questionsText.slice(0, 2000));
+      return {
+        error: 'JSON ayrıştırma hatası',
+        message: 'AI yanıtı işlenemedi: ' + parseError.message
+      };
+    }
+
+  } catch (error) {
+    console.error('TYT PDF processing error:', error);
+    
+    // Return a structured error response instead of throwing
+    return {
+      error: 'PDF işleme hatası',
+      message: 'PDF dosyası işlenirken bir hata oluştu.',
+      questions: []
+    };
+  }
+}
+
+export async function processAYTPDFContent(
+  fileContent: string
+): Promise<ProcessedContent> {
+  try {
+    console.log('AYT PDF content length:', fileContent.length);
+    
+    // AYT soruları için özel prompt
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 8000,

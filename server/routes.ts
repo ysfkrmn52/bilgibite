@@ -696,6 +696,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AYT Questions Direct Import Endpoint
+  app.post('/api/admin/import-ayt-questions', async (req, res) => {
+    console.log('AYT sorularını doğrudan veritabanına yüklüyorum...');
+    try {
+      const { importAYTQuestions } = await import('./direct-ayt-importer');
+      const result = await importAYTQuestions();
+      
+      console.log(`${result.savedCount} AYT sorusu veritabanına kaydedildi`);
+      res.json(result);
+
+    } catch (error: any) {
+      console.error('AYT questions import error:', error);
+      res.status(500).json({
+        success: false,
+        error: error?.message || 'Bilinmeyen hata',
+        message: 'AYT soruları yüklenirken hata oluştu'
+      });
+    }
+  });
+
   app.get("/api/user/achievements", async (req, res) => {
     try {
       const achievements = [
