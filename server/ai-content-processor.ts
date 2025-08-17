@@ -18,6 +18,8 @@ interface ProcessedContent {
     difficulty: 'easy' | 'medium' | 'hard';
     category: string;
     topic: string;
+    year?: number;
+    questionNumber?: number;
   }>;
   courses?: Array<{
     title: string;
@@ -35,6 +37,77 @@ interface ProcessedContent {
     objectives: string[];
     estimatedTime: number;
   }>;
+}
+
+export async function processTYTPDFContent(
+  fileContent: string
+): Promise<ProcessedContent> {
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: `Bu TYT (Temel Yeterlilik Testi) PDF dosyasını analiz et ve içindeki tüm soruları konularına göre kategorize et. Her soru için:
+
+1. Soru metni (tam metin)
+2. 4 seçenek (A, B, C, D) 
+3. Doğru cevap (0-3 arası index - metnde belirtilen doğru şıkka göre)
+4. Detaylı açıklama (varsa)
+5. Zorluk seviyesi (easy/medium/hard)
+6. Ana kategori (türkçe, matematik, fizik, kimya, biyoloji, tarih, coğrafya, felsefe)
+7. Alt konu/konu başlığı
+
+ÖZEL KURALLAR:
+- Her soru için kategoriyi PDF'teki bölüm başlığına göre belirle
+- TYT kategorileri: türkçe, matematik, fizik, kimya, biyoloji, tarih, coğrafya, felsefe
+- Alt konuları PDF'te belirtilen konu başlıklarından al
+- Soru numaralarını ve yıllarını (2018-2024) takip et
+- Sadece tam sorular işle, eksik olanları atla
+
+JSON formatında döndür:
+{
+  "questions": [
+    {
+      "text": "Tam soru metni?",
+      "options": ["A şıkkı", "B şıkkı", "C şıkkı", "D şıkkı"],
+      "correctAnswer": 2,
+      "explanation": "Açıklama (varsa)",
+      "difficulty": "medium",
+      "category": "türkçe",
+      "topic": "sözcükte anlam",
+      "year": 2024,
+      "questionNumber": 1
+    }
+  ]
+}
+
+İçerik:
+${fileContent.substring(0, 50000)}`
+      }]
+    });
+
+    const responseText = (response.content[0] as any).text;
+    
+    // Clean up the response text by removing markdown code blocks
+    let cleanedText = responseText.trim();
+    
+    // Remove markdown code blocks more comprehensively
+    cleanedText = cleanedText.replace(/^```(?:json)?\s*/gm, '').replace(/\s*```$/gm, '');
+    
+    // Try to extract JSON from the response
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedText = jsonMatch[0];
+    }
+    
+    const parsedContent = JSON.parse(cleanedText);
+    
+    return parsedContent;
+  } catch (error) {
+    console.error('TYT PDF processing error:', error);
+    throw new Error('TYT PDF işleme sırasında hata oluştu');
+  }
 }
 
 export async function processEducationContent(
@@ -152,10 +225,6 @@ ${fileContent}`
     return parsedContent;
   } catch (error) {
     console.error('AI content processing error:', error);
-    const responseTextLocal = (response as any)?.content?.[0]?.text;
-    if (responseTextLocal) {
-      console.error('Response text was:', responseTextLocal.substring(0, 500));
-    }
     throw new Error('İçerik işleme sırasında hata oluştu');
   }
 }

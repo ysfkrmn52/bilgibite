@@ -141,7 +141,10 @@ export default function AdminDashboard() {
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [showManualQuestionForm, setShowManualQuestionForm] = useState(false);
   const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [showTYTUpload, setShowTYTUpload] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const tytFileInputRef = useRef<HTMLInputElement>(null);
+  const [processingProgress, setProcessingProgress] = useState(0);
   
   // Form states
   const [newAdmin, setNewAdmin] = useState({
@@ -289,6 +292,53 @@ export default function AdminDashboard() {
         isPublished: false
       });
     }
+  });
+
+  // TYT PDF processing mutation
+  const processTYTPDFMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = async (e) => {
+          try {
+            const fileContent = e.target?.result as string;
+            
+            setProcessingProgress(20);
+            
+            const response = await apiRequest('POST', '/api/tyt/process-pdf', {
+              body: JSON.stringify({ fileContent }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            setProcessingProgress(100);
+            resolve(response);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        reader.onerror = () => reject(new Error('Dosya okuma hatası'));
+        reader.readAsText(file, 'utf-8');
+      });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "TYT PDF Başarıyla İşlendi!",
+        description: `${data.processedQuestions} soru kategorilere ayrılıp veritabanına kaydedildi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setShowTYTUpload(false);
+      setProcessingProgress(0);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "PDF İşleme Hatası",
+        description: error.message || "PDF dosyası işlenirken bir hata oluştu",
+        variant: "destructive",
+      });
+      setProcessingProgress(0);
+    },
   });
 
   const handleCreateAdmin = () => {
@@ -609,9 +659,13 @@ export default function AdminDashboard() {
                       <FileText className="w-6 h-6" />
                       Manuel Soru Ekle
                     </Button>
-                    <Button className="h-20 flex-col gap-2" variant="outline">
-                      <Brain className="w-6 h-6" />
-                      AI Soru Üret
+                    <Button 
+                      className="h-20 flex-col gap-2" 
+                      variant="outline"
+                      onClick={() => setShowTYTUpload(true)}
+                    >
+                      <FileText className="w-6 h-6" />
+                      TYT PDF İşle
                     </Button>
                     <Button className="h-20 flex-col gap-2" variant="outline">
                       <Download className="w-6 h-6" />
@@ -1081,6 +1135,68 @@ export default function AdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* TYT PDF Upload Dialog */}
+        <Dialog open={showTYTUpload} onOpenChange={setShowTYTUpload}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>TYT PDF İşle</DialogTitle>
+              <DialogDescription>
+                TYT sorularını içeren PDF dosyasını yükleyin. AI sistemi soruları konularına göre kategorize edip veritabanına kaydedecek.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="tyt-file">PDF/TXT Dosyası</Label>
+                <Input 
+                  id="tyt-file"
+                  ref={tytFileInputRef}
+                  type="file" 
+                  accept=".pdf,.txt"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      processTYTPDFMutation.mutate(file);
+                    }
+                  }}
+                />
+              </div>
+              
+              {processingProgress > 0 && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>AI ile işleniyor...</span>
+                    <span>{processingProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${processingProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTYTUpload(false)}
+                  disabled={processTYTPDFMutation.isPending}
+                >
+                  İptal
+                </Button>
+                <Button 
+                  onClick={() => tytFileInputRef.current?.click()}
+                  disabled={processTYTPDFMutation.isPending}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Dosya Seç
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );

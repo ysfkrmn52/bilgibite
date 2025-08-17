@@ -1,9 +1,10 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import cors from 'cors';
 import multer from "multer";
 import { storage } from "./storage";
-import { processContentFile } from "./ai-content-processor";
+import { processTYTPDFContent } from "./ai-content-processor";
 import { 
   insertUserSchema, 
   insertQuizSessionSchema,
@@ -69,6 +70,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(securityMiddleware);
   app.use(loggingMiddleware);
   app.use(apiRateLimiter); // Global rate limiting
+
+  // Parse JSON with increased limit for large content files
+  app.use('/api/tyt', express.json({ limit: '50mb' }));
 
   // Public routes (no authentication required)
   app.get("/health", (req: Request, res: Response) => {
@@ -1087,7 +1091,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI-powered content processing endpoint
-  app.post('/api/admin/process-content', upload.single('file'), processContentFile);
+  // TYT PDF processing endpoint
+  app.post("/api/tyt/process-pdf", async (req, res) => {
+    try {
+      const { fileContent } = req.body;
+      
+      if (!fileContent) {
+        return res.status(400).json({ 
+          error: 'PDF içeriği gerekli',
+          message: 'PDF dosyasının metin içeriğini gönderin.' 
+        });
+      }
+
+      console.log('TYT PDF işleniyor...');
+      const processedContent = await processTYTPDFContent(fileContent);
+      
+      if (!processedContent.questions || processedContent.questions.length === 0) {
+        return res.status(400).json({
+          error: 'Soru bulunamadı',
+          message: 'PDF dosyasında geçerli sorular bulunamadı.'
+        });
+      }
+
+      // Save questions to storage 
+      const questionsToAdd = processedContent.questions.map((q: any) => {
+        // Map category to exam category
+        let examCategoryId = 'yks';
+        switch(q.category?.toLowerCase()) {
+          case 'türkçe':
+          case 'turkce':
+            examCategoryId = 'tyt-turkce';
+            break;
+          case 'matematik':
+            examCategoryId = 'tyt-matematik';
+            break;
+          case 'fizik':
+            examCategoryId = 'tyt-fizik';
+            break;
+          case 'kimya':
+            examCategoryId = 'tyt-kimya';
+            break;
+          case 'biyoloji':
+            examCategoryId = 'tyt-biyoloji';
+            break;
+          case 'tarih':
+            examCategoryId = 'tyt-tarih';
+            break;
+          case 'coğrafya':
+          case 'cografya':
+            examCategoryId = 'tyt-cografya';
+            break;
+          case 'felsefe':
+            examCategoryId = 'tyt-felsefe';
+            break;
+        }
+
+        return {
+          examCategoryId,
+          subject: q.topic || q.category || 'genel',
+          difficulty: q.difficulty || 'medium',
+          questionText: q.text,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation || null,
+          points: 10,
+          year: q.year || null,
+          questionNumber: q.questionNumber || null
+        };
+      });
+
+      // Save to storage in batches to avoid overwhelming the system
+      let savedCount = 0;
+      const batchSize = 10;
+      
+      for (let i = 0; i < questionsToAdd.length; i += batchSize) {
+        const batch = questionsToAdd.slice(i, i + batchSize);
+        
+        for (const question of batch) {
+          try {
+            await storage.createQuestion(question);
+            savedCount++;
+          } catch (error) {
+            console.error('Error saving question:', error);
+          }
+        }
+      }
+
+      console.log(`${savedCount} TYT sorusu başarıyla kaydedildi.`);
+
+      res.json({
+        success: true,
+        message: `${savedCount} TYT sorusu başarıyla kategorilere ayrılıp veritabanına kaydedildi.`,
+        processedQuestions: savedCount,
+        totalFound: processedContent.questions.length,
+        categories: [...new Set(questionsToAdd.map(q => q.examCategoryId))]
+      });
+      
+    } catch (error) {
+      console.error('TYT PDF processing error:', error);
+      res.status(500).json({ 
+        error: 'PDF işleme hatası',
+        message: 'PDF dosyası işlenirken bir hata oluştu.' 
+      });
+    }
+  });
 
   // Existing admin file upload endpoint (for compatibility)
   app.post('/api/admin/upload', upload.single('file'), async (req, res) => {
