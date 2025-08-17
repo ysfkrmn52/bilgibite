@@ -397,24 +397,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: Error handling middleware moved to index.ts after Vite setup
 
   const httpServer = createServer(app);
-  // Admin Dashboard Routes
+  // Admin Dashboard Routes - Real Database Statistics
   app.get("/api/admin/stats", async (req, res) => {
     try {
-      // Get dynamic question count from storage
-      const totalQuestions = await storage.getTotalQuestionCount();
+      // Gerçek veritabanı verilerini al
+      const [totalQuestionsResult] = await db.select({ count: sql`count(*)` }).from(questions);
+      const totalQuestions = Number(totalQuestionsResult.count);
+      
+      const [totalUsersResult] = await db.select({ count: sql`count(*)` }).from(users);
+      const totalUsers = Number(totalUsersResult.count);
+      
+      const [totalQuizSessionsResult] = await db.select({ count: sql`count(*)` }).from(quizSessions);
+      const totalQuizSessions = Number(totalQuizSessionsResult.count);
+      
+      // Kategori dağılımını al
+      const categoryStats = await db.select({
+        category: questions.examCategoryId,
+        count: sql`count(*)`
+      }).from(questions).groupBy(questions.examCategoryId);
+      
+      let tytQuestions = 0;
+      let kpssQuestions = 0; 
+      let educationQuestions = 0;
+      
+      categoryStats.forEach(stat => {
+        if (stat.category && stat.category.includes('tyt')) {
+          tytQuestions += Number(stat.count);
+        } else if (stat.category && stat.category.includes('kpss')) {
+          kpssQuestions += Number(stat.count);
+        }
+      });
       
       const stats = {
         totalQuestions,
-        activeUsers: 342,
-        dailyQuizzes: 89,
-        successRate: 73,
+        activeUsers: totalUsers, // Gerçek kullanıcı sayısı (1)
+        dailyQuizzes: totalQuizSessions, // Gerçek quiz session sayısı (0)
+        premiumUsers: 0, // Henüz premium sistem yok
+        // Kategori dağılımları
+        tytQuestions,
+        kpssQuestions,
+        educationMaterials: educationQuestions,
         recentActivities: [
-          { description: "Yeni kullanıcı kaydı: Ali M.", time: "2 dakika önce" },
           { description: `${totalQuestions} soru sistemde mevcut`, time: "Şimdi" },
-          { description: "Quiz tamamlandı: Zeynep K.", time: "28 dakika önce" },
-          { description: "AI destekli soru yükleme aktif", time: "1 saat önce" }
+          { description: `${totalUsers} kayıtlı kullanıcı`, time: "Şimdi" },
+          { description: `${totalQuizSessions} quiz oturumu tamamlandı`, time: "Şimdi" },
+          { description: "AI soru üretimi aktif", time: "Son güncelleme" }
         ]
       };
+      
       res.json(stats);
     } catch (error) {
       console.error("Admin stats error:", error);
@@ -1394,33 +1424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin Statistics Route
-  app.get("/api/admin/stats", async (req, res) => {
-    try {
-      // Gerçek veritabanından istatistikler al
-      const totalQuestions = await storage.getQuestionCount();
-      const tytQuestions = await storage.getQuestionCountByCategory('tyt');
-      const kpssQuestions = await storage.getQuestionCountByCategory('kpss');
-      
-      const stats = {
-        totalQuestions: totalQuestions,
-        activeUsers: 342,
-        dailyQuizzes: 89,
-        premiumUsers: 23,
-        totalUsers: 1250,
-        freeUsers: 1227,
-        onlineUsers: 45,
-        tytQuestions: tytQuestions,
-        kpssQuestions: kpssQuestions,
-        educationMaterials: 150
-      };
-      
-      res.json(stats);
-    } catch (error) {
-      console.error("Admin stats error:", error);
-      res.status(500).json({ error: "İstatistikler alınamadı" });
-    }
-  });
+  // Duplicate admin stats endpoint removed - using the main one above
 
   // Manuel Soru Ekleme Endpoint
   app.post("/api/admin/questions", async (req, res) => {

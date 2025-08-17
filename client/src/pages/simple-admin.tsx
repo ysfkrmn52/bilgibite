@@ -618,25 +618,18 @@ export default function SimpleAdmin() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span>Toplam Kullanıcı:</span>
-                  <Badge variant="outline">{adminStats?.totalUsers || 0}</Badge>
+                  <span>Kayıtlı Kullanıcı:</span>
+                  <Badge variant="outline">{adminStats?.activeUsers || 0}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Aktif Kullanıcı:</span>
-                  <Badge variant="default">{adminStats?.activeUsers || 0}</Badge>
+                  <span>Quiz Oturumu:</span>
+                  <Badge variant="default">{adminStats?.dailyQuizzes || 0}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Ücretsiz Kullanıcı:</span>
-                  <Badge variant="secondary">{adminStats?.freeUsers || 0}</Badge>
+                  <span>Premium Kullanıcı:</span>
+                  <Badge variant="secondary">{adminStats?.premiumUsers || 0}</Badge>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span>Ücretli Kullanıcı:</span>
-                  <Badge variant="destructive">{adminStats?.premiumUsers || 0}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Çevrimiçi:</span>
-                  <Badge className="bg-green-500">{adminStats?.onlineUsers || 0}</Badge>
-                </div>
+
               </CardContent>
             </Card>
             
@@ -661,10 +654,7 @@ export default function SimpleAdmin() {
                   <span>Eğitim Materyali:</span>
                   <Badge variant="destructive">{adminStats?.educationMaterials || 0}</Badge>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span>Günlük Quiz:</span>
-                  <Badge className="bg-purple-500">{adminStats?.dailyQuizzes || 0}</Badge>
-                </div>
+
               </CardContent>
             </Card>
           </div>
