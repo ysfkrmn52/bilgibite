@@ -17,7 +17,7 @@ import { pwaManager } from "./lib/pwa";
 
 // Core pages loaded immediately for better UX
 import Home from "@/pages/simplified-home";
-import AdminDashboard from "@/pages/admin-dashboard";
+import SimpleAdmin from "@/pages/simple-admin";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -51,7 +51,10 @@ function Router() {
       <Navbar />
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin" component={() => (
+          <Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense>
+        )} />
+        <Route path="/admin-simple" component={SimpleAdmin} />
         <Route path="/profile" component={() => (
           <Suspense fallback={<PageLoader />}><Profile /></Suspense>
         )} />

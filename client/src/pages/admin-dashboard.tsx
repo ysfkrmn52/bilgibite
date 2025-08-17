@@ -299,10 +299,43 @@ export default function AdminDashboard() {
   // General PDF processing mutation
   const processPDFMutation = useMutation({
     mutationFn: async ({ file, examType }: { file: File; examType: string }) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const response = await fetch(`/api/exam/${examType}/process-pdf`, {
+          method: 'POST',
+          body: formData
+        });
         
-        reader.onload = async (e) => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('PDF upload error:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "PDF Başarıyla İşlendi!",
+        description: `${data.processedQuestions} soru kategorilere ayrılıp veritabanına kaydedildi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setShowPDFUpload(false);
+      setProcessingProgress(0);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "PDF İşleme Hatası",
+        description: error.message || "PDF dosyası işlenirken bir hata oluştu",
+        variant: "destructive",
+      });
+      setProcessingProgress(0);
+    }
           try {
             const fileContent = e.target?.result as string;
             
