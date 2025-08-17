@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Question } from "@shared/schema";
 import { formatTime, getDifficultyColor, getSubjectColor } from "@/lib/quiz-data";
+import { 
+  MultipleChoiceQuestion, 
+  FillInBlankQuestion, 
+  TrueFalseQuestion, 
+  VisualQuestion 
+} from "./QuestionTypes";
 
 interface QuizInterfaceProps {
   questions: Question[];
@@ -17,13 +23,15 @@ interface QuizInterfaceProps {
 export default function QuizInterface({ questions, onExit, onComplete }: QuizInterfaceProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [textAnswer, setTextAnswer] = useState<string>("");
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [score, setScore] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(20 * 60); // 20 minutes
+  const [timeRemaining, setTimeRemaining] = useState(5 * 60); // 5 minutes for Duolingo-style sessions
   const [startTime] = useState(Date.now());
   const [showFeedback, setShowFeedback] = useState(false);
   const [lives, setLives] = useState(3);
   const [streak, setStreak] = useState(0);
+  const [isCorrect, setIsCorrect] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
@@ -48,17 +56,35 @@ export default function QuizInterface({ questions, onExit, onComplete }: QuizInt
   };
 
   const handleSubmitAnswer = () => {
-    if (selectedAnswer === null) return;
+    if (currentQuestion.questionType === 'fill_blank') {
+      if (!textAnswer.trim()) return;
+      
+      const correctAnswer = (currentQuestion.options as Array<{text: string}>)[currentQuestion.correctAnswer]?.text || "";
+      const isAnswerCorrect = textAnswer.trim().toLowerCase() === correctAnswer.toLowerCase();
+      setIsCorrect(isAnswerCorrect);
+      setShowFeedback(true);
 
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-    setShowFeedback(true);
-
-    if (isCorrect) {
-      setScore(prev => prev + currentQuestion.points);
-      setStreak(prev => prev + 1);
+      if (isAnswerCorrect) {
+        setScore(prev => prev + currentQuestion.points);
+        setStreak(prev => prev + 1);
+      } else {
+        setLives(prev => prev - 1);
+        setStreak(0);
+      }
     } else {
-      setLives(prev => prev - 1);
-      setStreak(0);
+      if (selectedAnswer === null) return;
+
+      const isAnswerCorrect = selectedAnswer === currentQuestion.correctAnswer;
+      setIsCorrect(isAnswerCorrect);
+      setShowFeedback(true);
+
+      if (isAnswerCorrect) {
+        setScore(prev => prev + currentQuestion.points);
+        setStreak(prev => prev + 1);
+      } else {
+        setLives(prev => prev - 1);
+        setStreak(0);
+      }
     }
 
     setAnsweredQuestions(prev => [...prev, currentQuestionIndex]);
@@ -68,7 +94,9 @@ export default function QuizInterface({ questions, onExit, onComplete }: QuizInt
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
+        setTextAnswer("");
         setShowFeedback(false);
+        setIsCorrect(false);
       } else {
         handleQuizComplete();
       }
@@ -173,32 +201,47 @@ export default function QuizInterface({ questions, onExit, onComplete }: QuizInt
                   </h2>
                 </div>
 
-                {/* Quiz Options */}
+                {/* Quiz Content Based on Question Type */}
                 <div className="space-y-3">
-                  {(currentQuestion.options as Array<{text: string, letter: string}>).map((option, index: number) => (
-                    <motion.button
-                      key={index}
-                      className={`w-full p-4 text-left rounded-xl border-2 border-gray-200 quiz-option ${getOptionClass(index)}`}
-                      onClick={() => handleOptionSelect(index)}
-                      disabled={showFeedback}
-                      whileHover={{ scale: showFeedback ? 1 : 1.02 }}
-                      whileTap={{ scale: showFeedback ? 1 : 0.98 }}
-                      data-testid={`option-${index}`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                          getOptionClass(index) ? "bg-white text-white" : "bg-gray-200 text-gray-600"
-                        }`}>
-                          {option.letter || String.fromCharCode(65 + index)}
-                        </div>
-                        <span className={`font-medium ${
-                          getOptionClass(index) ? "text-white" : "text-text-dark"
-                        }`}>
-                          {option.text}
-                        </span>
-                      </div>
-                    </motion.button>
-                  ))}
+                  {currentQuestion.questionType === 'multiple_choice' && (
+                    <MultipleChoiceQuestion
+                      question={currentQuestion}
+                      selectedAnswer={selectedAnswer}
+                      onOptionSelect={handleOptionSelect}
+                      showFeedback={showFeedback}
+                      isCorrect={isCorrect}
+                    />
+                  )}
+                  
+                  {currentQuestion.questionType === 'fill_blank' && (
+                    <FillInBlankQuestion
+                      question={currentQuestion}
+                      textAnswer={textAnswer}
+                      onTextChange={setTextAnswer}
+                      showFeedback={showFeedback}
+                      isCorrect={isCorrect}
+                    />
+                  )}
+                  
+                  {currentQuestion.questionType === 'true_false' && (
+                    <TrueFalseQuestion
+                      question={currentQuestion}
+                      selectedAnswer={selectedAnswer}
+                      onOptionSelect={handleOptionSelect}
+                      showFeedback={showFeedback}
+                      isCorrect={isCorrect}
+                    />
+                  )}
+                  
+                  {currentQuestion.questionType === 'visual' && (
+                    <VisualQuestion
+                      question={currentQuestion}
+                      selectedAnswer={selectedAnswer}
+                      onOptionSelect={handleOptionSelect}
+                      showFeedback={showFeedback}
+                      isCorrect={isCorrect}
+                    />
+                  )}
                 </div>
 
                 {/* Explanation */}
@@ -230,7 +273,10 @@ export default function QuizInterface({ questions, onExit, onComplete }: QuizInt
               <Button
                 className="flex-1 bg-gradient-to-r from-primary to-secondary text-white btn-primary"
                 onClick={handleSubmitAnswer}
-                disabled={selectedAnswer === null || showFeedback}
+                disabled={
+                  showFeedback || 
+                  (currentQuestion.questionType === 'fill_blank' ? !textAnswer.trim() : selectedAnswer === null)
+                }
                 data-testid="button-submit"
               >
                 <Check className="mr-2 w-4 h-4" />

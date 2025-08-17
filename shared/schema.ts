@@ -36,6 +36,7 @@ export const questions = pgTable("questions", {
   examCategoryId: varchar("exam_category_id").notNull(),
   subject: text("subject").notNull(),
   difficulty: text("difficulty").notNull(), // easy, medium, hard
+  questionType: text("question_type").notNull().default('multiple_choice'), // multiple_choice, fill_blank, visual, true_false
   questionText: text("question_text").notNull(),
   options: jsonb("options").notNull(), // Array of option objects
   correctAnswer: integer("correct_answer").notNull(), // Index of correct option
@@ -44,6 +45,7 @@ export const questions = pgTable("questions", {
   topic: text("topic"),
   year: integer("year"),
   questionNumber: integer("question_number"),
+  imageUrl: text("image_url"), // For visual questions
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
