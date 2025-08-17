@@ -71,6 +71,27 @@
     transition: transform 0.2s ease;
   }
   
+  /* Dropdown özel stilleri - Light theme */
+  [data-radix-collection-item] {
+    @apply bg-white text-gray-900 !important;
+  }
+  
+  [data-radix-collection-item]:hover {
+    @apply bg-gray-100 text-gray-900 !important;
+  }
+  
+  [role="combobox"][data-state="open"] + [role="listbox"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+  }
+  
+  [data-radix-select-content] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+  }
+  
+  [data-radix-select-item] {
+    @apply bg-white text-gray-900 hover:bg-gray-100 focus:bg-gray-100 !important;
+  }
+  
   /* Focus outline temizlemesi */
   button:focus-visible,
   input:focus-visible,

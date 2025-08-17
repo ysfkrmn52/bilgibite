@@ -141,9 +141,10 @@ export default function AdminDashboard() {
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [showManualQuestionForm, setShowManualQuestionForm] = useState(false);
   const [showSystemSettings, setShowSystemSettings] = useState(false);
-  const [showTYTUpload, setShowTYTUpload] = useState(false);
+  const [showPDFUpload, setShowPDFUpload] = useState(false);
+  const [selectedExamType, setSelectedExamType] = useState('tyt');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const tytFileInputRef = useRef<HTMLInputElement>(null);
+  const pdfFileInputRef = useRef<HTMLInputElement>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
   
   // Form states
@@ -294,9 +295,9 @@ export default function AdminDashboard() {
     }
   });
 
-  // TYT PDF processing mutation
-  const processTYTPDFMutation = useMutation({
-    mutationFn: async (file: File) => {
+  // General PDF processing mutation
+  const processPDFMutation = useMutation({
+    mutationFn: async ({ file, examType }: { file: File; examType: string }) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         
@@ -306,8 +307,8 @@ export default function AdminDashboard() {
             
             setProcessingProgress(20);
             
-            const response = await apiRequest('POST', '/api/tyt/process-pdf', {
-              body: JSON.stringify({ fileContent }),
+            const response = await apiRequest('POST', `/api/exam/${examType}/process-pdf`, {
+              body: JSON.stringify({ fileContent, examType }),
               headers: { 'Content-Type': 'application/json' }
             });
             
@@ -324,11 +325,11 @@ export default function AdminDashboard() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "TYT PDF Başarıyla İşlendi!",
+        title: "PDF Başarıyla İşlendi!",
         description: `${data.processedQuestions} soru kategorilere ayrılıp veritabanına kaydedildi`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      setShowTYTUpload(false);
+      setShowPDFUpload(false);
       setProcessingProgress(0);
     },
     onError: (error: any) => {
@@ -662,10 +663,10 @@ export default function AdminDashboard() {
                     <Button 
                       className="h-20 flex-col gap-2" 
                       variant="outline"
-                      onClick={() => setShowTYTUpload(true)}
+                      onClick={() => setShowPDFUpload(true)}
                     >
                       <FileText className="w-6 h-6" />
-                      TYT PDF İşle
+                      Sınav PDF İşle
                     </Button>
                     <Button className="h-20 flex-col gap-2" variant="outline">
                       <Download className="w-6 h-6" />
@@ -1136,27 +1137,44 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
 
-        {/* TYT PDF Upload Dialog */}
-        <Dialog open={showTYTUpload} onOpenChange={setShowTYTUpload}>
-          <DialogContent className="max-w-md">
+        {/* General PDF Upload Dialog */}
+        <Dialog open={showPDFUpload} onOpenChange={setShowPDFUpload}>
+          <DialogContent className="max-w-md bg-white border border-gray-200">
             <DialogHeader>
-              <DialogTitle>TYT PDF İşle</DialogTitle>
-              <DialogDescription>
-                TYT sorularını içeren PDF dosyasını yükleyin. AI sistemi soruları konularına göre kategorize edip veritabanına kaydedecek.
+              <DialogTitle className="text-gray-900">Sınav PDF İşle</DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Sınav sorularını içeren PDF dosyasını yükleyin. AI sistemi soruları konularına göre kategorize edip veritabanına kaydedecek.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="tyt-file">PDF/TXT Dosyası</Label>
+                <Label htmlFor="exam-type" className="text-gray-700">Sınav Türü</Label>
+                <Select value={selectedExamType} onValueChange={setSelectedExamType}>
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                    <SelectItem value="tyt" className="text-gray-900 hover:bg-gray-100">TYT (Temel Yeterlilik Testi)</SelectItem>
+                    <SelectItem value="kpss" className="text-gray-900 hover:bg-gray-100">KPSS (Kamu Personeli Seçme Sınavı)</SelectItem>
+                    <SelectItem value="ehliyet" className="text-gray-900 hover:bg-gray-100">Ehliyet Sınavı</SelectItem>
+                    <SelectItem value="ale" className="text-gray-900 hover:bg-gray-100">ALE (Açık Lise)</SelectItem>
+                    <SelectItem value="dgs" className="text-gray-900 hover:bg-gray-100">DGS (Dikey Geçiş Sınavı)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="pdf-file" className="text-gray-700">PDF/TXT Dosyası</Label>
                 <Input 
-                  id="tyt-file"
-                  ref={tytFileInputRef}
+                  id="pdf-file"
+                  ref={pdfFileInputRef}
                   type="file" 
                   accept=".pdf,.txt"
+                  className="bg-white border-gray-300 text-gray-900"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      processTYTPDFMutation.mutate(file);
+                      processPDFMutation.mutate({ file, examType: selectedExamType });
                     }
                   }}
                 />
@@ -1164,7 +1182,7 @@ export default function AdminDashboard() {
               
               {processingProgress > 0 && (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-gray-700">
                     <span>AI ile işleniyor...</span>
                     <span>{processingProgress}%</span>
                   </div>
@@ -1180,14 +1198,16 @@ export default function AdminDashboard() {
               <div className="flex justify-end gap-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => setShowTYTUpload(false)}
-                  disabled={processTYTPDFMutation.isPending}
+                  onClick={() => setShowPDFUpload(false)}
+                  disabled={processPDFMutation.isPending}
+                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                 >
                   İptal
                 </Button>
                 <Button 
-                  onClick={() => tytFileInputRef.current?.click()}
-                  disabled={processTYTPDFMutation.isPending}
+                  onClick={() => pdfFileInputRef.current?.click()}
+                  disabled={processPDFMutation.isPending}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Dosya Seç

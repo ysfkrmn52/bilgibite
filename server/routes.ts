@@ -72,7 +72,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(apiRateLimiter); // Global rate limiting
 
   // Parse JSON with increased limit for large content files
-  app.use('/api/tyt', express.json({ limit: '50mb' }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
   // Public routes (no authentication required)
   app.get("/health", (req: Request, res: Response) => {
@@ -1091,10 +1092,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI-powered content processing endpoint
-  // TYT PDF processing endpoint
-  app.post("/api/tyt/process-pdf", async (req, res) => {
+  // General exam PDF processing endpoint
+  app.post("/api/exam/:examType/process-pdf", async (req, res) => {
     try {
-      const { fileContent } = req.body;
+      const { fileContent, examType: bodyExamType } = req.body;
+      const examType = req.params.examType || bodyExamType || 'tyt';
       
       if (!fileContent) {
         return res.status(400).json({ 
@@ -1103,7 +1105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log('TYT PDF işleniyor...');
+      console.log(`${examType.toUpperCase()} PDF işleniyor...`);
       const processedContent = await processTYTPDFContent(fileContent);
       
       if (!processedContent.questions || processedContent.questions.length === 0) {
@@ -1177,18 +1179,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      console.log(`${savedCount} TYT sorusu başarıyla kaydedildi.`);
+      console.log(`${savedCount} ${examType.toUpperCase()} sorusu başarıyla kaydedildi.`);
 
       res.json({
         success: true,
-        message: `${savedCount} TYT sorusu başarıyla kategorilere ayrılıp veritabanına kaydedildi.`,
+        message: `${savedCount} ${examType.toUpperCase()} sorusu başarıyla kategorilere ayrılıp veritabanına kaydedildi.`,
         processedQuestions: savedCount,
         totalFound: processedContent.questions.length,
-        categories: [...new Set(questionsToAdd.map(q => q.examCategoryId))]
+        examType: examType.toUpperCase(),
+        categories: Array.from(new Set(questionsToAdd.map(q => q.examCategoryId)))
       });
       
     } catch (error) {
-      console.error('TYT PDF processing error:', error);
+      console.error(`${req.params.examType || 'PDF'} processing error:`, error);
       res.status(500).json({ 
         error: 'PDF işleme hatası',
         message: 'PDF dosyası işlenirken bir hata oluştu.' 
