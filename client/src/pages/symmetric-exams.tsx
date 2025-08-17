@@ -180,7 +180,11 @@ export default function SymmetricExams() {
             const IconComponent = exam.icon;
             return (
               <motion.div key={exam.id} variants={cardVariants}>
-                <Card className="h-80 hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group">
+                <Card 
+                  className="h-80 hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group cursor-pointer"
+                  onClick={() => window.location.href = `/quiz?category=${exam.id}`}
+                  data-testid={`exam-card-${exam.id}`}
+                >
                   <div className={`h-20 bg-gradient-to-r ${exam.color} relative`}>
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                     <div className="relative h-full flex items-center justify-between px-6">
@@ -236,16 +240,12 @@ export default function SymmetricExams() {
                     </div>
 
                     <div className="space-y-3 pt-4">
-                      <Button 
-                        className={`w-full bg-gradient-to-r ${exam.color} hover:scale-105 transition-transform text-white border-0 shadow-lg`}
-                        asChild
-                        data-testid={`button-start-exam-${exam.id}`}
-                      >
-                        <Link href={`/quiz?category=${exam.id}`}>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-center text-primary font-medium">
                           <Play className="w-4 h-4 mr-2" />
-                          Sınavı Başlat
-                        </Link>
-                      </Button>
+                          Kartı tıklayarak sınava başla
+                        </div>
+                      </div>
                       
                       <div className="grid grid-cols-2 gap-2">
                         <Button 

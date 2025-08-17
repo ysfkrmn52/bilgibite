@@ -45,7 +45,10 @@ export class PWAManager {
   }
 
   private async registerServiceWorker() {
-    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+    // Only register in production environment with HTTPS
+    if ('serviceWorker' in navigator && 
+        window.location.protocol === 'https:' && 
+        !window.location.hostname.includes('replit.dev')) {
       try {
         this.swRegistration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/'
