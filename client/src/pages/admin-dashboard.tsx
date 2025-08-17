@@ -305,15 +305,25 @@ export default function AdminDashboard() {
           try {
             const fileContent = e.target?.result as string;
             
+            console.log(`Dosya boyutu: ${fileContent.length} karakter`);
             setProcessingProgress(20);
             
-            const response = await apiRequest('POST', `/api/exam/${examType}/process-pdf`, {
-              body: JSON.stringify({ fileContent, examType }),
-              headers: { 'Content-Type': 'application/json' }
+            const response = await fetch(`/api/exam/${examType}/process-pdf`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ fileContent, examType })
             });
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
             
             setProcessingProgress(100);
-            resolve(response);
+            resolve(data);
           } catch (error) {
             reject(error);
           }
