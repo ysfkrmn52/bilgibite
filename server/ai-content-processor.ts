@@ -75,7 +75,7 @@ Analiz sonucu JSON formatında ver:
       }]
     });
 
-    console.log('PDF Analysis:', analysisResponse.content[0].text);
+    console.log('PDF Analysis:', (analysisResponse.content[0] as any).text);
 
     // Şimdi sorular çıkar
     const response = await anthropic.messages.create({
