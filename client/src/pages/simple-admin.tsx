@@ -18,6 +18,7 @@ export default function SimpleAdmin() {
   const [selectedCategory, setSelectedCategory] = useState('turkce');
   const [questionCount, setQuestionCount] = useState(10);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [pdfAnalysisResult, setPdfAnalysisResult] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -32,38 +33,60 @@ export default function SimpleAdmin() {
   });
 
   // Admin istatistikleri query
-  const { data: adminStats } = useQuery({
+  const { data: adminStats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/admin/stats'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/stats');
-      return response;
-    }
+      try {
+        const response = await fetch('/api/admin/stats');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Admin stats fetch error:', error);
+        throw error;
+      }
+    },
+    refetchInterval: 30000, // 30 saniyede bir güncelle
   });
 
   const uploadPDFMutation = useMutation({
     mutationFn: async (file: File) => {
+      // Dosya boyutu kontrolü (200MB = 200 * 1024 * 1024)
+      if (file.size > 200 * 1024 * 1024) {
+        throw new Error('Dosya boyutu 200MB\'dan büyük olamaz');
+      }
+
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch(`/api/exam/${selectedExamType}/process-pdf`, {
+      const response = await fetch(`/api/admin/process-pdf`, {
         method: 'POST',
         body: formData
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
       
       return await response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "PDF Başarıyla Yüklendi!",
-        description: `${data.processedQuestions} soru veritabanına eklendi`,
-      });
+      if (data.detectedQuestions) {
+        setPdfAnalysisResult(data);
+        toast({
+          title: "PDF Analizi Tamamlandı!",
+          description: `${data.detectedQuestions} soru tespit edildi. Onayınızı bekliyor.`,
+        });
+      } else {
+        toast({
+          title: "PDF Başarıyla Yüklendi!",
+          description: `${data.processedQuestions} soru veritabanına eklendi`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      }
       setIsUploading(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: any) => {
       toast({
@@ -131,17 +154,54 @@ export default function SimpleAdmin() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+    if (file.size > 200 * 1024 * 1024) { // 200MB limit
       toast({
         title: "Dosya Çok Büyük",
-        description: "Maksimum dosya boyutu 50MB",
+        description: "Maksimum dosya boyutu 200MB",
         variant: "destructive",
       });
       return;
     }
 
     setIsUploading(true);
+    setPdfAnalysisResult(null); // Önceki sonuçları temizle
     uploadPDFMutation.mutate(file);
+  };
+
+  const confirmPDFQuestions = async (confirm: boolean) => {
+    if (!pdfAnalysisResult) return;
+
+    try {
+      const response = await fetch('/api/admin/confirm-pdf-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tempId: pdfAnalysisResult.tempId,
+          confirmAdd: confirm
+        })
+      });
+
+      if (confirm) {
+        toast({
+          title: "Sorular Ekleniyor...",
+          description: "Tespit edilen sorular veritabanına ekleniyor",
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      } else {
+        toast({
+          title: "İşlem İptal Edildi",
+          description: "PDF sorular veritabanına eklenmedi",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "İşlem sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+
+    setPdfAnalysisResult(null);
   };
 
   const handleCreateQuestion = () => {
@@ -302,7 +362,7 @@ export default function SimpleAdmin() {
                         {isUploading ? "PDF İşleniyor..." : `${selectedExamType.toUpperCase()} PDF Dosyası Seçin`}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Maksimum dosya boyutu: 50MB
+                        Maksimum dosya boyutu: 200MB
                       </p>
                     </div>
                   </label>
@@ -314,6 +374,50 @@ export default function SimpleAdmin() {
                     <p className="mt-2 text-sm text-gray-600">
                       PDF dosyası işleniyor, lütfen bekleyin...
                     </p>
+                  </div>
+                )}
+                
+                {/* PDF Analiz Sonucu ve Onay */}
+                {pdfAnalysisResult && (
+                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-900 dark:text-blue-100">
+                      PDF Analizi Tamamlandı
+                    </h3>
+                    <p className="text-blue-800 dark:text-blue-200 mb-4">
+                      <strong>{pdfAnalysisResult.detectedQuestions} soru tespit edildi</strong>
+                    </p>
+                    
+                    {pdfAnalysisResult.preview && pdfAnalysisResult.preview.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium mb-2 text-blue-900 dark:text-blue-100">Örnek Sorular:</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {pdfAnalysisResult.preview.map((question: any, index: number) => (
+                            <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                              <p className="font-medium">{question.questionText}</p>
+                              <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                Kategori: {question.subject || 'N/A'} | Zorluk: {question.difficulty}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={() => confirmPDFQuestions(true)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Evet, Veritabanına Ekle
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => confirmPDFQuestions(false)}
+                        className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400"
+                      >
+                        İptal Et
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

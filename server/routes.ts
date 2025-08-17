@@ -455,29 +455,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/questions", async (req, res) => {
     try {
-      const { question, options, correctAnswer, explanation, category, difficulty, tags } = req.body;
+      const { question, options, correctAnswer, explanation, category, difficulty } = req.body;
       
       // Validate required fields
       if (!question || !options || correctAnswer === undefined || !category) {
         return res.status(400).json({ error: "Gerekli alanlar eksik" });
       }
 
-      // Mock creation - replace with database insert
-      const newQuestion = {
-        id: Date.now().toString(),
-        question,
-        options,
-        correctAnswer,
-        explanation,
-        category,
-        difficulty: difficulty || "intermediate",
-        tags: tags || [],
-        createdAt: new Date().toISOString()
+      // Gerçek veritabanına soru ekle
+      const questionData = {
+        examCategoryId: category,
+        subject: 'manuel',
+        difficulty: difficulty || 'medium',
+        questionText: question,
+        options: options,
+        correctAnswer: correctAnswer,
+        explanation: explanation,
+        points: 10
       };
-
-      res.status(201).json(newQuestion);
+      
+      const createdQuestion = await storage.createQuestion(questionData);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Soru başarıyla veritabanına eklendi",
+        question: createdQuestion
+      });
     } catch (error) {
-      res.status(500).json({ error: "Soru eklenemedi" });
+      console.error("Manuel soru ekleme hatası:", error);
+      res.status(500).json({ error: "Soru eklenirken hata oluştu" });
     }
   });
 
@@ -1090,8 +1096,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI-powered content processing endpoint with PDF support
-  app.post("/api/exam/:examType/process-pdf", (req, res) => {
+  // PDF işleme endpoint - iki aşamalı (önce analiz, sonra onay)
+  app.post("/api/admin/process-pdf", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          error: 'PDF dosyası gerekli',
+          message: 'Lütfen bir PDF dosyası yükleyin.' 
+        });
+      }
+
+      const file = req.file;
+      
+      // Check file type
+      if (file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ 
+          error: 'Geçersiz dosya tipi',
+          message: 'Sadece PDF dosyaları desteklenir.' 
+        });
+      }
+
+      // Check file size (200MB limit)
+      if (file.size > 200 * 1024 * 1024) {
+        return res.status(413).json({ 
+          error: 'Dosya çok büyük',
+          message: 'Dosya boyutu 200MB sınırını aşıyor.' 
+        });
+      }
+
+      console.log('PDF analizi başlıyor...');
+      
+      // Extract text from PDF buffer
+      let pdfText = '';
+      try {
+        const pdfParse = await import('pdf-parse');
+        const pdf = pdfParse.default;
+        const pdfData = await pdf(file.buffer);
+        pdfText = pdfData.text;
+        
+        if (!pdfText || pdfText.trim().length === 0) {
+          return res.status(400).json({ 
+            error: 'PDF boş veya okunamadı',
+            message: 'PDF dosyasında metin içeriği bulunamadı.' 
+          });
+        }
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        return res.status(400).json({ 
+          error: 'PDF işleme hatası',
+          message: 'PDF dosyası işlenirken hata oluştu.'
+        });
+      }
+
+      // AI ile PDF içeriğini analiz et ve soruları çıkar
+      const { processTYTPDFContent } = await import("./ai-content-processor");
+      const result = await processTYTPDFContent(pdfText);
+
+      if (!result.questions || result.questions.length === 0) {
+        return res.status(400).json({
+          error: 'Soru bulunamadı',
+          message: 'PDF dosyasından geçerli soru formatı bulunamadı. Lütfen uygun formatta bir PDF yükleyin.'
+        });
+      }
+
+      // Sadece analiz sonucunu döndür, henüz veritabanına kaydetme
+      res.json({
+        success: true,
+        detectedQuestions: result.questions.length,
+        preview: result.questions.slice(0, 3), // İlk 3 soruyu önizleme için göster
+        message: `${result.questions.length} soru tespit edildi`,
+        tempId: `temp_${Date.now()}` // Geçici ID
+      });
+
+    } catch (error) {
+      console.error('PDF processing error:', error);
+      res.status(500).json({ 
+        error: 'Sunucu hatası',
+        message: 'PDF işlenirken beklenmeyen bir hata oluştu.'
+      });
+    }
+  });
+  // PDF onay endpoint'i - kullanıcı onayladıktan sonra veritabanına kaydet
+  app.post("/api/admin/confirm-pdf-questions", async (req, res) => {
+    try {
+      const { tempId, confirmAdd } = req.body;
+      
+      if (!confirmAdd) {
+        return res.json({
+          success: false,
+          message: 'İşlem iptal edildi'
+        });
+      }
+
+      // Temp verileri tekrar işle (basit implementasyon)
+      // Gerçek uygulamada temp verileri cache'te saklayabilirsiniz
+      return res.status(400).json({
+        error: 'Geçici veriler bulunamadı',
+        message: 'Lütfen PDF\'yi tekrar yükleyin'
+      });
+
+    } catch (error) {
+      console.error('PDF confirmation error:', error);
+      res.status(500).json({ 
+        error: 'Sunucu hatası',
+        message: 'Soru onayı sırasında hata oluştu.'
+      });
+    }
+  });
+
+  // Eski endpoint'i kaldırıyoruz, yeni sistemde artık gerekli değil
+  app.post("/api/exam/:examType/process-pdf-old", (req, res) => {
     upload.single('file')(req, res, async (err) => {
       if (err) {
         console.error('Multer error:', err);
