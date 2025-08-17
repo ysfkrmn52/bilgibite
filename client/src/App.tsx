@@ -7,7 +7,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Performance and monitoring imports
+// Performance and monitoring imports  
 import { useEffect } from "react";
 import { initializeAnalytics } from "./lib/analytics";
 import MonitoringService from "./lib/monitoring";
@@ -15,24 +15,35 @@ import { ErrorBoundaryMonitoring } from "@/components/ErrorBoundaryMonitoring";
 import { SEOManager } from "./lib/seo";
 import { pwaManager } from "./lib/pwa";
 
-import AuthPage from "@/pages/auth";
+// Core pages loaded immediately for better UX
 import Home from "@/pages/simplified-home";
-import Profile from "@/pages/profile";
-import Quiz from "@/pages/quiz";
-import Rozetler from "@/pages/rozetler";
-import AIProtected from "@/pages/ai-protected";
-import AILearning from "@/pages/ai-learning";
-import Social from "@/pages/social";
-import Analytics from "@/pages/analytics";
-import TurkishExams from "@/pages/symmetric-exams";
-import Education from "@/pages/education";
-import Pricing from "@/pages/updated-pricing";
-import MonitoringDashboard from "@/pages/monitoring-dashboard";
-import EnterpriseDashboard from "@/pages/enterprise-dashboard";
-import TeacherDashboard from "@/pages/teacher-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
+
+// Secondary pages loaded lazily  
+import { lazy, Suspense } from "react";
+const AuthPage = lazy(() => import("@/pages/auth"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Quiz = lazy(() => import("@/pages/quiz"));
+const Rozetler = lazy(() => import("@/pages/rozetler"));
+const AIProtected = lazy(() => import("@/pages/ai-protected"));
+const AILearning = lazy(() => import("@/pages/ai-learning"));
+const Social = lazy(() => import("@/pages/social"));
+const Analytics = lazy(() => import("@/pages/analytics"));
+const TurkishExams = lazy(() => import("@/pages/symmetric-exams"));
+const Education = lazy(() => import("@/pages/education"));
+const Pricing = lazy(() => import("@/pages/updated-pricing"));
+const MonitoringDashboard = lazy(() => import("@/pages/monitoring-dashboard"));
+const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
+const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
+
+// Fast loading component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[40vh]">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 function Router() {
   return (
@@ -40,20 +51,46 @@ function Router() {
       <Navbar />
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/ai" component={() => <AIProtected><AILearning /></AIProtected>} />
-        <Route path="/social" component={Social} />
-        <Route path="/analytics" component={Analytics} />
-        <Route path="/exams" component={TurkishExams} />
-        <Route path="/education" component={Education} />
-        <Route path="/subscription" component={Pricing} />
-        <Route path="/quiz/:categoryId" component={Quiz} />
-        <Route path="/badges" component={Rozetler} />
-        <Route path="/monitoring" component={MonitoringDashboard} />
-        <Route path="/enterprise" component={EnterpriseDashboard} />
-        <Route path="/teacher" component={TeacherDashboard} />
         <Route path="/admin" component={AdminDashboard} />
-        <Route path="/auth" component={AuthPage} />
+        <Route path="/profile" component={() => (
+          <Suspense fallback={<PageLoader />}><Profile /></Suspense>
+        )} />
+        <Route path="/ai" component={() => (
+          <Suspense fallback={<PageLoader />}><AIProtected><AILearning /></AIProtected></Suspense>
+        )} />
+        <Route path="/social" component={() => (
+          <Suspense fallback={<PageLoader />}><Social /></Suspense>
+        )} />
+        <Route path="/analytics" component={() => (
+          <Suspense fallback={<PageLoader />}><Analytics /></Suspense>
+        )} />
+        <Route path="/exams" component={() => (
+          <Suspense fallback={<PageLoader />}><TurkishExams /></Suspense>
+        )} />
+        <Route path="/education" component={() => (
+          <Suspense fallback={<PageLoader />}><Education /></Suspense>
+        )} />
+        <Route path="/subscription" component={() => (
+          <Suspense fallback={<PageLoader />}><Pricing /></Suspense>
+        )} />
+        <Route path="/quiz/:categoryId" component={() => (
+          <Suspense fallback={<PageLoader />}><Quiz /></Suspense>
+        )} />
+        <Route path="/badges" component={() => (
+          <Suspense fallback={<PageLoader />}><Rozetler /></Suspense>
+        )} />
+        <Route path="/monitoring" component={() => (
+          <Suspense fallback={<PageLoader />}><MonitoringDashboard /></Suspense>
+        )} />
+        <Route path="/enterprise" component={() => (
+          <Suspense fallback={<PageLoader />}><EnterpriseDashboard /></Suspense>
+        )} />
+        <Route path="/teacher" component={() => (
+          <Suspense fallback={<PageLoader />}><TeacherDashboard /></Suspense>
+        )} />
+        <Route path="/auth" component={() => (
+          <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>
+        )} />
         <Route component={NotFound} />
       </Switch>
     </div>

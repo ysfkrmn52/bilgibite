@@ -2,8 +2,8 @@
 const CACHE_NAME = 'bilgibite-v1';
 const urlsToCache = [
   '/',
-  '/assets/js/main.js',
-  '/assets/css/main.css'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // Install event

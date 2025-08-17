@@ -45,7 +45,7 @@ export class PWAManager {
   }
 
   private async registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
       try {
         this.swRegistration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/'

@@ -108,11 +108,11 @@ export class MonitoringService {
       }, 1000);
     });
 
-    // Long tasks detection
+    // Long tasks detection - only log if > 100ms to reduce noise
     if ('PerformanceObserver' in window) {
       const longTaskObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (entry.duration > 50) {
+          if (entry.duration > 100) {
             this.analytics.trackPerformance('long_task', entry.duration);
             console.warn(`Long task detected: ${entry.duration}ms`);
           }
@@ -276,10 +276,10 @@ export class MonitoringService {
       }
     });
 
-    // Alert on poor performance
-    if (metrics.loadTime > 5000) {
+    // Alert on poor performance - increase threshold to reduce noise
+    if (metrics.loadTime > 10000) {
       this.reportError({
-        message: `Slow page load: ${metrics.loadTime}ms`,
+        message: `Very slow page load: ${metrics.loadTime}ms`,
         url: window.location.href,
         userAgent: navigator.userAgent,
         timestamp: Date.now(),
@@ -297,8 +297,10 @@ export class MonitoringService {
       return;
     }
 
-    // Filter out Replit beacon errors
-    if (error.message.includes('beacon.js')) {
+    // Filter out Replit beacon errors and external resource errors
+    if (error.message.includes('beacon.js') || 
+        error.message.includes('replit.com/public/js') ||
+        error.url?.includes('replit.com/public/js')) {
       return;
     }
 
