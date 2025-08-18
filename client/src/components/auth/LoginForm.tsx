@@ -45,10 +45,39 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
     try {
       setError('');
       setIsLoading(true);
-      await login(data.email, data.password);
+      
+      // Use our backend API for login instead of Firebase
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Giriş başarısız');
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(result.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // Redirect to home or admin panel if super admin
+      if (result.user.role === 'super_admin' || result.user.role === 'admin') {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/';
+      }
+      
       onSuccess?.();
     } catch (err: any) {
-      setError(getErrorMessage(err.code));
+      setError(err.message || 'Giriş sırasında hata oluştu');
     } finally {
       setIsLoading(false);
     }
