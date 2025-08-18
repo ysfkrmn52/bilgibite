@@ -167,21 +167,34 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center">
+      <Card className="w-full max-w-md mx-auto shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+        <CardHeader className="space-y-1 text-center pb-8">
+          {/* BilgiBite Logo */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
-            className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4"
+            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-green-600 rounded-full flex items-center justify-center shadow-lg"
           >
-            <span className="text-2xl font-bold text-white">B</span>
+            <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Mascot Head */}
+              <circle cx="50" cy="40" r="18" fill="white" opacity="0.9"/>
+              {/* Eyes */}
+              <circle cx="44" cy="35" r="3" fill="#1E40AF"/>
+              <circle cx="56" cy="35" r="3" fill="#1E40AF"/>
+              {/* Smile */}
+              <path d="M 42 45 Q 50 50 58 45" stroke="#1E40AF" strokeWidth="2" fill="none"/>
+              {/* Graduation Cap */}
+              <ellipse cx="50" cy="25" rx="16" ry="3" fill="#1E40AF"/>
+              <rect x="46" y="22" width="8" height="6" fill="#1E40AF"/>
+              <circle cx="62" cy="25" r="2" fill="#F59E0B"/>
+            </svg>
           </motion.div>
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-            Tekrar Hoş Geldin!
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            BilgiBite
           </CardTitle>
-          <p className="text-gray-600 dark:text-gray-400">
-            Öğrenmeye devam etmek için giriş yap
+          <p className="text-gray-600 text-lg">
+            Türkiye'nin en gelişmiş sınav hazırlık platformu
           </p>
         </CardHeader>
 
@@ -213,7 +226,7 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
                 />
               </div>
               {errors.email && (
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-red-600">
                   {errors.email.message}
                 </p>
               )}
@@ -241,7 +254,7 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-red-600">
                   {errors.password.message}
                 </p>
               )}
@@ -259,10 +272,10 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+              <span className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-gray-900 px-2 text-gray-500">
+              <span className="bg-white px-2 text-gray-500">
                 veya
               </span>
             </div>
@@ -293,7 +306,7 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Hesabın yok mu?{' '}
               <button
                 type="button"

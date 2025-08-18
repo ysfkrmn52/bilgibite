@@ -140,8 +140,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (isDemoMode) {
-      // Demo mode: don't auto-login, let user use login form
-      setCurrentUser(null);
+      // Demo mode: Check for stored user data from backend login
+      const storedUser = localStorage.getItem('currentUser');
+      const isAuthenticated = localStorage.getItem('isAuthenticated');
+      
+      if (storedUser && isAuthenticated === 'true') {
+        try {
+          const userData = JSON.parse(storedUser);
+          setCurrentUser({
+            uid: userData.id,
+            email: userData.email,
+            displayName: userData.username,
+            role: userData.role,
+            subscription_type: userData.subscription_type
+          } as any);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          localStorage.removeItem('currentUser');
+          localStorage.removeItem('isAuthenticated');
+        }
+      }
       setLoading(false);
       return;
     }
