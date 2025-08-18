@@ -5,6 +5,7 @@ import cors from 'cors';
 import multer from "multer";
 import { storage } from "./storage";
 import { processTYTPDFContent } from "./ai-content-processor";
+import { generateExamQuestions } from "./ai-service";
 import { 
   insertUserSchema, 
   insertQuizSessionSchema,
@@ -489,6 +490,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Admin questions error:", error);
       res.status(500).json({ error: "Sorular alınamadı" });
+    }
+  });
+
+  // AI Soru Üretimi Endpoint'i
+  app.post("/api/ai/generate-questions", async (req, res) => {
+    try {
+      const { category, count = 5 } = req.body;
+      
+      if (!category) {
+        return res.status(400).json({ error: "Kategori belirtilmeli" });
+      }
+
+      console.log(`AI ile ${category} kategorisi için ${count} soru üretiliyor...`);
+      
+      const aiResponse = await generateExamQuestions(category, count);
+      
+      if (!aiResponse || !aiResponse.questions || !Array.isArray(aiResponse.questions)) {
+        return res.status(500).json({ error: "AI'den geçerli yanıt alınamadı" });
+      }
+
+      // AI'den gelen soruları veritabanına kaydet
+      const savedQuestions = [];
+      for (const q of aiResponse.questions) {
+        try {
+          const questionData = {
+            examCategoryId: category,
+            subject: q.topic || 'AI Üretimi',
+            difficulty: q.difficulty || 'medium',
+            questionText: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+            points: 10
+          };
+          
+          const saved = await storage.createQuestion(questionData);
+          savedQuestions.push(saved);
+        } catch (error) {
+          console.error('Soru kaydetme hatası:', error);
+        }
+      }
+
+      res.json({ 
+        success: true,
+        message: `${savedQuestions.length} soru başarıyla üretildi ve kaydedildi`,
+        questions: savedQuestions
+      });
+
+    } catch (error) {
+      console.error("AI soru üretme hatası:", error);
+      res.status(500).json({ error: "AI soru üretiminde hata oluştu: " + error.message });
     }
   });
 

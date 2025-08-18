@@ -31,6 +31,7 @@ export default function SimpleAdmin() {
     difficulty: 'medium',
     explanation: ''
   });
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // Admin istatistikleri query
   const { data: adminStats, isLoading: statsLoading } = useQuery({
@@ -124,6 +125,31 @@ export default function SimpleAdmin() {
       });
     }
   });
+
+  const generateAIQuestions = async (category: string, count: number = 5) => {
+    setAiGenerating(true);
+    try {
+      const response = await apiRequest('POST', '/api/ai/generate-questions', {
+        category,
+        count
+      });
+      
+      toast({
+        title: "AI Sorular Üretildi!",
+        description: `${category} kategorisi için ${count} kaliteli soru üretildi ve kaydedildi`,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+    } catch (error: any) {
+      toast({
+        title: "AI Soru Üretim Hatası", 
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const generateQuestionsMutation = useMutation({
     mutationFn: async ({ count, examType }: { count: number; examType: string }) => {
@@ -318,13 +344,122 @@ export default function SimpleAdmin() {
         </Card>
       </div>
 
-      <Tabs defaultValue="upload" className="space-y-6">
+      <Tabs defaultValue="ai-quick" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="ai-quick">Hızlı AI Sorular</TabsTrigger>
           <TabsTrigger value="upload">PDF Yükleme</TabsTrigger>
           <TabsTrigger value="manual">Manuel Soru</TabsTrigger>
-          <TabsTrigger value="ai">AI Soru Üretimi</TabsTrigger>
-          <TabsTrigger value="stats">Detaylı İstatistikler</TabsTrigger>
+          <TabsTrigger value="ai">Gelişmiş AI</TabsTrigger>
         </TabsList>
+
+        {/* Hızlı AI Soru Üretimi Tab */}
+        <TabsContent value="ai-quick">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Hızlı AI Soru Üretimi
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-6">
+                {/* TYT Kategorileri */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">TYT Soruları</h3>
+                  <div className="grid gap-2">
+                    <Button
+                      onClick={() => generateAIQuestions('tyt-turkce', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'TYT Türkçe (5 soru)'}
+                    </Button>
+                    <Button
+                      onClick={() => generateAIQuestions('tyt-matematik', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'TYT Matematik (5 soru)'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* AYT Kategorileri */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">AYT Soruları</h3>
+                  <div className="grid gap-2">
+                    <Button
+                      onClick={() => generateAIQuestions('ayt-matematik', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'AYT Matematik (5 soru)'}
+                    </Button>
+                    <Button
+                      onClick={() => generateAIQuestions('ayt-fizik', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'AYT Fizik (5 soru)'}
+                    </Button>
+                    <Button
+                      onClick={() => generateAIQuestions('ayt-kimya', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'AYT Kimya (5 soru)'}
+                    </Button>
+                    <Button
+                      onClick={() => generateAIQuestions('ayt-biyoloji', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'AYT Biyoloji (5 soru)'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Diğer Kategoriler */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Diğer Sınavlar</h3>
+                  <div className="grid gap-2">
+                    <Button
+                      onClick={() => generateAIQuestions('kpss', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'KPSS (5 soru)'}
+                    </Button>
+                    <Button
+                      onClick={() => generateAIQuestions('ehliyet', 5)}
+                      disabled={aiGenerating}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      {aiGenerating ? 'Üretiliyor...' : 'Ehliyet (5 soru)'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {aiGenerating && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span className="text-blue-700">AI sorular üretiyor, lütfen bekleyin...</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* PDF Yükleme Tab */}
         <TabsContent value="upload">

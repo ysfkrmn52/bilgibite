@@ -98,6 +98,7 @@ function Router() {
         <Route path="/auth" component={() => (
           <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>
         )} />
+        <Route path="/simple-admin" component={SimpleAdmin} />
         <Route path="/admin/questions" component={AdminQuestions} />
         <Route component={NotFound} />
       </Switch>

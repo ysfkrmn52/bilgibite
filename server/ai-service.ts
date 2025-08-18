@@ -53,86 +53,75 @@ export interface StudyPlan {
   }>;
 }
 
-// Generate personalized questions based on user's weak areas
-export async function generatePersonalizedQuestions(params: QuestionGenerationParams) {
+// Generate authentic exam questions for specific categories
+export async function generateExamQuestions(examCategory: string, count: number = 5) {
   try {
-    const prompt = `Sen bir Türk eğitim uzmanısın. ${params.examCategory} sınavına hazırlanan bir öğrenci için kişiselleştirilmiş sorular üret.
+    const categoryPrompts = {
+      'tyt-turkce': 'TYT Türkçe dersi için gerçek sınav tarzında sorular üret. Konular: sözcük bilgisi, cümle bilgisi, yazım kuralları, paragraf, ses bilgisi.',
+      'tyt-matematik': 'TYT Matematik dersi için gerçek sınav tarzında sorular üret. Konular: sayılar, cebir, geometri, veri, olasılık.',
+      'ayt-matematik': 'AYT Matematik dersi için gerçek sınav tarzında sorular üret. Konular: limit, türev, integral, logaritma, trigonometri.',
+      'ayt-fizik': 'AYT Fizik dersi için gerçek sınav tarzında sorular üret. Konular: mekanik, termodinamik, dalga, optik, elektrik.',
+      'ayt-kimya': 'AYT Kimya dersi için gerçek sınav tarzında sorular üret. Konular: atom, bağ, kimyasal denge, asit-baz, elektrokimya.',
+      'ayt-biyoloji': 'AYT Biyoloji dersi için gerçek sınav tarzında sorular üret. Konular: hücre, metabolizma, genetik, ekoloji, sistemler.',
+      'kpss': 'KPSS Genel Kültür-Genel Yetenek için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, tarih, coğrafya, vatandaşlık.',
+      'ehliyet': 'Ehliyet sınavı için gerçek sınav tarzında sorular üret. Konular: trafik kuralları, işaret ve levhalar, araç tekniği, ilk yardım.'
+    };
 
-Öğrenci Profili:
-- Seviye: ${params.userLevel}
-- Zorluk: ${params.difficulty}
-- Zayıf alanlar: ${params.weakAreas.join(', ')}
-- Son hatalar: ${params.recentErrors.join(', ')}
-- Odaklanılacak konular: ${params.topicsToFocus.join(', ')}
+    const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory] || 'Bu kategori için sorular üret.'} 
 
-${params.questionCount} adet çoktan seçmeli soru üret. Her soru için:
-- Zayıf alanları hedefleyen sorular ol
-- Türkçe ve net açıklamalar
-- 4 seçenek (A, B, C, D)
-- Doğru cevap
-- Detaylı açıklama
-- Zorluk seviyesi belirtimi
+ÇÖZÜLEN GERÇEK SINAV SORULARI ÜRETECEKSİN:
+- Gerçek sınav formatında ${count} soru
+- Her soru özgün ve değerli olmalı
+- Türkçe dilbilgisi kurallarına uygun
+- 4 seçenek, sadece bir doğru cevap
+- Detaylı ve öğretici açıklama
+- Sınav seviyesinde zorluk
 
-JSON formatında döndür:
+MUTLAKA JSON FORMATINDA DÖNDÜR:
 {
   "questions": [
     {
-      "question": "Soru metni",
-      "options": ["A) Seçenek 1", "B) Seçenek 2", "C) Seçenek 3", "D) Seçenek 4"],
-      "correctAnswer": "A",
-      "explanation": "Detaylı açıklama",
-      "difficulty": "intermediate",
-      "topic": "Konu başlığı",
-      "targetWeakness": "Hedeflenen zayıf alan"
+      "question": "Soru metni burada",
+      "options": ["Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4"],
+      "correctAnswer": 0,
+      "explanation": "Detaylı çözüm açıklaması",
+      "difficulty": "medium",
+      "topic": "Ana konu başlığı"
     }
   ]
 }`;
 
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
-      max_tokens: 2500, // Reduced for faster response
+      max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
 
-    // Direct parsing without helper function
     const content = response.content[0];
     if (content.type === 'text') {
-      let text = content.text;
-      console.log('Raw AI response for questions:', text.substring(0, 200) + '...');
+      let text = content.text.trim();
       
-      // Remove markdown code blocks
+      // Clean up AI response - remove markdown formatting
       text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      text = text.trim();
+      text = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
       
-      // Extract JSON from text
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          console.log('Successfully parsed AI question response');
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.questions && Array.isArray(parsed.questions)) {
+          console.log(`AI üretilen soru sayısı: ${parsed.questions.length}`);
           return parsed;
-        } catch (error) {
-          console.error('JSON Parse Error:', error);
         }
+      } catch (error) {
+        console.error('AI yanıtı parse hatası:', error);
+        console.log('Hatalı metin:', text.substring(0, 300));
       }
     }
     
-    // Fallback response
-    return {
-      questions: [{
-        question: "Test sorusu - AI parse hatası nedeniyle fallback",
-        options: ["A) Seçenek 1", "B) Seçenek 2", "C) Seçenek 3", "D) Seçenek 4"],
-        correctAnswer: "A",
-        explanation: "Bu bir test sorusudur.",
-        difficulty: "intermediate",
-        topic: "Test"
-      }]
-    };
+    throw new Error('AI servisinden geçerli yanıt alınamadı');
   } catch (error) {
-    console.error('AI Question Generation Error:', error);
-    throw new Error('AI soru üretimi başarısız oldu');
+    console.error('AI soru üretim hatası:', error);
+    throw new Error('AI soru üretimi başarısız oldu: ' + error.message);
   }
-
 }
 
 function parseResponse(response: any) {

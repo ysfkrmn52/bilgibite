@@ -2,7 +2,6 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import {
-  generatePersonalizedQuestions,
   analyzeLearningPerformance,
   generateStudyPlan,
   getTutorResponse,
