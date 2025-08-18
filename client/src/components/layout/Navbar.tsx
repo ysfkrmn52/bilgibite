@@ -32,8 +32,7 @@ export function Navbar() {
   const navigationItems = [
     { path: "/", label: "Ana Sayfa", icon: Home },
     { path: "/exams", label: "Sınavlar", icon: GraduationCap },
-    { path: "/education", label: "Eğitim", icon: BookOpen },
-    { path: "/ai", label: "AI", icon: Brain },
+    { path: "/ai-education", label: "AI Eğitim", icon: Brain },
     { path: "/badges", label: "Rozetler", icon: Trophy },
     { path: "/social", label: "Sosyal", icon: Users },
     { path: "/analytics", label: "İstatistikler", icon: BarChart3 },

@@ -40,6 +40,7 @@ const MonitoringDashboard = lazy(() => import("@/pages/monitoring-dashboard"));
 const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
 const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
 const AIEducationGenerator = lazy(() => import("@/pages/ai-education-generator"));
+const AIEducationNew = lazy(() => import("@/pages/ai-education-new"));
 const PdfManager = lazy(() => import("@/pages/pdf-manager"));
 
 // Fast loading component
@@ -62,8 +63,8 @@ function Router() {
         <Route path="/profile" component={() => (
           <Suspense fallback={<PageLoader />}><Profile /></Suspense>
         )} />
-        <Route path="/ai" component={() => (
-          <Suspense fallback={<PageLoader />}><AIProtected><AILearning /></AIProtected></Suspense>
+        <Route path="/ai-education" component={() => (
+          <Suspense fallback={<PageLoader />}><AIProtected><AIEducationNew /></AIProtected></Suspense>
         )} />
         <Route path="/social" component={() => (
           <Suspense fallback={<PageLoader />}><Social /></Suspense>
@@ -76,9 +77,6 @@ function Router() {
         )} />
         <Route path="/quiz" component={() => (
           <Suspense fallback={<PageLoader />}><Quiz /></Suspense>
-        )} />
-        <Route path="/education" component={() => (
-          <Suspense fallback={<PageLoader />}><Education /></Suspense>
         )} />
         <Route path="/course/:courseId" component={() => (
           <Suspense fallback={<PageLoader />}><CourseView /></Suspense>

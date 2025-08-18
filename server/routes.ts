@@ -426,6 +426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pdfProcessingRoutes = await import('./pdf-processing-routes');
   app.use('/api/admin/pdf-processing', pdfProcessingRoutes.default);
 
+  // AI Education Routes
+  const aiEducationRoutes = await import('./ai-education-routes');
+  app.use('/api/ai', aiEducationRoutes.default);
+
   // Admin Dashboard Routes - Real Database Statistics  
   app.get("/api/admin/stats", async (req, res) => {
     console.log("Admin stats endpoint reached!");
