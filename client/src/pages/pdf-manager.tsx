@@ -90,8 +90,8 @@ export default function PdfManager() {
     queryKey: ['/api/admin/pdf-materials', selectedCategory, selectedSubject, searchTerm],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (selectedCategory) params.append('category', selectedCategory);
-      if (selectedSubject) params.append('subject', selectedSubject);
+      if (selectedCategory && selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (selectedSubject && selectedSubject !== 'all') params.append('subject', selectedSubject);
       if (searchTerm) params.append('search', searchTerm);
       return fetch(`/api/admin/pdf-materials?${params}`).then(res => res.json());
     }
@@ -392,7 +392,7 @@ export default function PdfManager() {
                     <SelectValue placeholder="Kategori" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tümü</SelectItem>
+                    <SelectItem value="all">Tümü</SelectItem>
                     {examCategories.map(cat => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
@@ -405,7 +405,7 @@ export default function PdfManager() {
                     <SelectValue placeholder="Ders" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tümü</SelectItem>
+                    <SelectItem value="all">Tümü</SelectItem>
                     {subjects.map(subj => (
                       <SelectItem key={subj.value} value={subj.value}>
                         {subj.label}
