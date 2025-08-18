@@ -65,7 +65,12 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
       </h2>
       
       <div className="space-y-3">
-        {(question.options as Array<{text: string, letter: string}>).map((option, index) => (
+        {(Array.isArray(question.options) ? question.options : []).map((option, index) => {
+          // Handle both string and object options
+          const optionText = typeof option === 'string' ? option : (option?.text || `Seçenek ${String.fromCharCode(65 + index)}`);
+          const optionLetter = typeof option === 'object' && option?.letter ? option.letter : String.fromCharCode(65 + index);
+          
+          return (
           <motion.button
             key={index}
             variants={optionVariants}
@@ -91,18 +96,19 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
                   'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
                 }`}
               >
-                {option.letter || String.fromCharCode(65 + index)}
+                {optionLetter}
               </motion.div>
               <span className={`font-medium ${
                 getOptionVariant(index) === 'correct' || getOptionVariant(index) === 'incorrect' 
                   ? 'text-white' 
                   : 'text-gray-900 dark:text-white'
               }`}>
-                {option.text}
+                {optionText}
               </span>
             </div>
           </motion.button>
-        ))}
+        );
+        })}
       </div>
     </motion.div>
   );

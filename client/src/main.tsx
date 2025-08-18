@@ -5,7 +5,7 @@ import "./index.css";
 import "./lib/i18n";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="light" storageKey="bilgibite-ui-theme">
+  <ThemeProvider defaultTheme="light" storageKey="bilgibite-ui-theme" forceLightMode={true}>
     <App />
   </ThemeProvider>
 );

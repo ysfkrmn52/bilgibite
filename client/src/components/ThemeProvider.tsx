@@ -6,6 +6,7 @@ type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
+  forceLightMode?: boolean;
 };
 
 type ThemeProviderState = {
@@ -22,18 +23,25 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "bilgibite-ui-theme",
+  forceLightMode = false,
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => forceLightMode ? "light" : (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
 
   useEffect(() => {
     const root = window.document.documentElement;
 
     root.classList.remove("light", "dark");
+
+    // Force light mode if specified
+    if (forceLightMode) {
+      root.classList.add("light");
+      return;
+    }
 
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
@@ -46,7 +54,7 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
-  }, [theme]);
+  }, [theme, forceLightMode]);
 
   const value = {
     theme,
