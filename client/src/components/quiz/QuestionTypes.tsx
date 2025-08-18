@@ -60,7 +60,7 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
       exit="exit"
       className="space-y-4"
     >
-      <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
         {question.questionText}
       </h2>
       
@@ -84,7 +84,7 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
               getOptionVariant(index) === 'selected' ? 'border-blue-400' :
               getOptionVariant(index) === 'correct' ? 'border-green-400' :
               getOptionVariant(index) === 'incorrect' ? 'border-red-400' :
-              'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+              'border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="flex items-center space-x-3">
@@ -93,7 +93,7 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
                   getOptionVariant(index) === 'correct' ? 'bg-green-500 text-white' :
                   getOptionVariant(index) === 'incorrect' ? 'bg-red-500 text-white' :
                   getOptionVariant(index) === 'selected' ? 'bg-blue-500 text-white' :
-                  'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                  'bg-gray-200 text-gray-600'
                 }`}
               >
                 {optionLetter}
@@ -101,7 +101,7 @@ export function MultipleChoiceQuestion({ question, onAnswer, showFeedback, userA
               <span className={`font-medium ${
                 getOptionVariant(index) === 'correct' || getOptionVariant(index) === 'incorrect' 
                   ? 'text-white' 
-                  : 'text-gray-900 dark:text-white'
+                  : 'text-gray-900'
               }`}>
                 {optionText}
               </span>

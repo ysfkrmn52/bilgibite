@@ -18,6 +18,7 @@ import { pwaManager } from "./lib/pwa";
 // Core pages loaded immediately for better UX
 import Home from "@/pages/simplified-home";
 import SimpleAdmin from "@/pages/simple-admin";
+import AdminQuestions from "@/pages/admin-questions";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -97,6 +98,7 @@ function Router() {
         <Route path="/auth" component={() => (
           <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>
         )} />
+        <Route path="/admin/questions" component={AdminQuestions} />
         <Route component={NotFound} />
       </Switch>
     </div>

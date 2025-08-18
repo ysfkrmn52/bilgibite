@@ -179,9 +179,9 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
   const timePercentage = ((currentQuestion.timeLimit || 60) - timeLeft) / (currentQuestion.timeLimit || 60) * 100;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 z-50">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 z-50">
       {/* Quiz Header */}
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Exit Button */}
@@ -189,7 +189,7 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
               variant="ghost"
               size="sm"
               onClick={onExit}
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -197,14 +197,14 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
             {/* Progress Bar */}
             <div className="flex-1 mx-6">
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium min-w-[4rem]">
+                <span className="text-sm text-gray-600 font-medium min-w-[4rem]">
                   {quizState.currentQuestionIndex + 1}/{quizState.questions.length}
                 </span>
                 <div className="flex-1 relative">
                   <Progress value={progress} className="h-3" />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50 animate-pulse" />
                 </div>
-                <span className="text-sm font-bold text-blue-600 dark:text-blue-400 min-w-[3rem]">
+                <span className="text-sm font-bold text-blue-600 min-w-[3rem]">
                   {Math.round(progress)}%
                 </span>
               </div>
@@ -213,13 +213,13 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
             {/* Timer & Controls */}
             <div className="flex items-center space-x-3">
               <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
-                timeLeft <= 10 ? 'bg-red-100 dark:bg-red-900/30' : 'bg-gray-100 dark:bg-gray-800'
+                timeLeft <= 10 ? 'bg-red-100' : 'bg-gray-100'
               }`}>
                 <Clock className={`w-4 h-4 ${
-                  timeLeft <= 10 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+                  timeLeft <= 10 ? 'text-red-600' : 'text-gray-600'
                 }`} />
                 <span className={`text-sm font-medium ${
-                  timeLeft <= 10 ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
+                  timeLeft <= 10 ? 'text-red-600' : 'text-gray-700'
                 }`}>
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                 </span>
@@ -229,7 +229,7 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
                 variant="ghost"
                 size="sm"
                 onClick={togglePause}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="hover:bg-gray-100"
               >
                 {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
               </Button>
@@ -238,7 +238,7 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
           
           {/* Time Progress Bar */}
           <div className="mt-2">
-            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
               <motion.div
                 className={`h-full ${
                   timeLeft <= 10 ? 'bg-red-500' : 'bg-blue-500'
@@ -253,12 +253,12 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
       </div>
 
       {/* Stats Bar */}
-      <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white/50 backdrop-blur-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <LivesDisplay lives={quizState.lives} maxLives={5} />
             <StreakDisplay streak={quizState.streak} />
-            <div className="flex items-center space-x-1 text-yellow-600 dark:text-yellow-400">
+            <div className="flex items-center space-x-1 text-yellow-600">
               <span className="font-bold">{quizState.xpGained} XP</span>
             </div>
           </div>
@@ -276,7 +276,7 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
               exit={{ opacity: 0, scale: 1.05, y: -20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border-0">
+              <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
                 <CardContent className="p-8">
                   <QuestionTypeRouter
                     question={currentQuestion}
@@ -319,13 +319,13 @@ export function DuolingoQuizInterface({ questions, onExit, onComplete }: Duoling
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-16"
           >
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0 max-w-md mx-auto">
+            <Card className="bg-white/90 backdrop-blur-sm shadow-xl border-0 max-w-md mx-auto">
               <CardContent className="p-8">
                 <div className="text-6xl mb-4">⏸️</div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
                   Quiz Duraklatıldı
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-gray-600 mb-6">
                   Hazır olduğunuzda devam edin
                 </p>
                 <Button

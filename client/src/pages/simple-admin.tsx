@@ -255,7 +255,17 @@ export default function SimpleAdmin() {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">BilgiBite Admin Panel</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">BilgiBite Admin Panel</h1>
+        <Button 
+          onClick={() => window.location.href = '/admin/questions'}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <BookOpen className="w-4 h-4" />
+          Soru Yönetimi
+        </Button>
+      </div>
       
       {/* İstatistikler */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
