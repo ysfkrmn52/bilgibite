@@ -133,6 +133,54 @@ export const userAchievements = pgTable("user_achievements", {
   earnedAt: timestamp("earned_at").defaultNow(),
 });
 
+// PDF Eğitim Materyalleri
+export const pdfMaterials = pgTable("pdf_materials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // TYT, AYT, KPSS, vs.
+  subject: text("subject").notNull(), // Matematik, Türkçe, vs.
+  difficulty: text("difficulty").notNull().default('medium'), // easy, medium, hard
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(), // bytes
+  uploadedBy: varchar("uploaded_by").notNull(),
+  tags: jsonb("tags").default([]), // Array of tags
+  isActive: boolean("is_active").notNull().default(true),
+  downloadCount: integer("download_count").notNull().default(0),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// PDF Konuları - Her PDF'deki konuları kaydetmek için
+export const pdfTopics = pgTable("pdf_topics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pdfId: varchar("pdf_id").notNull(),
+  topicTitle: text("topic_title").notNull(),
+  topicNumber: integer("topic_number").notNull(), // Konu sırası
+  startPage: integer("start_page").notNull(),
+  endPage: integer("end_page").notNull(),
+  description: text("description"),
+  keywords: jsonb("keywords").default([]), // Anahtar kelimeler
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// PDF Klasör Sistemi
+export const pdfFolders = pgTable("pdf_folders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  parentId: varchar("parent_id"), // Self-referencing for nested folders
+  category: text("category").notNull(), // TYT, AYT, KPSS
+  subject: text("subject"), // Matematik, Türkçe, vs.
+  icon: text("icon").default('folder'),
+  color: text("color").default('#3B82F6'),
+  createdBy: varchar("created_by").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Daily Challenges Table
 export const dailyChallenges = pgTable("daily_challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -595,3 +643,19 @@ export type InsertDirectMessage = typeof directMessages.$inferInsert;
 
 export type StudySession = typeof studySessions.$inferSelect;
 export type StudySessionParticipant = typeof studySessionParticipants.$inferSelect;
+
+
+// PDF Material Types
+export type PdfMaterial = typeof pdfMaterials.$inferSelect;
+export type InsertPdfMaterial = typeof pdfMaterials.$inferInsert;
+
+export type PdfTopic = typeof pdfTopics.$inferSelect;
+export type InsertPdfTopic = typeof pdfTopics.$inferInsert;
+
+export type PdfFolder = typeof pdfFolders.$inferSelect;
+export type InsertPdfFolder = typeof pdfFolders.$inferInsert;
+
+// PDF Schema Exports
+export const insertPdfMaterialSchema = createInsertSchema(pdfMaterials).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPdfTopicSchema = createInsertSchema(pdfTopics).omit({ id: true, createdAt: true });
+export const insertPdfFolderSchema = createInsertSchema(pdfFolders).omit({ id: true, createdAt: true });

@@ -303,6 +303,13 @@ export default function SimpleAdmin() {
             <BookOpen className="w-4 h-4" />
             Soru Yönetimi
           </Button>
+          <Button 
+            onClick={() => window.location.href = '/admin/pdf-manager'}
+            variant="outline"
+            className="flex items-center gap-2 bg-red-50 border-red-200 hover:bg-red-100"
+          >
+            📄 PDF Yönetimi
+          </Button>
         </div>
       </div>
       

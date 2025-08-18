@@ -10,16 +10,25 @@ import {
   type InsertQuizSession,
   type Achievement,
   type UserAchievement,
+  type PdfMaterial,
+  type InsertPdfMaterial,
+  type PdfFolder,
+  type InsertPdfFolder,
+  type PdfTopic,
+  type InsertPdfTopic,
   users,
   examCategories,
   questions,
   userProgress,
   quizSessions,
   achievements,
-  userAchievements
+  userAchievements,
+  pdfMaterials,
+  pdfFolders,
+  pdfTopics
 } from "@shared/schema";
 import { db } from './db';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, like, and, sql } from 'drizzle-orm';
 
 export interface IStorage {
   // Users
@@ -56,6 +65,27 @@ export interface IStorage {
   getAchievements(): Promise<Achievement[]>;
   getUserAchievements(userId: string): Promise<UserAchievement[]>;
   addUserAchievement(userId: string, achievementId: string): Promise<UserAchievement>;
+
+  // PDF Materials
+  getPdfMaterials(filters?: { category?: string; subject?: string; search?: string }): Promise<PdfMaterial[]>;
+  getPdfMaterial(id: string): Promise<PdfMaterial | undefined>;
+  createPdfMaterial(material: InsertPdfMaterial): Promise<PdfMaterial>;
+  updatePdfMaterial(id: string, updates: Partial<PdfMaterial>): Promise<PdfMaterial | undefined>;
+  deletePdfMaterial(id: string): Promise<boolean>;
+  incrementPdfView(id: string): Promise<void>;
+  incrementPdfDownload(id: string): Promise<void>;
+
+  // PDF Folders
+  getPdfFolders(): Promise<PdfFolder[]>;
+  createPdfFolder(folder: InsertPdfFolder): Promise<PdfFolder>;
+  updatePdfFolder(id: string, updates: Partial<PdfFolder>): Promise<PdfFolder | undefined>;
+  deletePdfFolder(id: string): Promise<boolean>;
+
+  // PDF Topics
+  getPdfTopics(pdfId: string): Promise<PdfTopic[]>;
+  createPdfTopic(topic: InsertPdfTopic): Promise<PdfTopic>;
+  updatePdfTopic(id: string, updates: Partial<PdfTopic>): Promise<PdfTopic | undefined>;
+  deletePdfTopic(id: string): Promise<boolean>;
 }
 
 // Only DatabaseStorage - MemStorage completely removed
@@ -338,6 +368,212 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error adding user achievement:', error);
       throw error;
+    }
+  }
+
+  // PDF Materials
+  async getPdfMaterials(filters?: { category?: string; subject?: string; search?: string }): Promise<PdfMaterial[]> {
+    try {
+      let query = db.select().from(pdfMaterials).where(eq(pdfMaterials.isActive, true));
+      
+      const conditions = [];
+      
+      if (filters?.category) {
+        conditions.push(eq(pdfMaterials.category, filters.category));
+      }
+      
+      if (filters?.subject) {
+        conditions.push(eq(pdfMaterials.subject, filters.subject));
+      }
+      
+      if (filters?.search) {
+        conditions.push(
+          sql`(${pdfMaterials.title} ILIKE ${`%${filters.search}%`} OR ${pdfMaterials.description} ILIKE ${`%${filters.search}%`})`
+        );
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      return await query.orderBy(sql`${pdfMaterials.createdAt} DESC`);
+    } catch (error) {
+      console.error('Error getting PDF materials:', error);
+      return [];
+    }
+  }
+
+  async getPdfMaterial(id: string): Promise<PdfMaterial | undefined> {
+    try {
+      const [material] = await db.select().from(pdfMaterials).where(eq(pdfMaterials.id, id));
+      return material || undefined;
+    } catch (error) {
+      console.error('Error getting PDF material:', error);
+      return undefined;
+    }
+  }
+
+  async createPdfMaterial(material: InsertPdfMaterial): Promise<PdfMaterial> {
+    try {
+      const [newMaterial] = await db
+        .insert(pdfMaterials)
+        .values(material)
+        .returning();
+      return newMaterial;
+    } catch (error) {
+      console.error('Error creating PDF material:', error);
+      throw error;
+    }
+  }
+
+  async updatePdfMaterial(id: string, updates: Partial<PdfMaterial>): Promise<PdfMaterial | undefined> {
+    try {
+      const [updated] = await db
+        .update(pdfMaterials)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(pdfMaterials.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating PDF material:', error);
+      return undefined;
+    }
+  }
+
+  async deletePdfMaterial(id: string): Promise<boolean> {
+    try {
+      await db
+        .update(pdfMaterials)
+        .set({ isActive: false })
+        .where(eq(pdfMaterials.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting PDF material:', error);
+      return false;
+    }
+  }
+
+  async incrementPdfView(id: string): Promise<void> {
+    try {
+      await db
+        .update(pdfMaterials)
+        .set({ viewCount: sql`${pdfMaterials.viewCount} + 1` })
+        .where(eq(pdfMaterials.id, id));
+    } catch (error) {
+      console.error('Error incrementing PDF view count:', error);
+    }
+  }
+
+  async incrementPdfDownload(id: string): Promise<void> {
+    try {
+      await db
+        .update(pdfMaterials)
+        .set({ downloadCount: sql`${pdfMaterials.downloadCount} + 1` })
+        .where(eq(pdfMaterials.id, id));
+    } catch (error) {
+      console.error('Error incrementing PDF download count:', error);
+    }
+  }
+
+  // PDF Folders
+  async getPdfFolders(): Promise<PdfFolder[]> {
+    try {
+      return await db.select().from(pdfFolders).where(eq(pdfFolders.isActive, true));
+    } catch (error) {
+      console.error('Error getting PDF folders:', error);
+      return [];
+    }
+  }
+
+  async createPdfFolder(folder: InsertPdfFolder): Promise<PdfFolder> {
+    try {
+      const [newFolder] = await db
+        .insert(pdfFolders)
+        .values(folder)
+        .returning();
+      return newFolder;
+    } catch (error) {
+      console.error('Error creating PDF folder:', error);
+      throw error;
+    }
+  }
+
+  async updatePdfFolder(id: string, updates: Partial<PdfFolder>): Promise<PdfFolder | undefined> {
+    try {
+      const [updated] = await db
+        .update(pdfFolders)
+        .set(updates)
+        .where(eq(pdfFolders.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating PDF folder:', error);
+      return undefined;
+    }
+  }
+
+  async deletePdfFolder(id: string): Promise<boolean> {
+    try {
+      await db
+        .update(pdfFolders)
+        .set({ isActive: false })
+        .where(eq(pdfFolders.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting PDF folder:', error);
+      return false;
+    }
+  }
+
+  // PDF Topics
+  async getPdfTopics(pdfId: string): Promise<PdfTopic[]> {
+    try {
+      return await db.select().from(pdfTopics)
+        .where(and(eq(pdfTopics.pdfId, pdfId), eq(pdfTopics.isActive, true)))
+        .orderBy(pdfTopics.topicNumber);
+    } catch (error) {
+      console.error('Error getting PDF topics:', error);
+      return [];
+    }
+  }
+
+  async createPdfTopic(topic: InsertPdfTopic): Promise<PdfTopic> {
+    try {
+      const [newTopic] = await db
+        .insert(pdfTopics)
+        .values(topic)
+        .returning();
+      return newTopic;
+    } catch (error) {
+      console.error('Error creating PDF topic:', error);
+      throw error;
+    }
+  }
+
+  async updatePdfTopic(id: string, updates: Partial<PdfTopic>): Promise<PdfTopic | undefined> {
+    try {
+      const [updated] = await db
+        .update(pdfTopics)
+        .set(updates)
+        .where(eq(pdfTopics.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating PDF topic:', error);
+      return undefined;
+    }
+  }
+
+  async deletePdfTopic(id: string): Promise<boolean> {
+    try {
+      await db
+        .update(pdfTopics)
+        .set({ isActive: false })
+        .where(eq(pdfTopics.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting PDF topic:', error);
+      return false;
     }
   }
 

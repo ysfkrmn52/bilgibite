@@ -418,6 +418,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerEnterpriseRoutes } = await import('./enterprise-routes');
   registerEnterpriseRoutes(app);
 
+  // PDF Routes
+  const pdfRoutes = await import('./pdf-routes');
+  app.use('/api/admin', pdfRoutes.default);
+
   // Admin Dashboard Routes - Real Database Statistics  
   app.get("/api/admin/stats", async (req, res) => {
     console.log("Admin stats endpoint reached!");

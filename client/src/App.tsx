@@ -40,6 +40,7 @@ const MonitoringDashboard = lazy(() => import("@/pages/monitoring-dashboard"));
 const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
 const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
 const AIEducationGenerator = lazy(() => import("@/pages/ai-education-generator"));
+const PdfManager = lazy(() => import("@/pages/pdf-manager"));
 
 // Fast loading component
 const PageLoader = () => (
@@ -108,6 +109,9 @@ function Router() {
         )} />
         <Route path="/simple-admin" component={SimpleAdmin} />
         <Route path="/admin/questions" component={AdminQuestions} />
+        <Route path="/admin/pdf-manager" component={() => (
+          <Suspense fallback={<PageLoader />}><PdfManager /></Suspense>
+        )} />
         <Route component={NotFound} />
       </Switch>
     </div>
