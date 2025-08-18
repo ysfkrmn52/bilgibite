@@ -166,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       
       if (!categoryId) {
-        // Return all questions if no category specified
+        // Return all questions if no category specified  
         const questions = await storage.getAllQuestions(limit);
         res.json(questions);
         return;
@@ -476,9 +476,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       console.error("Admin stats detailed error:", error);
-      console.error("Error message:", error?.message);
-      console.error("Error stack:", error?.stack);
-      res.status(500).json({ error: "İstatistikler alınamadı", details: error?.message });
+      console.error("Error message:", (error as Error)?.message);
+      console.error("Error stack:", (error as Error)?.stack);
+      res.status(500).json({ error: "İstatistikler alınamadı", details: (error as Error)?.message });
     }
   });
 
@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("AI soru üretme hatası:", error);
-      res.status(500).json({ error: "AI soru üretiminde hata oluştu: " + error.message });
+      res.status(500).json({ error: "AI soru üretiminde hata oluştu: " + (error as Error).message });
     }
   });
 
@@ -1975,7 +1975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         price: level === 'beginner' ? 0 : Math.floor(Math.random() * 200) + 50,
         createdAt: new Date().toISOString(),
         chapters: generateCourseChapters(topicsToInclude, level),
-        objectives: learningObjectives ? learningObjectives.split(',').map(obj => obj.trim()) : [],
+        objectives: learningObjectives ? learningObjectives.split(',').map((obj: string) => obj.trim()) : [],
         targetAudience: targetAudience || 'Genel'
       };
       
@@ -2018,7 +2018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('AI Batch Generation Request:', { subject, count, level });
       
-      const topicList = topics.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      const topicList = topics.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
       const generatedContent = [];
       
       // Kurslar oluştur
@@ -2104,7 +2104,7 @@ function generateLessonContent(topic: string, complexity: string, includeExample
   
   let content = `
     <h2>${topic}</h2>
-    <p>Bu ders ${topic} konusunu ${complexity} seviyesinde ${styles[languageStyle] || 'anlaşılır'} bir dille ele alır.</p>
+    <p>Bu ders ${topic} konusunu ${complexity} seviyesinde ${styles[languageStyle as keyof typeof styles] || 'anlaşılır'} bir dille ele alır.</p>
     
     <h3>Giriş</h3>
     <p>${topic} konusu, eğitim programının önemli bileşenlerinden biridir. Bu derste temel kavramları öğreneceğiz.</p>
@@ -2191,5 +2191,5 @@ function getSubjectName(subjectId: string): string {
     literature: 'Edebiyat'
   };
   
-  return subjects[subjectId] || subjectId;
+  return subjects[subjectId as keyof typeof subjects] || subjectId;
 }

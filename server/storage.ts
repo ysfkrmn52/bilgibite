@@ -34,6 +34,7 @@ export interface IStorage {
 
   // Questions
   getQuestionsByCategory(examCategoryId: string, limit?: number): Promise<Question[]>;
+  getAllQuestions(limit?: number): Promise<Question[]>;
   getQuestion(id: string): Promise<Question | undefined>;
   addQuestions(questions: InsertQuestion[]): Promise<Question[]>;
   createQuestion(question: any): Promise<Question>;
@@ -192,6 +193,30 @@ export class DatabaseStorage implements IStorage {
 
   async getQuestionCount(): Promise<number> {
     return this.getTotalQuestionCount();
+  }
+
+  async getQuestionCountByCategory(examType: string): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() })
+        .from(questions)
+        .where(eq(questions.examCategoryId, examType));
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting question count by category:', error);
+      return 0;
+    }
+  }
+
+  async getAllQuestions(limit = 20): Promise<Question[]> {
+    try {
+      return await db
+        .select()
+        .from(questions)
+        .limit(limit);
+    } catch (error) {
+      console.error('Error getting all questions:', error);
+      return [];
+    }
   }
 
   async getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined> {
