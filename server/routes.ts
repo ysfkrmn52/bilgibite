@@ -97,8 +97,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     email: z.string().email(),
     password: z.string().min(6)
   })), asyncHandler(async (req: Request, res: Response) => {
-    // Login logic would go here
-    res.json({ message: "Login endpoint - implement with Firebase Auth" });
+    const { email, password } = req.body;
+    
+    try {
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ 
+          error: "Geçersiz email veya şifre",
+          success: false 
+        });
+      }
+
+      // For now, simple password check (in production, use bcrypt)
+      if (user.password !== password) {
+        return res.status(401).json({ 
+          error: "Geçersiz email veya şifre",
+          success: false 
+        });
+      }
+
+      // Return user data without password
+      const { password: _, ...userData } = user;
+      res.json({ 
+        success: true, 
+        user: userData,
+        message: "Giriş başarılı" 
+      });
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ 
+        error: "Giriş sırasında hata oluştu",
+        success: false 
+      });
+    }
   }));
 
   app.post("/api/auth/register", strictRateLimiter, validationMiddleware(z.object({

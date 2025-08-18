@@ -9,6 +9,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   firebaseUid: text("firebase_uid").unique(),
+  role: text("role").notNull().default('user'), // 'user', 'admin', 'super_admin'
+  subscriptionType: text("subscription_type").notNull().default('free'), // 'free', 'premium', 'enterprise'
+  hasAiPackage: boolean("has_ai_package").notNull().default(false),
   level: integer("level").notNull().default(1),
   totalPoints: integer("total_points").notNull().default(0),
   streakDays: integer("streak_days").notNull().default(0),
