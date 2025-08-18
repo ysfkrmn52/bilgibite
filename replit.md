@@ -11,7 +11,7 @@ Language: Turkish (user requested Turkish responses)
 
 ## Frontend Architecture
 
-The client-side is a React with TypeScript SPA, using Tailwind CSS and shadcn/ui for a responsive design system with dark/light themes. Wouter handles routing, while TanStack React Query manages server state. Framer Motion provides smooth animations, and Vite is used for build processes. Key features include PWA support, Turkish i18n, and a Duolingo-style onboarding flow with an interactive mascot.
+The client-side is a React with TypeScript SPA, using Tailwind CSS and shadcn/ui for a responsive design system with light theme only. Wouter handles routing, while TanStack React Query manages server state. Framer Motion provides smooth animations, and Vite is used for build processes. Key features include PWA support, Turkish i18n, and a Duolingo-style onboarding flow with an interactive mascot.
 
 ## Backend Architecture
 

@@ -33,10 +33,7 @@
     --chart-5: 27 87% 67%;
   }
   
-  /* Dark mode completely disabled */
-  .dark {
-    display: none !important;
-  }
+  /* Dark mode completely removed */
   
   /* Force light theme on body */
   body {
@@ -235,10 +232,7 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.dark .glass-effect {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* Glass effect - light theme only */
 
 /* Loading states */
 .loading-skeleton {

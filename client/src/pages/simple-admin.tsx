@@ -544,22 +544,22 @@ export default function SimpleAdmin() {
                 
                 {/* PDF Analiz Sonucu ve Onay */}
                 {pdfAnalysisResult && (
-                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h3 className="text-lg font-semibold mb-3 text-blue-900 dark:text-blue-100">
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-900">
                       PDF Analizi Tamamlandı
                     </h3>
-                    <p className="text-blue-800 dark:text-blue-200 mb-4">
+                    <p className="text-blue-800 mb-4">
                       <strong>{pdfAnalysisResult.detectedQuestions} soru tespit edildi</strong>
                     </p>
                     
                     {pdfAnalysisResult.preview && pdfAnalysisResult.preview.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-sm font-medium mb-2 text-blue-900 dark:text-blue-100">Örnek Sorular:</h4>
+                        <h4 className="text-sm font-medium mb-2 text-blue-900">Örnek Sorular:</h4>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {pdfAnalysisResult.preview.map((question: any, index: number) => (
-                            <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded border text-sm">
+                            <div key={index} className="bg-white p-3 rounded border text-sm">
                               <p className="font-medium">{question.questionText}</p>
-                              <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                              <div className="mt-1 text-xs text-gray-600">
                                 Kategori: {question.subject || 'N/A'} | Zorluk: {question.difficulty}
                               </div>
                             </div>
@@ -578,7 +578,7 @@ export default function SimpleAdmin() {
                       <Button 
                         variant="outline" 
                         onClick={() => confirmPDFQuestions(false)}
-                        className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400"
+                        className="border-red-300 text-red-700 hover:bg-red-50"
                       >
                         İptal Et
                       </Button>
