@@ -1954,5 +1954,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Eğitim Üretici Endpoint'leri
+  app.post("/api/ai/generate-course", async (req, res) => {
+    try {
+      const { title, description, subject, level, duration, targetAudience, learningObjectives, topicsToInclude } = req.body;
+      
+      console.log('AI Course Generation Request:', { title, subject, level });
+      
+      // AI ile kurs oluşturma simülasyonu
+      const course = {
+        id: `course_${Date.now()}`,
+        title,
+        description,
+        subject,
+        level,
+        duration: duration || '4 hafta',
+        instructor: 'AI Eğitmen',
+        rating: 45 + Math.floor(Math.random() * 5), // 4.5-5.0 arası
+        totalStudents: Math.floor(Math.random() * 500) + 100,
+        price: level === 'beginner' ? 0 : Math.floor(Math.random() * 200) + 50,
+        createdAt: new Date().toISOString(),
+        chapters: generateCourseChapters(topicsToInclude, level),
+        objectives: learningObjectives ? learningObjectives.split(',').map(obj => obj.trim()) : [],
+        targetAudience: targetAudience || 'Genel'
+      };
+      
+      console.log('Generated course:', course.title);
+      res.json(course);
+    } catch (error) {
+      console.error('AI course generation error:', error);
+      res.status(500).json({ error: 'Kurs oluşturma hatası' });
+    }
+  });
+
+  app.post("/api/ai/generate-lesson", async (req, res) => {
+    try {
+      const { topic, duration, complexity, includeExamples, includeExercises, languageStyle } = req.body;
+      
+      console.log('AI Lesson Generation Request:', { topic, complexity });
+      
+      const lesson = {
+        id: `lesson_${Date.now()}`,
+        title: topic,
+        duration: `${duration} dakika`,
+        complexity,
+        content: generateLessonContent(topic, complexity, includeExamples, includeExercises, languageStyle),
+        exercises: includeExercises ? generateLessonExercises(topic, complexity) : [],
+        examples: includeExamples ? generateLessonExamples(topic, complexity) : [],
+        createdAt: new Date().toISOString()
+      };
+      
+      console.log('Generated lesson:', lesson.title);
+      res.json(lesson);
+    } catch (error) {
+      console.error('AI lesson generation error:', error);
+      res.status(500).json({ error: 'Ders oluşturma hatası' });
+    }
+  });
+
+  app.post("/api/ai/generate-batch-content", async (req, res) => {
+    try {
+      const { subject, count, level, topics, generateQuizzes, generateMaterials } = req.body;
+      
+      console.log('AI Batch Generation Request:', { subject, count, level });
+      
+      const topicList = topics.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      const generatedContent = [];
+      
+      // Kurslar oluştur
+      for (let i = 0; i < Math.min(count, topicList.length); i++) {
+        const topic = topicList[i % topicList.length];
+        generatedContent.push({
+          type: 'course',
+          title: `${topic} - ${getSubjectName(subject)}`,
+          description: `${topic} konusunda detaylı ${level} seviyesinde eğitim`,
+          subject,
+          level,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      // Quiz'ler oluştur
+      if (generateQuizzes) {
+        for (let i = 0; i < Math.floor(count / 2); i++) {
+          const topic = topicList[i % topicList.length];
+          generatedContent.push({
+            type: 'quiz',
+            title: `${topic} Quiz`,
+            questionCount: 10,
+            subject,
+            level,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+      
+      // Materyaller oluştur
+      if (generateMaterials) {
+        for (let i = 0; i < Math.floor(count / 3); i++) {
+          const topic = topicList[i % topicList.length];
+          generatedContent.push({
+            type: 'material',
+            title: `${topic} Çalışma Materyali`,
+            format: 'PDF',
+            subject,
+            level,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+      
+      console.log(`Generated ${generatedContent.length} content items`);
+      res.json({ 
+        generated: generatedContent.length,
+        content: generatedContent,
+        message: `${generatedContent.length} içerik başarıyla oluşturuldu`
+      });
+    } catch (error) {
+      console.error('AI batch generation error:', error);
+      res.status(500).json({ error: 'Toplu içerik oluşturma hatası' });
+    }
+  });
+
   return createServer(app);
+}
+
+// AI Eğitim Üretici Yardımcı Fonksiyonları
+function generateCourseChapters(topics: string, level: string): any[] {
+  if (!topics) return [];
+  
+  const topicList = topics.split(',').map(t => t.trim()).filter(t => t.length > 0);
+  return topicList.map((topic, index) => ({
+    id: `chapter_${index + 1}`,
+    title: topic,
+    description: `${topic} konusunda ${level} seviyesinde detaylı eğitim`,
+    duration: `${30 + Math.floor(Math.random() * 30)} dakika`,
+    orderIndex: index + 1,
+    isCompleted: false
+  }));
+}
+
+function generateLessonContent(topic: string, complexity: string, includeExamples: boolean, includeExercises: boolean, languageStyle: string): string {
+  const styles = {
+    formal: 'resmi ve akademik',
+    casual: 'günlük ve anlaşılır',
+    academic: 'bilimsel ve detaylı',
+    interactive: 'etkileşimli ve katılımcı'
+  };
+  
+  let content = `
+    <h2>${topic}</h2>
+    <p>Bu ders ${topic} konusunu ${complexity} seviyesinde ${styles[languageStyle] || 'anlaşılır'} bir dille ele alır.</p>
+    
+    <h3>Giriş</h3>
+    <p>${topic} konusu, eğitim programının önemli bileşenlerinden biridir. Bu derste temel kavramları öğreneceğiz.</p>
+    
+    <h3>Temel Kavramlar</h3>
+    <ul>
+      <li>Kavram 1: ${topic} nedir?</li>
+      <li>Kavram 2: Temel özellikler</li>
+      <li>Kavram 3: Uygulama alanları</li>
+    </ul>
+  `;
+  
+  if (includeExamples) {
+    content += `
+      <h3>Örnekler</h3>
+      <div class="example-box">
+        <p><strong>Örnek 1:</strong> ${topic} konusunda pratik örnek.</p>
+        <p><strong>Örnek 2:</strong> Günlük hayattan ${topic} uygulaması.</p>
+      </div>
+    `;
+  }
+  
+  if (includeExercises) {
+    content += `
+      <h3>Alıştırmalar</h3>
+      <div class="exercise-box">
+        <p>1. ${topic} ile ilgili problemi çözünüz.</p>
+        <p>2. Verilen durumda ${topic} prensiplerini uygulayınız.</p>
+      </div>
+    `;
+  }
+  
+  content += `
+    <h3>Özet</h3>
+    <p>Bu derste ${topic} konusunu kapsamlı şekilde inceledik. Öğrenilen kavramları pratik uygulamalarla pekiştirmeniz önerilir.</p>
+  `;
+  
+  return content;
+}
+
+function generateLessonExercises(topic: string, complexity: string): any[] {
+  const exercises = [
+    {
+      question: `${topic} konusunda temel soru`,
+      options: ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      correct: 0,
+      solution: `${topic} ile ilgili detaylı açıklama ve çözüm yöntemi.`
+    },
+    {
+      question: `${topic} uygulaması ile ilgili ${complexity} seviyesinde soru`,
+      options: ["Doğru", "Yanlış", "Kısmen doğru", "Belirsiz"],
+      correct: 0,
+      solution: `Bu soruda ${topic} prensipleri uygulanarak çözüm bulunmuştur.`
+    }
+  ];
+  
+  return exercises;
+}
+
+function generateLessonExamples(topic: string, complexity: string): any[] {
+  return [
+    {
+      title: `${topic} Örnek 1`,
+      content: `${topic} konusunda ${complexity} seviyesinde örnek uygulama.`,
+      solution: `Bu örnekte ${topic} kavramları praktik olarak uygulanmıştır.`
+    },
+    {
+      title: `${topic} Örnek 2`,
+      content: `Günlük hayattan ${topic} uygulaması.`,
+      solution: `Gerçek hayat senaryosunda ${topic} nasıl kullanılır örneği.`
+    }
+  ];
+}
+
+function getSubjectName(subjectId: string): string {
+  const subjects = {
+    mathematics: 'Matematik',
+    physics: 'Fizik',
+    chemistry: 'Kimya',
+    biology: 'Biyoloji',
+    turkish: 'Türkçe',
+    history: 'Tarih',
+    geography: 'Coğrafya',
+    literature: 'Edebiyat'
+  };
+  
+  return subjects[subjectId] || subjectId;
 }

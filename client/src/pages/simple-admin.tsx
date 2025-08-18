@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Users, BookOpen, Target, Zap, Plus } from 'lucide-react';
+import { Upload, Users, BookOpen, Target, Zap, Plus, Brain } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { Link } from 'wouter';
 
 export default function SimpleAdmin() {
   const [isUploading, setIsUploading] = useState(false);
@@ -283,14 +284,26 @@ export default function SimpleAdmin() {
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">BilgiBite Admin Panel</h1>
-        <Button 
-          onClick={() => window.location.href = '/admin/questions'}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <BookOpen className="w-4 h-4" />
-          Soru Yönetimi
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/admin/ai-education">
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:from-purple-100 hover:to-blue-100"
+              data-testid="button-ai-education"
+            >
+              <Brain className="w-4 h-4 text-purple-600" />
+              AI Eğitim Üretici
+            </Button>
+          </Link>
+          <Button 
+            onClick={() => window.location.href = '/admin/questions'}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            Soru Yönetimi
+          </Button>
+        </div>
       </div>
       
       {/* İstatistikler */}

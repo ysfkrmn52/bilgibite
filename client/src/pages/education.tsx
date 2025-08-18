@@ -347,10 +347,12 @@ export default function Education() {
                         </div>
                         
                         <div className="flex gap-2 pt-2">
-                          <Button className="flex-1" data-testid={`button-enroll-${course.id}`}>
-                            <Play className="w-4 h-4 mr-2" />
-                            Başla
-                          </Button>
+                          <Link href={`/course/${course.id}`}>
+                            <Button className="flex-1" data-testid={`button-enroll-${course.id}`}>
+                              <Play className="w-4 h-4 mr-2" />
+                              Başla
+                            </Button>
+                          </Link>
                           <Button variant="outline" size="icon" data-testid={`button-bookmark-${course.id}`}>
                             <BookMarked className="w-4 h-4" />
                           </Button>

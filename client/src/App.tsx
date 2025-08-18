@@ -39,6 +39,7 @@ const Pricing = lazy(() => import("@/pages/updated-pricing"));
 const MonitoringDashboard = lazy(() => import("@/pages/monitoring-dashboard"));
 const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
 const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
+const AIEducationGenerator = lazy(() => import("@/pages/ai-education-generator"));
 
 // Fast loading component
 const PageLoader = () => (
@@ -80,6 +81,9 @@ function Router() {
         )} />
         <Route path="/course/:courseId" component={() => (
           <Suspense fallback={<PageLoader />}><CourseView /></Suspense>
+        )} />
+        <Route path="/admin/ai-education" component={() => (
+          <Suspense fallback={<PageLoader />}><AIEducationGenerator /></Suspense>
         )} />
         <Route path="/subscription" component={() => (
           <Suspense fallback={<PageLoader />}><Pricing /></Suspense>
