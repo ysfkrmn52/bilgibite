@@ -140,8 +140,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (isDemoMode) {
-      // Demo mode: set demo user and finish loading
-      setCurrentUser(demoUser);
+      // Demo mode: don't auto-login, let user use login form
+      setCurrentUser(null);
       setLoading(false);
       return;
     }

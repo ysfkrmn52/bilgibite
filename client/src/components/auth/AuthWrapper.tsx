@@ -23,29 +23,9 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     );
   }
 
-  // Kullanıcı giriş yapmış ve onboarding tamamlanmış
-  if (currentUser && !showOnboarding) {
-    // localStorage'dan onboarding durumunu kontrol et
-    const onboardingCompleted = localStorage.getItem(`onboarding-${currentUser.uid}`);
-    if (!onboardingCompleted) {
-      setShowOnboarding(true);
-      return null;
-    }
+  // Kullanıcı giriş yapmışsa dashboard'ı göster
+  if (currentUser) {
     return <>{children}</>;
-  }
-
-  // Onboarding göster
-  if (currentUser && showOnboarding) {
-    return (
-      <OnboardingFlow
-        onComplete={(userData) => {
-          // Onboarding verilerini localStorage'a kaydet
-          localStorage.setItem(`onboarding-${currentUser.uid}`, JSON.stringify(userData));
-          localStorage.setItem(`user-preferences-${currentUser.uid}`, JSON.stringify(userData));
-          setShowOnboarding(false);
-        }}
-      />
-    );
   }
 
   // Giriş/Kayıt formlarını göster
