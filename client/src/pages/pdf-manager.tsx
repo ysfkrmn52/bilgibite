@@ -135,6 +135,30 @@ export default function PdfManager() {
     }
   });
 
+  // Process PDF with AI mutation
+  const processPdfMutation = useMutation({
+    mutationFn: async (pdfId: string) => {
+      const response = await fetch(`/api/admin/pdf-processing/process/${pdfId}`, {
+        method: 'POST'
+      });
+      if (!response.ok) throw new Error('PDF processing failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: 'AI İşleme Başarılı', 
+        description: `${data.topicsCount} konu başarıyla çıkarıldı!` 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'AI İşleme Hatası', 
+        description: error.message || 'PDF AI ile işlenirken hata oluştu',
+        variant: 'destructive'
+      });
+    }
+  });
+
   // Create folder mutation
   const createFolderMutation = useMutation({
     mutationFn: async (folderData: any) => {
@@ -496,6 +520,27 @@ export default function PdfManager() {
                         }}
                       >
                         <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                        onClick={() => processPdfMutation.mutate(material.id)}
+                        disabled={processPdfMutation.isPending}
+                        data-testid={`button-process-${material.id}`}
+                      >
+                        {processPdfMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            İşleniyor...
+                          </>
+                        ) : (
+                          <>
+                            🤖 AI ile Konu Çıkar
+                          </>
+                        )}
                       </Button>
                     </div>
                   </CardContent>
