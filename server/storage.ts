@@ -341,18 +341,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getQuestionCountByCategory(examType: string): Promise<number> {
-    try {
-      const [result] = await db
-        .select({ count: count() })
-        .from(questions)
-        .where(eq(questions.examCategoryId, examType));
-      return result?.count || 0;
-    } catch (error) {
-      console.error('Error getting question count by category:', error);
-      return 0;
-    }
-  }
 }
 
 export const storage = new DatabaseStorage();
