@@ -1683,5 +1683,276 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Education System Routes
+  app.get("/api/education/subjects", async (req, res) => {
+    try {
+      const subjects = [
+        { id: "matematik", name: "Matematik", description: "Sayılar, cebir, geometri", icon: "Calculator", color: "#3B82F6" },
+        { id: "fen", name: "Fen Bilimleri", description: "Fizik, kimya, biyoloji", icon: "Atom", color: "#10B981" },
+        { id: "turkce", name: "Türkçe", description: "Dil bilgisi ve edebiyat", icon: "Languages", color: "#F59E0B" },
+        { id: "tarih", name: "Tarih", description: "Türk ve dünya tarihi", icon: "History", color: "#EF4444" },
+        { id: "cografya", name: "Coğrafya", description: "Fiziki ve beşeri coğrafya", icon: "Globe", color: "#8B5CF6" }
+      ];
+      res.json(subjects);
+    } catch (error) {
+      console.error('Education subjects error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/education/courses", async (req, res) => {
+    try {
+      const courses = [
+        {
+          id: "matematik-ileri",
+          title: "İleri Matematik: Limit ve Türev",
+          description: "YKS matematik bölümünde en çok zorlanılan konulardan limit ve türev işlemlerini detaylıca öğrenin.",
+          instructor: "Prof. Dr. Mehmet Yılmaz",
+          subjectId: "matematik",
+          duration: "8 saat",
+          level: "İleri",
+          rating: 48,
+          totalStudents: 0,
+          featured: true,
+          price: 0,
+          thumbnailUrl: "/course-thumbnails/matematik-ileri.jpg",
+          videoUrl: null,
+          createdAt: "2025-08-15T20:18:42.232Z",
+          updatedAt: "2025-08-15T20:18:42.232Z"
+        }
+      ];
+      res.json(courses);
+    } catch (error) {
+      console.error('Education courses error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Course chapters/lessons
+  app.get("/api/education/courses/:courseId/chapters", async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      
+      if (courseId === 'matematik-ileri') {
+        const chapters = [
+          {
+            id: "chapter-1",
+            courseId: "matematik-ileri",
+            title: "Limit Kavramı ve Temel Teoremler",
+            description: "Limitin tanımı, özellikleri ve temel teoremler",
+            orderIndex: 1,
+            duration: "45 dakika",
+            content: `
+              <h2>Limit Kavramı</h2>
+              <p>Limit, matematikte bir fonksiyonun belirli bir noktaya yaklaşırken aldığı değeri ifade eder. Limit kavramı, türev ve integral hesabının temelini oluşturur.</p>
+              
+              <h3>Limit Tanımı</h3>
+              <p>f(x) fonksiyonunun x = a noktasındaki limiti:</p>
+              <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-md my-4">
+                <p><strong>lim(x→a) f(x) = L</strong></p>
+                <p>Bu ifade, x değeri a'ya yaklaştığında f(x) değerinin L'ye yaklaştığını belirtir.</p>
+              </div>
+              
+              <h3>Temel Limit Kuralları</h3>
+              <ul>
+                <li><strong>Toplama Kuralı:</strong> lim(x→a) [f(x) + g(x)] = lim(x→a) f(x) + lim(x→a) g(x)</li>
+                <li><strong>Çarpma Kuralı:</strong> lim(x→a) [f(x) × g(x)] = lim(x→a) f(x) × lim(x→a) g(x)</li>
+                <li><strong>Bölme Kuralı:</strong> lim(x→a) [f(x)/g(x)] = lim(x→a) f(x) / lim(x→a) g(x) (g(x) ≠ 0)</li>
+              </ul>
+              
+              <h3>Önemli Limit Değerleri</h3>
+              <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md my-4">
+                <ul>
+                  <li>lim(x→0) (sin x)/x = 1</li>
+                  <li>lim(x→0) (1 - cos x)/x = 0</li>
+                  <li>lim(x→∞) (1 + 1/x)^x = e</li>
+                  <li>lim(x→0) (e^x - 1)/x = 1</li>
+                </ul>
+              </div>
+              
+              <h3>Limit Hesaplama Yöntemleri</h3>
+              <p>1. <strong>Direkt Yerine Koyma:</strong> Fonksiyon sürekli ise doğrudan x = a değerini yerine koyabiliriz.</p>
+              <p>2. <strong>Sadeleştirme:</strong> 0/0 belirsizliği durumunda pay ve payda sadeleştirilebilir.</p>
+              <p>3. <strong>L'Hôpital Kuralı:</strong> 0/0 veya ∞/∞ belirsizliklerinde kullanılır.</p>
+              <p>4. <strong>Sıkıştırma Teoremi:</strong> f(x) ≤ g(x) ≤ h(x) ve lim f(x) = lim h(x) = L ise lim g(x) = L</p>
+            `,
+            exercises: [
+              {
+                question: "lim(x→2) (x² - 4)/(x - 2) limitini hesaplayınız.",
+                options: ["2", "4", "0", "Tanımsız"],
+                correct: 1,
+                solution: "x² - 4 = (x-2)(x+2) şeklinde çarpanlara ayırarak sadeleştirme yapabiliriz. lim(x→2) (x-2)(x+2)/(x-2) = lim(x→2) (x+2) = 2+2 = 4"
+              },
+              {
+                question: "lim(x→0) sin(3x)/x limitini hesaplayınız.",
+                options: ["0", "1", "3", "1/3"],
+                correct: 2,
+                solution: "lim(x→0) sin(3x)/x = 3 × lim(x→0) sin(3x)/(3x) = 3 × 1 = 3 (çünkü lim(u→0) sin(u)/u = 1)"
+              }
+            ],
+            isCompleted: false
+          },
+          {
+            id: "chapter-2",
+            courseId: "matematik-ileri",
+            title: "Süreklilik ve Süreksizlik Noktaları",
+            description: "Fonksiyonların sürekliliği, süreksizlik türleri ve örnekler",
+            orderIndex: 2,
+            duration: "40 dakika",
+            content: `
+              <h2>Süreklilik Kavramı</h2>
+              <p>Bir fonksiyon, grafiği kesintisiz çizilebiliyorsa o noktada süreklidir. Matematiksel olarak, f(x) fonksiyonunun x = a noktasında sürekli olması için:</p>
+              
+              <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-md my-4">
+                <ol>
+                  <li>f(a) tanımlı olmalıdır</li>
+                  <li>lim(x→a) f(x) var olmalıdır</li>
+                  <li>lim(x→a) f(x) = f(a) olmalıdır</li>
+                </ol>
+              </div>
+              
+              <h3>Süreksizlik Türleri</h3>
+              
+              <h4>1. Kaldırılabilir Süreksizlik</h4>
+              <p>Fonksiyon o noktada tanımlı değil ama limit var. Fonksiyonu yeniden tanımlayarak sürekli hale getirilebilir.</p>
+              
+              <h4>2. Sıçrama Süreksizliği</h4>
+              <p>Sağdan ve soldan limitler farklıdır. Grafikte "sıçrama" görülür.</p>
+              
+              <h4>3. Sonsuz Süreksizlik</h4>
+              <p>En az bir yönlü limit sonsuza gider. Dikey asimptot oluşur.</p>
+              
+              <h3>Sürekli Fonksiyon Örnekleri</h3>
+              <ul>
+                <li>Polinom fonksiyonlar (tüm reel sayılarda sürekli)</li>
+                <li>Trigonometrik fonksiyonlar (tanım kümelerinde sürekli)</li>
+                <li>Üstel ve logaritmik fonksiyonlar (tanım kümelerinde sürekli)</li>
+              </ul>
+              
+              <h3>Ara Değer Teoremi</h3>
+              <p>f(x) fonksiyonu [a,b] aralığında sürekli ve f(a) ≠ f(b) ise, f(a) ile f(b) arasındaki her k değeri için f(c) = k olan en az bir c ∈ (a,b) vardır.</p>
+              
+              <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-md my-4">
+                <p><strong>Uygulama:</strong> Bu teorem denklemlerin kök varlığını ispatlamada kullanılır.</p>
+              </div>
+            `,
+            exercises: [
+              {
+                question: "f(x) = (x² - 9)/(x - 3) fonksiyonu x = 3 noktasında hangi tür süreksizlik gösterir?",
+                options: ["Kaldırılabilir süreksizlik", "Sıçrama süreksizliği", "Sonsuz süreksizlik", "Süreklidir"],
+                correct: 0,
+                solution: "x = 3'te fonksiyon tanımsız ancak lim(x→3) (x²-9)/(x-3) = lim(x→3) (x-3)(x+3)/(x-3) = 6 var. Bu kaldırılabilir süreksizliktir."
+              }
+            ],
+            isCompleted: false
+          },
+          {
+            id: "chapter-3",
+            courseId: "matematik-ileri",
+            title: "Türev Kavramı ve Geometrik Anlamı",
+            description: "Türevin tanımı, geometrik yorumu ve temel kurallar",
+            orderIndex: 3,
+            duration: "50 dakika",
+            content: `
+              <h2>Türev Nedir?</h2>
+              <p>Türev, bir fonksiyonun belirli bir noktadaki anlık değişim hızını gösteren matematiksel kavramdır. Geometrik olarak, fonksiyon grafiğinin o noktasındaki teğet doğrusunun eğimini verir.</p>
+              
+              <h3>Türev Tanımı</h3>
+              <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-md my-4">
+                <p><strong>f'(x) = lim(h→0) [f(x+h) - f(x)]/h</strong></p>
+                <p>veya</p>
+                <p><strong>f'(a) = lim(x→a) [f(x) - f(a)]/(x - a)</strong></p>
+              </div>
+              
+              <h3>Geometrik Anlam</h3>
+              <p>f'(a) değeri, f(x) fonksiyonunun x = a noktasındaki teğet doğrusunun eğimidir.</p>
+              <ul>
+                <li>f'(a) > 0 ise fonksiyon o noktada artan</li>
+                <li>f'(a) < 0 ise fonksiyon o noktada azalan</li>
+                <li>f'(a) = 0 ise o nokta kritik nokta (maksimum, minimum veya eğim değişim noktası)</li>
+              </ul>
+              
+              <h3>Temel Türev Formülleri</h3>
+              <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md my-4">
+                <ul>
+                  <li>(c)' = 0 (sabitin türevi sıfır)</li>
+                  <li>(x^n)' = n × x^(n-1) (kuvvet kuralı)</li>
+                  <li>(sin x)' = cos x</li>
+                  <li>(cos x)' = -sin x</li>
+                  <li>(e^x)' = e^x</li>
+                  <li>(ln x)' = 1/x</li>
+                </ul>
+              </div>
+            `,
+            exercises: [
+              {
+                question: "f(x) = x³ - 2x² + 3x - 1 fonksiyonunun türevini bulunuz.",
+                options: ["3x² - 4x + 3", "x² - 4x + 3", "3x² - 2x + 3", "3x² - 4x + 1"],
+                correct: 0,
+                solution: "Her terimi ayrı ayrı türetelim: (x³)' = 3x², (-2x²)' = -4x, (3x)' = 3, (-1)' = 0. Sonuç: f'(x) = 3x² - 4x + 3"
+              }
+            ],
+            isCompleted: false
+          }
+        ];
+        
+        res.json(chapters);
+      } else {
+        res.json([]); // Other courses don't have chapters yet
+      }
+    } catch (error) {
+      console.error('Course chapters error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get single course
+  app.get("/api/education/courses/:courseId", async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      const courses = [
+        {
+          id: "matematik-ileri",
+          title: "İleri Matematik: Limit ve Türev",
+          description: "YKS matematik bölümünde en çok zorlanılan konulardan limit ve türev işlemlerini detaylıca öğrenin.",
+          instructor: "Prof. Dr. Mehmet Yılmaz",
+          subjectId: "matematik",
+          duration: "8 saat",
+          level: "İleri",
+          rating: 48,
+          totalStudents: 0,
+          featured: true,
+          price: 0,
+          thumbnailUrl: "/course-thumbnails/matematik-ileri.jpg",
+          videoUrl: null,
+          createdAt: "2025-08-15T20:18:42.232Z",
+          updatedAt: "2025-08-15T20:18:42.232Z"
+        }
+      ];
+      
+      const course = courses.find(c => c.id === courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      console.error('Course error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Complete chapter
+  app.post("/api/education/chapters/:chapterId/complete", async (req, res) => {
+    try {
+      const { chapterId } = req.params;
+      // In a real app, this would update the database
+      res.json({ message: "Chapter completed successfully", chapterId });
+    } catch (error) {
+      console.error('Complete chapter error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   return createServer(app);
 }

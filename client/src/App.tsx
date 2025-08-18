@@ -34,6 +34,7 @@ const Social = lazy(() => import("@/pages/social"));
 const Analytics = lazy(() => import("@/pages/analytics"));
 const TurkishExams = lazy(() => import("@/pages/symmetric-exams"));
 const Education = lazy(() => import("@/pages/education"));
+const CourseView = lazy(() => import("@/pages/course-view"));
 const Pricing = lazy(() => import("@/pages/updated-pricing"));
 const MonitoringDashboard = lazy(() => import("@/pages/monitoring-dashboard"));
 const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
@@ -76,6 +77,9 @@ function Router() {
         )} />
         <Route path="/education" component={() => (
           <Suspense fallback={<PageLoader />}><Education /></Suspense>
+        )} />
+        <Route path="/course/:courseId" component={() => (
+          <Suspense fallback={<PageLoader />}><CourseView /></Suspense>
         )} />
         <Route path="/subscription" component={() => (
           <Suspense fallback={<PageLoader />}><Pricing /></Suspense>

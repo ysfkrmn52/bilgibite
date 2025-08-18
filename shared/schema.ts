@@ -468,6 +468,22 @@ export const educationCourses = pgTable("education_courses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Course Chapters/Lessons Table
+export const courseChapters = pgTable("course_chapters", {
+  id: text("id").primaryKey(),
+  courseId: text("course_id").notNull().references(() => educationCourses.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  orderIndex: integer("order_index").notNull(),
+  duration: text("duration").notNull(),
+  videoUrl: text("video_url"),
+  content: text("content").notNull(), // Rich text content or markdown
+  exercises: jsonb("exercises").$type<any[]>().default([]),
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 export const educationMaterials = pgTable("education_materials", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
