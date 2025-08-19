@@ -385,9 +385,7 @@ export class DatabaseStorage implements IStorage {
   // PDF Materials
   async getPdfMaterials(filters?: { category?: string; subject?: string; search?: string }): Promise<PdfMaterial[]> {
     try {
-      let query = db.select().from(pdfMaterials).where(eq(pdfMaterials.isActive, true));
-      
-      const conditions = [];
+      const conditions = [eq(pdfMaterials.isActive, true)];
       
       if (filters?.category) {
         conditions.push(eq(pdfMaterials.category, filters.category));
@@ -403,11 +401,10 @@ export class DatabaseStorage implements IStorage {
         );
       }
       
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
-      
-      return await query.orderBy(sql`${pdfMaterials.createdAt} DESC`);
+      return await db.select()
+        .from(pdfMaterials)
+        .where(and(...conditions))
+        .orderBy(sql`${pdfMaterials.createdAt} DESC`);
     } catch (error) {
       console.error('Error getting PDF materials:', error);
       return [];
