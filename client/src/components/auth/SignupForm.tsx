@@ -113,8 +113,11 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       setError('');
       
       const { signInWithPopup } = await import('firebase/auth');
-      const { auth } = await import('@/lib/firebase');
-      const { facebookProvider } = await import('@/lib/firebase');
+      const { auth, facebookProvider } = await import('@/lib/firebase');
+      
+      if (!auth || !facebookProvider) {
+        throw new Error('Firebase authentication not configured');
+      }
       
       const result = await signInWithPopup(auth, facebookProvider);
       onSuccess?.();

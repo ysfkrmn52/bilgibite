@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
@@ -21,7 +21,10 @@ export default function AuthPage() {
 
   // Kullanıcı giriş yapmışsa ana sayfaya yönlendir
   if (currentUser) {
-    setLocation('/');
+    // Use useEffect to avoid state update during render
+    React.useEffect(() => {
+      setLocation('/');
+    }, [setLocation]);
     return null;
   }
 
