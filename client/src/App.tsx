@@ -53,62 +53,64 @@ const PageLoader = () => (
 function Router() {
   return (
     <div className="min-h-screen">
-      <Navbar />
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/admin" component={() => (
-          <Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense>
-        )} />
-        <Route path="/admin-simple" component={SimpleAdmin} />
-        <Route path="/profile" component={() => (
-          <Suspense fallback={<PageLoader />}><Profile /></Suspense>
-        )} />
-        <Route path="/ai-education" component={() => (
-          <Suspense fallback={<PageLoader />}><AIProtected><AIEducationNew /></AIProtected></Suspense>
-        )} />
-        <Route path="/social" component={() => (
-          <Suspense fallback={<PageLoader />}><Social /></Suspense>
-        )} />
-        <Route path="/analytics" component={() => (
-          <Suspense fallback={<PageLoader />}><Analytics /></Suspense>
-        )} />
-        <Route path="/exams" component={() => (
-          <Suspense fallback={<PageLoader />}><TurkishExams /></Suspense>
-        )} />
-        <Route path="/quiz" component={() => (
-          <Suspense fallback={<PageLoader />}><Quiz /></Suspense>
-        )} />
-        <Route path="/course/:courseId" component={() => (
-          <Suspense fallback={<PageLoader />}><CourseView /></Suspense>
-        )} />
-        <Route path="/admin/ai-education" component={() => (
-          <Suspense fallback={<PageLoader />}><AIEducationGenerator /></Suspense>
-        )} />
-        <Route path="/subscription" component={() => (
-          <Suspense fallback={<PageLoader />}><Pricing /></Suspense>
-        )} />
-        <Route path="/quiz/:categoryId" component={() => (
-          <Suspense fallback={<PageLoader />}><Quiz /></Suspense>
-        )} />
-        <Route path="/badges" component={() => (
-          <Suspense fallback={<PageLoader />}><Rozetler /></Suspense>
-        )} />
-        <Route path="/monitoring" component={() => (
-          <Suspense fallback={<PageLoader />}><MonitoringDashboard /></Suspense>
-        )} />
-        <Route path="/enterprise" component={() => (
-          <Suspense fallback={<PageLoader />}><EnterpriseDashboard /></Suspense>
-        )} />
-        <Route path="/teacher" component={() => (
-          <Suspense fallback={<PageLoader />}><TeacherDashboard /></Suspense>
-        )} />
+        {/* Auth route without navbar */}
         <Route path="/auth" component={() => (
           <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>
         )} />
-        <Route path="/simple-admin" component={SimpleAdmin} />
-        <Route path="/admin/questions" component={AdminQuestions} />
+        
+        {/* All other routes with navbar */}
+        <Route path="/" component={() => (<><Navbar /><Home /></>)} />
+        <Route path="/admin" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+        )} />
+        <Route path="/admin-simple" component={() => (<><Navbar /><SimpleAdmin /></>)} />
+        <Route path="/profile" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
+        )} />
+        <Route path="/ai-education" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><AIProtected><AIEducationNew /></AIProtected></Suspense></>
+        )} />
+        <Route path="/social" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Social /></Suspense></>
+        )} />
+        <Route path="/analytics" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Analytics /></Suspense></>
+        )} />
+        <Route path="/exams" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><TurkishExams /></Suspense></>
+        )} />
+        <Route path="/quiz" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Quiz /></Suspense></>
+        )} />
+        <Route path="/course/:courseId" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><CourseView /></Suspense></>
+        )} />
+        <Route path="/admin/ai-education" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><AIEducationGenerator /></Suspense></>
+        )} />
+        <Route path="/subscription" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Pricing /></Suspense></>
+        )} />
+        <Route path="/quiz/:categoryId" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Quiz /></Suspense></>
+        )} />
+        <Route path="/badges" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Rozetler /></Suspense></>
+        )} />
+        <Route path="/monitoring" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><MonitoringDashboard /></Suspense></>
+        )} />
+        <Route path="/enterprise" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><EnterpriseDashboard /></Suspense></>
+        )} />
+        <Route path="/teacher" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><TeacherDashboard /></Suspense></>
+        )} />
+        <Route path="/simple-admin" component={() => (<><Navbar /><SimpleAdmin /></>)} />
+        <Route path="/admin/questions" component={() => (<><Navbar /><AdminQuestions /></>)} />
         <Route path="/admin/pdf-manager" component={() => (
-          <Suspense fallback={<PageLoader />}><PdfManager /></Suspense>
+          <><Navbar /><Suspense fallback={<PageLoader />}><PdfManager /></Suspense></>
         )} />
         <Route component={NotFound} />
       </Switch>
