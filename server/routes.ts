@@ -139,8 +139,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     password: z.string().min(8),
     username: z.string().min(3).max(50)
   })), asyncHandler(async (req: Request, res: Response) => {
-    // Registration logic would go here  
-    res.json({ message: "Register endpoint - implement with Firebase Auth" });
+    const { email, password, username } = req.body;
+    
+    try {
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ 
+          error: "Bu email adresi zaten kullanımda",
+          success: false 
+        });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password,
+        role: 'user',
+        subscriptionType: 'free'
+      });
+
+      // Return user data without password
+      const { password: _, ...userData } = newUser;
+      res.status(201).json({ 
+        success: true, 
+        user: userData,
+        message: "Hesap başarıyla oluşturuldu" 
+      });
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ 
+        error: "Hesap oluşturulurken hata oluştu",
+        success: false 
+      });
+    }
   }));
 
   // Protected user routes (require authentication)

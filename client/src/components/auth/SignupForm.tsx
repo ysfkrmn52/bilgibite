@@ -56,13 +56,38 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       setError('');
       setSuccess('');
       setIsLoading(true);
-      await signup(data.email, data.password, data.displayName);
-      setSuccess('Hesabınız oluşturuldu! Email adresinizi kontrol edin ve doğrulama linkine tıklayın.');
+      
+      // Use our backend API for registration
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          username: data.displayName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Kayıt işlemi başarısız');
+      }
+
+      setSuccess('Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.');
+      
+      // Store user data in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(result.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      
       setTimeout(() => {
         onSuccess?.();
-      }, 2000);
+      }, 1500);
+      
     } catch (err: any) {
-      setError(getErrorMessage(err.code));
+      setError(err.message || 'Hesap oluşturulurken hata oluştu');
     } finally {
       setIsLoading(false);
     }
@@ -167,20 +192,33 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center">
+      <Card className="w-full max-w-md mx-auto shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+        <CardHeader className="space-y-1 text-center pb-8">
+          {/* BilgiBite Logo */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-            className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4"
+            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-green-600 rounded-full flex items-center justify-center shadow-lg"
           >
-            <span className="text-2xl font-bold text-white">B</span>
+            <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Mascot Head */}
+              <circle cx="50" cy="40" r="18" fill="white" opacity="0.9"/>
+              {/* Eyes */}
+              <circle cx="44" cy="35" r="3" fill="#1E40AF"/>
+              <circle cx="56" cy="35" r="3" fill="#1E40AF"/>
+              {/* Smile */}
+              <path d="M 42 45 Q 50 50 58 45" stroke="#1E40AF" strokeWidth="2" fill="none"/>
+              {/* Graduation Cap */}
+              <ellipse cx="50" cy="25" rx="16" ry="3" fill="#1E40AF"/>
+              <rect x="46" y="22" width="8" height="6" fill="#1E40AF"/>
+              <circle cx="62" cy="25" r="2" fill="#F59E0B"/>
+            </svg>
           </motion.div>
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
             BilgiBite'a Katıl!
           </CardTitle>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 text-lg">
             Öğrenme yolculuğuna başlamak için hesap oluştur
           </p>
         </CardHeader>
@@ -203,9 +241,9 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <Alert className="border-green-200 bg-green-50 dark:bg-green-900/20">
+              <Alert className="border-green-200 bg-green-50">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800 dark:text-green-200">
+                <AlertDescription className="text-green-800">
                   {success}
                 </AlertDescription>
               </Alert>
@@ -227,7 +265,7 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
                 />
               </div>
               {errors.displayName && (
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-red-600">
                   {errors.displayName.message}
                 </p>
               )}
@@ -247,7 +285,7 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
                 />
               </div>
               {errors.email && (
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-red-600">
                   {errors.email.message}
                 </p>
               )}
