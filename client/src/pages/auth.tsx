@@ -5,7 +5,6 @@ import SignupForm from '@/components/auth/SignupForm';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useLocation } from 'wouter';
-import '@/utils/debug-clear-auth';
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -20,6 +19,14 @@ export default function AuthPage() {
     console.log('AuthPage - localStorage isAuthenticated:', localStorage.getItem('isAuthenticated'));
   }, [currentUser, loading]);
 
+  // Debug: Clear auth button for testing
+  const clearAuthForTesting = () => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isAuthenticated');
+    console.log('Auth cleared, reloading...');
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
@@ -28,13 +35,32 @@ export default function AuthPage() {
     );
   }
 
-  // Kullanıcı giriş yapmışsa ana sayfaya yönlendir
+  // Kullanıcı giriş yapmışsa admin panel göster
   if (currentUser) {
-    // Use useEffect to avoid state update during render
-    React.useEffect(() => {
-      setLocation('/');
-    }, [setLocation]);
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-8 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">Zaten giriş yapmışsın!</h2>
+          <p className="mb-6 text-gray-600">Admin: <strong>{currentUser.email}</strong></p>
+          <div className="space-y-3">
+            <button 
+              onClick={clearAuthForTesting}
+              className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              data-testid="button-logout"
+            >
+              🚪 Çıkış Yap ve Login Ekranını Gör
+            </button>
+            <button 
+              onClick={() => setLocation('/')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              data-testid="button-dashboard"
+            >
+              📊 Dashboard'a Git
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleAuthSuccess = () => {
@@ -42,24 +68,9 @@ export default function AuthPage() {
     setLocation('/');
   };
 
-  // Debug: Clear auth button for testing
-  const clearAuthForTesting = () => {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('isAuthenticated');
-    window.location.reload();
-  };
-
   // Giriş/Kayıt formlarını göster
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-      {/* Debug button - remove in production */}
-      <button 
-        onClick={clearAuthForTesting}
-        className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded text-xs"
-        style={{ zIndex: 9999 }}
-      >
-        Clear Auth
-      </button>
       <div className="w-full max-w-md">
         <AnimatePresence mode="wait">
           {authMode === 'login' ? (
