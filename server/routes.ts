@@ -92,8 +92,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(categories);
   }));
 
-  // Authentication endpoints (with special rate limiting)
-  app.post("/api/auth/login", strictRateLimiter, validationMiddleware(z.object({
+  // Authentication endpoints (with moderate rate limiting for auth)
+  app.post("/api/auth/login", moderateRateLimiter, validationMiddleware(z.object({
     email: z.string().email(),
     password: z.string().min(6)
   })), asyncHandler(async (req: Request, res: Response) => {
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  app.post("/api/auth/register", strictRateLimiter, validationMiddleware(z.object({
+  app.post("/api/auth/register", moderateRateLimiter, validationMiddleware(z.object({
     email: z.string().email(),
     password: z.string().min(8),
     username: z.string().min(3).max(50)

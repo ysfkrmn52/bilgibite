@@ -29,6 +29,21 @@ import { Badge } from "@/components/ui/badge";
 export function Navbar() {
   const [location] = useLocation();
   
+  // Get current user data
+  const getCurrentUser = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        return JSON.parse(currentUser);
+      } catch (error) {
+        console.error('User data parse error:', error);
+      }
+    }
+    return null;
+  };
+
+  const currentUser = getCurrentUser();
+  
   const navigationItems = [
     { path: "/", label: "Ana Sayfa", icon: Home },
     { path: "/exams", label: "Sınavlar", icon: GraduationCap },
@@ -158,7 +173,7 @@ export function Navbar() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/avatars/user.png" alt="Profil" />
                   <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                    KB
+                    {currentUser ? currentUser.username.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'KB'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -166,9 +181,16 @@ export function Navbar() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">Kullanıcı Adı</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{currentUser ? currentUser.username : 'Kullanıcı'}</p>
+                    {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                      <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
+                        {currentUser.role === 'super_admin' ? 'Süper Admin' : 'Admin'}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    kullanici@bilgibite.com
+                    {currentUser ? currentUser.email : 'kullanici@bilgibite.com'}
                   </p>
                 </div>
               </div>
@@ -184,7 +206,14 @@ export function Navbar() {
                 Ayarlar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+              <DropdownMenuItem 
+                className="cursor-pointer text-red-600 focus:text-red-600"
+                onClick={() => {
+                  localStorage.removeItem('currentUser');
+                  localStorage.removeItem('isAuthenticated');
+                  window.location.href = '/auth';
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Çıkış Yap
               </DropdownMenuItem>

@@ -16,14 +16,29 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-// Mock subscription check - in real app this would come from user data
-const hasAISubscription = false; // Change this to test different states
-
 export default function AIProtected({ children }: { children: React.ReactNode }) {
   const [, navigate] = useLocation();
 
-  // If user has AI subscription, show the AI content
-  if (hasAISubscription) {
+  // Check if user is authenticated and has AI access
+  const currentUser = localStorage.getItem('currentUser');
+  let hasAIAccess = false;
+
+  if (currentUser) {
+    try {
+      const userData = JSON.parse(currentUser);
+      // Admin ve super_admin kullanıcıları veya AI paketi olan kullanıcılar erişebilir
+      hasAIAccess = userData.role === 'admin' || 
+                   userData.role === 'super_admin' || 
+                   userData.hasAiPackage === true ||
+                   userData.subscriptionType === 'premium' ||
+                   userData.subscriptionType === 'enterprise';
+    } catch (error) {
+      console.error('User data parse error:', error);
+    }
+  }
+
+  // If user has AI access, show the AI content
+  if (hasAIAccess) {
     return <>{children}</>;
   }
 

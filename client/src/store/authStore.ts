@@ -5,6 +5,9 @@ interface User {
   id: string;
   username: string;
   email: string;
+  role: string;
+  subscriptionType: string;
+  hasAiPackage: boolean;
   level: number;
   totalPoints: number;
   streakDays: number;
@@ -24,17 +27,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: {
-        id: 'mock-user-123',
-        username: 'Ahmet Yılmaz',
-        email: 'ahmet@example.com',
-        level: 12,
-        totalPoints: 2450,
-        streakDays: 7,
-        lastActiveDate: new Date(),
-        initials: 'AY'
-      },
-      isAuthenticated: true,
+      user: null,
+      isAuthenticated: false,
       isLoading: false,
       setUser: (user) => set({ user, isAuthenticated: true }),
       logout: () => set({ user: null, isAuthenticated: false }),
