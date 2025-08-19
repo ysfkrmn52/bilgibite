@@ -120,6 +120,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isDemoMode) {
       // Demo mode: simulate successful logout
       setCurrentUser(null);
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('isAuthenticated');
       return;
     }
     

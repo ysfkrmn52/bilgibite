@@ -5,11 +5,20 @@ import SignupForm from '@/components/auth/SignupForm';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useLocation } from 'wouter';
+import '@/utils/debug-clear-auth';
 
 export default function AuthPage() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const { currentUser, loading } = useAuth();
   const [, setLocation] = useLocation();
+
+  // Debug: Log current auth state
+  React.useEffect(() => {
+    console.log('AuthPage - currentUser:', currentUser);
+    console.log('AuthPage - loading:', loading);
+    console.log('AuthPage - localStorage currentUser:', localStorage.getItem('currentUser'));
+    console.log('AuthPage - localStorage isAuthenticated:', localStorage.getItem('isAuthenticated'));
+  }, [currentUser, loading]);
 
   if (loading) {
     return (
@@ -33,9 +42,24 @@ export default function AuthPage() {
     setLocation('/');
   };
 
+  // Debug: Clear auth button for testing
+  const clearAuthForTesting = () => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isAuthenticated');
+    window.location.reload();
+  };
+
   // Giriş/Kayıt formlarını göster
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+      {/* Debug button - remove in production */}
+      <button 
+        onClick={clearAuthForTesting}
+        className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded text-xs"
+        style={{ zIndex: 9999 }}
+      >
+        Clear Auth
+      </button>
       <div className="w-full max-w-md">
         <AnimatePresence mode="wait">
           {authMode === 'login' ? (
