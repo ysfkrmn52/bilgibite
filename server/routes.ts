@@ -263,6 +263,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Question Generation endpoint
+  app.post("/api/ai/generate-questions", async (req, res) => {
+    try {
+      const { examCategory, count, difficulty } = req.body;
+      
+      if (!examCategory || !count) {
+        return res.status(400).json({ error: 'examCategory and count are required' });
+      }
+
+      if (count > 100 || count < 10 || count % 10 !== 0) {
+        return res.status(400).json({ error: 'Count must be between 10-100 and multiple of 10' });
+      }
+
+      const result = await generateExamQuestions(examCategory, count);
+      res.json(result);
+    } catch (error) {
+      console.error('AI Question Generation Error:', error);
+      res.status(500).json({ 
+        error: 'AI soru üretimi başarısız oldu',
+        message: error.message 
+      });
+    }
+  });
+
+  // Bulk question creation endpoint
+  app.post("/api/questions/bulk", async (req, res) => {
+    try {
+      const { questions } = req.body;
+      
+      if (!questions || !Array.isArray(questions)) {
+        return res.status(400).json({ error: 'Questions array is required' });
+      }
+
+      const savedQuestions = await storage.addQuestions(questions);
+      res.json({ 
+        success: true, 
+        savedCount: savedQuestions.length,
+        questions: savedQuestions 
+      });
+    } catch (error) {
+      console.error('Bulk question creation error:', error);
+      res.status(500).json({ error: 'Failed to save questions' });
+    }
+  });
+
+  // AI Tutor Chat endpoint
+  app.post("/api/ai/tutor-chat", async (req, res) => {
+    try {
+      const { message, context } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      // Check if educational content
+      const nonEducationalKeywords = [
+        'siyaset', 'politika', 'haber', 'gündem', 'şarkı', 'müzik', 
+        'oyun', 'film', 'dizi', 'arkadaş', 'aşk', 'kişisel', 'özel',
+        'para', 'borsa', 'yatırım', 'alışveriş', 'moda'
+      ];
+
+      const isNonEducational = nonEducationalKeywords.some(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+
+      if (isNonEducational) {
+        return res.json({
+          response: 'Üzgünüm, ben sadece eğitim amaçlı konularda yardımcı olabilirim. Matematik, Türkçe, fen bilimleri, tarih, coğrafya gibi ders konularında sorularınızı yanıtlayabilirim.',
+          isEducational: false
+        });
+      }
+
+      // Educational response
+      let response = '';
+      if (message.toLowerCase().includes('matematik')) {
+        response = 'Matematik konusunda yardımcı olabilirim! Hangi matematik konusu hakkında bilgi almak istiyorsunuz? Örneğin: cebir, geometri, analiz, trigonometri...';
+      } else if (message.toLowerCase().includes('türkçe')) {
+        response = 'Türkçe dersi için buradayım! Dil bilgisi, edebiyat, kompozisyon yazma veya okuma anlama konularında yardım edebilirim.';
+      } else if (message.toLowerCase().includes('fen') || message.toLowerCase().includes('fizik') || message.toLowerCase().includes('kimya') || message.toLowerCase().includes('biyoloji')) {
+        response = 'Fen bilimleri alanında uzmanım! Fizik, kimya ve biyoloji konularında detaylı açıklamalar yapabilirim. Hangi konuyu merak ediyorsunuz?';
+      } else {
+        response = 'Bu konuda size yardımcı olmaya çalışayım. Daha spesifik bir soru sorarsanız daha detaylı açıklama yapabilirim. Hangi ders veya konu hakkında bilgi almak istiyorsunuz?';
+      }
+
+      res.json({
+        response,
+        isEducational: true
+      });
+    } catch (error) {
+      console.error('AI Tutor Chat Error:', error);
+      res.status(500).json({ 
+        error: 'AI tutor yanıt verilemedi',
+        message: error.message 
+      });
+    }
+  });
+
   // User progress
   app.get("/api/users/:userId/progress", async (req, res) => {
     try {

@@ -57,14 +57,19 @@ export interface StudyPlan {
 export async function generateExamQuestions(examCategory: string, count: number = 5) {
   try {
     const categoryPrompts = {
+      'yks': 'YKS (TYT/AYT) sınavları için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, fen bilimleri, sosyal bilimler.',
       'tyt-turkce': 'TYT Türkçe dersi için gerçek sınav tarzında sorular üret. Konular: sözcük bilgisi, cümle bilgisi, yazım kuralları, paragraf, ses bilgisi.',
       'tyt-matematik': 'TYT Matematik dersi için gerçek sınav tarzında sorular üret. Konular: sayılar, cebir, geometri, veri, olasılık.',
       'ayt-matematik': 'AYT Matematik dersi için gerçek sınav tarzında sorular üret. Konular: limit, türev, integral, logaritma, trigonometri.',
       'ayt-fizik': 'AYT Fizik dersi için gerçek sınav tarzında sorular üret. Konular: mekanik, termodinamik, dalga, optik, elektrik.',
       'ayt-kimya': 'AYT Kimya dersi için gerçek sınav tarzında sorular üret. Konular: atom, bağ, kimyasal denge, asit-baz, elektrokimya.',
       'ayt-biyoloji': 'AYT Biyoloji dersi için gerçek sınav tarzında sorular üret. Konular: hücre, metabolizma, genetik, ekoloji, sistemler.',
-      'kpss': 'KPSS Genel Kültür-Genel Yetenek için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, tarih, coğrafya, vatandaşlık.',
-      'ehliyet': 'Ehliyet sınavı için gerçek sınav tarzında sorular üret. Konular: trafik kuralları, işaret ve levhalar, araç tekniği, ilk yardım.'
+      'kpss': 'KPSS Genel Kültür-Genel Yetenek için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, tarih, coğrafya, vatandaşlık, anayasa.',
+      'ehliyet': 'Ehliyet sınavı için gerçek sınav tarzında sorular üret. Konular: trafik kuralları, işaret ve levhalar, araç tekniği, ilk yardım.',
+      'src': 'SRC Sınavı için gerçek sınav tarzında sorular üret. Konular: telsiz haberleşme kuralları, frekans planları, antenlerin.',
+      'ales': 'ALES sınavı için gerçek sınav tarzında sorular üret. Konular: sayısal yetenek, sözel yetenek, analitik düşünce.',
+      'dgs': 'DGS sınavı için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, sayısal mantık, sözel mantık.',
+      'meb-ogretmenlik': 'MEB Öğretmenlik sınavı için gerçek sınav tarzında sorular üret. Konular: eğitim bilimleri, öğretim yöntemleri, gelişim psikolojisi.'
     };
 
     const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory] || 'Bu kategori için sorular üret.'} 

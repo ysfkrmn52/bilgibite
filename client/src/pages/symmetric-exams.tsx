@@ -317,39 +317,7 @@ export default function SymmetricExams() {
           })}
         </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center"
-        >
-          <Card className="inline-block p-6 bg-gradient-to-r from-gray-50 to-blue-50">
-            <h3 className="text-lg font-semibold mb-4">Daha Fazla Özellik</h3>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" asChild data-testid="button-all-analytics">
-                <Link href="/analytics">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Genel İstatistikler
-                </Link>
-              </Button>
-              
-              <Button variant="outline" asChild data-testid="button-study-plan">
-                <Link href="/dashboard">
-                  <Target className="w-4 h-4 mr-2" />
-                  Çalışma Planı
-                </Link>
-              </Button>
-              
-              <Button variant="outline" asChild data-testid="button-ai-help">
-                <Link href="/ai-learning">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  AI Yardımcı
-                </Link>
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
+
       </div>
     </div>
   );

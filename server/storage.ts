@@ -323,6 +323,28 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async addQuestions(questionList: any[]): Promise<Question[]> {
+    try {
+      const formattedQuestions = questionList.map(q => ({
+        ...q,
+        id: undefined, // Let database generate ID
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+
+      const addedQuestions = await db
+        .insert(questions)
+        .values(formattedQuestions)
+        .returning();
+
+      console.log(`Added ${addedQuestions.length} questions to database`);
+      return addedQuestions;
+    } catch (error) {
+      console.error('Error adding questions to database:', error);
+      throw error;
+    }
+  }
+
   async updateQuizSession(id: string, updates: Partial<QuizSession>): Promise<QuizSession | undefined> {
     try {
       const [updatedSession] = await db

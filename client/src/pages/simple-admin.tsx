@@ -304,6 +304,14 @@ export default function SimpleAdmin() {
             Soru Yönetimi
           </Button>
           <Button 
+            onClick={() => window.location.href = '/admin/ai-questions'}
+            variant="outline"
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 hover:from-purple-100 hover:to-pink-100"
+          >
+            <Brain className="w-4 h-4 text-purple-600" />
+            Gelişmiş AI Üretimi
+          </Button>
+          <Button 
             onClick={() => window.location.href = '/admin/pdf-manager'}
             variant="outline"
             className="flex items-center gap-2 bg-red-50 border-red-200 hover:bg-red-100"

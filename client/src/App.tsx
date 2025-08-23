@@ -42,6 +42,9 @@ const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
 const AIEducationGenerator = lazy(() => import("@/pages/ai-education-generator"));
 const AIEducationNew = lazy(() => import("@/pages/ai-education-new"));
 const AIEducationPremium = lazy(() => import("@/pages/ai-education-premium"));
+const AdminAIQuestions = lazy(() => import("@/pages/admin-ai-questions"));
+const AISmartTutor = lazy(() => import("@/pages/ai-smart-tutor"));
+const AIDemo = lazy(() => import("@/pages/ai-demo"));
 const PdfManager = lazy(() => import("@/pages/pdf-manager"));
 
 // Fast loading component
@@ -110,6 +113,15 @@ function Router() {
         )} />
         <Route path="/simple-admin" component={() => (<><Navbar /><SimpleAdmin /></>)} />
         <Route path="/admin/questions" component={() => (<><Navbar /><AdminQuestions /></>)} />
+        <Route path="/admin/ai-questions" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><AdminAIQuestions /></Suspense></>
+        )} />
+        <Route path="/ai-smart-tutor" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><AISmartTutor /></Suspense></>
+        )} />
+        <Route path="/ai-demo" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><AIDemo /></Suspense></>
+        )} />
         <Route path="/admin/pdf-manager" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><PdfManager /></Suspense></>
         )} />
