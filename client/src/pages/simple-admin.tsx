@@ -50,6 +50,7 @@ export default function SimpleAdmin() {
   const [questionCount, setQuestionCount] = useState(10);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState('');
 
   // Queries
   const { data: adminStats } = useQuery({
@@ -193,12 +194,22 @@ export default function SimpleAdmin() {
     }
 
     setIsGenerating(true);
+    setGenerationProgress('AI sistemini başlatıyor...');
+    
+    // Progress simulation
+    setTimeout(() => setGenerationProgress(`${questionCount} soru üretiliyor...`), 1000);
+    setTimeout(() => setGenerationProgress('Sorular kontrol ediliyor...'), 3000);
+    setTimeout(() => setGenerationProgress('Son kontroller yapılıyor...'), 5000);
+    
     generateQuestionsMutation.mutate({ 
       category: selectedCategory, 
       count: questionCount 
     });
     
-    setTimeout(() => setIsGenerating(false), 3000);
+    setTimeout(() => {
+      setIsGenerating(false);
+      setGenerationProgress('');
+    }, 7000);
   };
 
   const handleSaveQuestions = () => {
@@ -454,7 +465,7 @@ export default function SimpleAdmin() {
                   {isGenerating || generateQuestionsMutation.isPending ? (
                     <>
                       <Zap className="w-4 h-4 mr-2 animate-pulse" />
-                      AI Sorular Üretiyor...
+                      {generationProgress || 'AI Sorular Üretiyor...'}
                     </>
                   ) : (
                     <>
@@ -463,6 +474,13 @@ export default function SimpleAdmin() {
                     </>
                   )}
                 </Button>
+                
+                {/* Progress indicator when generating */}
+                {(isGenerating || generateQuestionsMutation.isPending) && (
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '30%' }} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -478,6 +496,7 @@ export default function SimpleAdmin() {
                 <div className="grid grid-cols-1 gap-3">
                   {EXAM_CATEGORIES.map(category => {
                     const count = getCategoryCount(category.id);
+                    const percentage = Math.min(100, (count / 100) * 100);
                     const isReady = count >= 100;
                     return (
                       <div key={category.id} className="flex justify-between items-center p-3 border rounded-lg">
@@ -485,9 +504,19 @@ export default function SimpleAdmin() {
                           <span className="font-medium">{category.name}</span>
                           <div className="text-sm text-gray-500">{count} soru</div>
                         </div>
-                        <Badge variant={isReady ? "default" : "secondary"}>
-                          {isReady ? 'Hazır' : 'Eksik'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-500 ${
+                                isReady ? 'bg-green-600' : 'bg-blue-600'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <Badge variant={isReady ? "default" : "secondary"}>
+                            {percentage.toFixed(0)}%
+                          </Badge>
+                        </div>
                       </div>
                     );
                   })}

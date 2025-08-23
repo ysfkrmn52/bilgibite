@@ -11,15 +11,15 @@ export interface ExamCategory {
 export const EXAM_CATEGORIES: ExamCategory[] = [
   {
     id: 'yks',
-    name: 'YKS (TYT/AYT)',
+    name: 'YKS (TYT/AYT)', 
     description: 'Yükseköğretime Geçiş Sınavı - Tüm TYT ve AYT konuları',
-    dbCategories: ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji', 'ayt-tarih', 'ayt-cografya', 'ayt-edebiyat']
+    dbCategories: ['tyt-turkce'] // Sadece aktif olan kategoriler
   },
   {
     id: 'kpss',
     name: 'KPSS',
     description: 'Kamu Personeli Seçme Sınavı',
-    dbCategories: ['kpss-genel', 'kpss-egitim', 'kpss-matematik', 'kpss-turkce', 'kpss-vatandaslik']
+    dbCategories: ['kpss']
   },
   {
     id: 'ehliyet',
