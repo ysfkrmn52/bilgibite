@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const categoryMapping: { [key: string]: string[] } = {
         'yks': ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji'],
-        'kpss': ['kpss', 'kpss-genel'],
+        'kpss': ['kpss-genel', 'kpss'],
         'ehliyet': ['ehliyet'],
         'src': ['src'],
         'ales': ['ales'],
@@ -259,14 +259,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
       };
       
+      console.log('Category mapping debug:', categoryMapping);
+      
       const counts: { [key: string]: number } = {};
       
       for (const [displayCategory, dbCategories] of Object.entries(categoryMapping)) {
         let totalCount = 0;
         for (const dbCategory of dbCategories) {
-          totalCount += await storage.getQuestionCountByCategory(dbCategory);
+          const count = await storage.getQuestionCountByCategory(dbCategory);
+          console.log(`Category ${dbCategory}: ${count} questions`);
+          totalCount += count;
         }
         counts[displayCategory] = totalCount;
+        console.log(`Total for ${displayCategory}: ${totalCount}`);
       }
       
       res.json(counts);
