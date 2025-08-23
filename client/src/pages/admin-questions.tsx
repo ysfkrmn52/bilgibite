@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Book, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { EXAM_CATEGORIES } from '@shared/categories';
 
 interface Question {
   id: string;
@@ -29,16 +30,7 @@ interface ExamCategory {
   name: string;
 }
 
-// Kategori mapping (admin panel ile aynı)
-const examCategories = [
-  { id: 'yks', name: 'YKS (TYT/AYT)' },
-  { id: 'kpss', name: 'KPSS' },
-  { id: 'ehliyet', name: 'Ehliyet' },
-  { id: 'src', name: 'SRC Sınavı' },
-  { id: 'ales', name: 'ALES' },
-  { id: 'dgs', name: 'DGS' },
-  { id: 'meb-ogretmenlik', name: 'MEB Öğretmenlik' }
-];
+
 
 export default function AdminQuestions() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -114,7 +106,7 @@ export default function AdminQuestions() {
                   <SelectValue placeholder="Sınav kategorisi seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  {examCategories.map((category) => (
+                  {EXAM_CATEGORIES.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>

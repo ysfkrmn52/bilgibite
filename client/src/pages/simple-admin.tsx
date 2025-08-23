@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Users, Target, Zap, Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { EXAM_CATEGORIES } from '@shared/categories';
 
 interface AdminStats {
   totalQuestions: number;
@@ -28,15 +29,7 @@ interface GeneratedQuestion {
   topic: string;
 }
 
-const examCategories = [
-  { id: 'yks', name: 'YKS (TYT/AYT)' },
-  { id: 'kpss', name: 'KPSS' },
-  { id: 'ehliyet', name: 'Ehliyet' },
-  { id: 'src', name: 'SRC Sınavı' },
-  { id: 'ales', name: 'ALES' },
-  { id: 'dgs', name: 'DGS' },
-  { id: 'meb-ogretmenlik', name: 'MEB Öğretmenlik' }
-];
+// Using unified category system from @shared/categories
 
 export default function SimpleAdmin() {
   const { toast } = useToast();
@@ -308,7 +301,7 @@ export default function SimpleAdmin() {
                       <SelectValue placeholder="Kategori seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {examCategories.map((category) => (
+                      {EXAM_CATEGORIES.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
@@ -422,7 +415,7 @@ export default function SimpleAdmin() {
                       <SelectValue placeholder="Kategori seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {examCategories.map((category) => (
+                      {EXAM_CATEGORIES.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           <div className="flex justify-between items-center w-full">
                             <span>{category.name}</span>
@@ -483,7 +476,7 @@ export default function SimpleAdmin() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-3">
-                  {examCategories.map(category => {
+                  {EXAM_CATEGORIES.map(category => {
                     const count = getCategoryCount(category.id);
                     const isReady = count >= 100;
                     return (

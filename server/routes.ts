@@ -219,19 +219,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get questions by category (support both URL param and query param)
   app.get("/api/questions/:categoryId", async (req, res) => {
     try {
-      const categoryMapping: { [key: string]: string[] } = {
-        'yks': ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji'],
-        'kpss': ['kpss-genel', 'kpss'],
-        'ehliyet': ['ehliyet'],
-        'src': ['src'],
-        'ales': ['ales'],
-        'dgs': ['dgs'],
-        'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
-      };
+      const { getDbCategoriesForExam } = await import('@shared/categories');
 
       const categoryId = req.params.categoryId;
-      const dbCategories = categoryMapping[categoryId] || [categoryId];
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const dbCategories = getDbCategoriesForExam(categoryId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       
       console.log(`Getting questions for category: ${categoryId}, DB categories: ${dbCategories}`);
       
@@ -271,30 +263,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get question counts by category
   app.get("/api/questions/counts", async (req, res) => {
     try {
-      const categoryMapping: { [key: string]: string[] } = {
-        'yks': ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji'],
-        'kpss': ['kpss-genel', 'kpss'],
-        'ehliyet': ['ehliyet'],
-        'src': ['src'],
-        'ales': ['ales'],
-        'dgs': ['dgs'],
-        'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
-      };
+      const { EXAM_CATEGORIES } = await import('@shared/categories');
       
       console.log('Question counts API called');
-      console.log('Category mapping debug:', categoryMapping);
+      console.log('Using new category system');
       
       const counts: { [key: string]: number } = {};
       
-      for (const [displayCategory, dbCategories] of Object.entries(categoryMapping)) {
+      for (const category of EXAM_CATEGORIES) {
         let totalCount = 0;
-        for (const dbCategory of dbCategories) {
+        for (const dbCategory of category.dbCategories) {
           const count = await storage.getQuestionCountByCategory(dbCategory);
-          console.log(`Category ${dbCategory}: ${count} questions`);
+          console.log(`DB Category ${dbCategory}: ${count} questions`);
           totalCount += count;
         }
-        counts[displayCategory] = totalCount;
-        console.log(`Total for ${displayCategory}: ${totalCount}`);
+        counts[category.id] = totalCount;
+        console.log(`Total for ${category.id} (${category.name}): ${totalCount}`);
       }
       
       res.json(counts);
