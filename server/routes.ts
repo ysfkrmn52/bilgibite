@@ -246,6 +246,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get question counts by category
+  app.get("/api/questions/counts", async (req, res) => {
+    try {
+      const categories = ['yks', 'kpss', 'ehliyet', 'src', 'ales', 'dgs', 'meb-ogretmenlik'];
+      const counts: { [key: string]: number } = {};
+      
+      for (const category of categories) {
+        counts[category] = await storage.getQuestionCountByCategory(category);
+      }
+      
+      res.json(counts);
+    } catch (error) {
+      console.error('Error fetching question counts:', error);
+      res.status(500).json({ error: 'Failed to fetch question counts' });
+    }
+  });
+
   // User progress
   app.get("/api/users/:userId/progress", async (req, res) => {
     try {

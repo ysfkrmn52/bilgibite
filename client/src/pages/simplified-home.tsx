@@ -177,68 +177,36 @@ export default function SimplifiedHome() {
             className="lg:col-span-3 space-y-6"
           >
             
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2 bg-white/50 hover:bg-blue-50 border-blue-200"
-                asChild
-                data-testid="button-start-quiz"
-              >
-                <Link href="/quiz">
-                  <Play className="w-6 h-6 text-blue-600" />
-                  <span className="text-sm">Hızlı Quiz</span>
-                </Link>
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2 bg-white/50 hover:bg-green-50 border-green-200"
-                asChild
-                data-testid="button-exams"
-              >
-                <Link href="/exams">
-                  <GraduationCap className="w-6 h-6 text-green-600" />
-                  <span className="text-sm">Sınavlar</span>
-                </Link>
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2 bg-white/50 hover:bg-indigo-50 border-indigo-200"
-                asChild
-                data-testid="button-education"
-              >
-                <Link href="/education">
-                  <BookOpen className="w-6 h-6 text-indigo-600" />
-                  <span className="text-sm">Eğitim</span>
-                </Link>
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2 bg-white/50 hover:bg-purple-50 border-purple-200"
-                asChild
-                data-testid="button-ai"
-              >
-                <Link href="/ai">
-                  <Zap className="w-6 h-6 text-purple-600" />
-                  <span className="text-sm">AI</span>
-                </Link>
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2 bg-white/50 hover:bg-orange-50 border-orange-200"
-                asChild
-                data-testid="button-badges"
-              >
-                <Link href="/badges">
-                  <Award className="w-6 h-6 text-orange-600" />
-                  <span className="text-sm">Rozetler</span>
-                </Link>
-              </Button>
-            </div>
+            {/* Today's Progress Summary - moved up */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Bugünün Özeti
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <Clock className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                    <div className="text-2xl font-bold text-blue-600">{userStats.todayStudyTime}</div>
+                    <div className="text-sm text-muted-foreground">Dakika Çalıştın</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <Star className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                    <div className="text-2xl font-bold text-green-600">{userStats.correctAnswers}</div>
+                    <div className="text-sm text-muted-foreground">Doğru Cevap</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <Trophy className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                    <div className="text-2xl font-bold text-purple-600">{userStats.successRate}%</div>
+                    <div className="text-sm text-muted-foreground">Başarı Oranı</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* MEB News Feed */}
             <Card>
@@ -291,85 +259,101 @@ export default function SimplifiedHome() {
               </CardContent>
             </Card>
 
-            {/* Today's Progress Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Bugünün Özeti
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Clock className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                    <div className="text-2xl font-bold text-blue-600">{userStats.todayStudyTime}</div>
-                    <div className="text-sm text-muted-foreground">Dakika Çalıştın</div>
+            {/* MEB News & Statistics Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Daily & Weekly Statistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                    İstatistiklerim
+                  </CardTitle>
+                  <CardDescription>
+                    Günlük ve haftalık çalışma verilerin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Bu Hafta</p>
+                        <p className="text-xs text-muted-foreground">Çalışma süresi</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-blue-600">{userStats.studyTime}dk</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Tamamlanan Quiz</p>
+                        <p className="text-xs text-muted-foreground">Bu ay</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-green-600">{userStats.completedQuizzes}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Sıralama</p>
+                        <p className="text-xs text-muted-foreground">Genel</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-purple-600">#{userStats.currentLevel}</p>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <Star className="w-8 h-8 mx-auto mb-2 text-green-600" />
-                    <div className="text-2xl font-bold text-green-600">{userStats.correctAnswers}</div>
-                    <div className="text-sm text-muted-foreground">Doğru Cevap</div>
+                </CardContent>
+              </Card>
+
+              {/* MEB News */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Newspaper className="w-5 h-5 text-red-600" />
+                    MEB Güncel Haberler
+                  </CardTitle>
+                  <CardDescription>
+                    Son haberler ve duyurular
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {mebNews.slice(0, 3).map((news) => (
+                      <motion.div
+                        key={news.id}
+                        whileHover={{ x: 2 }}
+                        className="flex items-start gap-3 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100 cursor-pointer hover:shadow-sm transition-all"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-xs mb-1 text-gray-900 line-clamp-2">
+                            {news.title}
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                              {news.category}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(news.date).toLocaleDateString('tr-TR')}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                  
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <Trophy className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                    <div className="text-2xl font-bold text-purple-600">{userStats.successRate}%</div>
-                    <div className="text-sm text-muted-foreground">Başarı Oranı</div>
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" size="sm" className="text-xs h-8" asChild>
+                      <a href="https://www.meb.gov.tr" target="_blank" rel="noopener noreferrer">
+                        Tüm Haberleri Gör
+                        <Globe className="w-3 h-3 ml-1" />
+                      </a>
+                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Access to Key Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Hızlı Erişim</CardTitle>
-                <CardDescription>
-                  En çok kullandığın özellikler
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <Button 
-                    variant="ghost" 
-                    className="h-16 flex-col gap-2 hover:bg-blue-50"
-                    asChild
-                    data-testid="button-analytics"
-                  >
-                    <Link href="/analytics">
-                      <TrendingUp className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm">İstatistikler</span>
-                    </Link>
-                  </Button>
-
-                  <Button 
-                    variant="ghost" 
-                    className="h-16 flex-col gap-2 hover:bg-green-50"
-                    asChild
-                    data-testid="button-social"
-                  >
-                    <Link href="/social">
-                      <Users className="w-5 h-5 text-green-600" />
-                      <span className="text-sm">Sosyal</span>
-                    </Link>
-                  </Button>
-
-                  <Button 
-                    variant="ghost" 
-                    className="h-16 flex-col gap-2 hover:bg-orange-50"
-                    asChild
-                    data-testid="button-subscription"
-                  >
-                    <Link href="/subscription">
-                      <Sparkles className="w-5 h-5 text-orange-600" />
-                      <span className="text-sm">Abonelik</span>
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
         </div>
       </div>

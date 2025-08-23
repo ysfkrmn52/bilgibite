@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useQuery } from '@tanstack/react-query';
 import { 
   GraduationCap,
   Building,
@@ -17,7 +18,8 @@ import {
   Play,
   BarChart3,
   Calendar,
-  Users
+  Users,
+  AlertTriangle
 } from 'lucide-react';
 
 // Symmetric exam data with consistent structure
@@ -151,6 +153,26 @@ const cardVariants = {
 };
 
 export default function SymmetricExams() {
+  // Fetch question counts for each category from the database
+  const { data: questionCounts } = useQuery({
+    queryKey: ['/api/questions/counts'],
+    queryFn: async () => {
+      const response = await fetch('/api/questions/counts');
+      return response.json();
+    }
+  });
+
+  // Check if category has enough questions (minimum 100)
+  const getQuestionCount = (categoryId: string) => {
+    if (!questionCounts) return 0;
+    const count = questionCounts[categoryId] || 0;
+    return count;
+  };
+
+  const hasEnoughQuestions = (categoryId: string) => {
+    return getQuestionCount(categoryId) >= 100;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -178,15 +200,28 @@ export default function SymmetricExams() {
         >
           {examCategories.map((exam) => {
             const IconComponent = exam.icon;
+            const questionCount = getQuestionCount(exam.id);
+            const isComingSoon = !hasEnoughQuestions(exam.id);
+            
             return (
               <motion.div key={exam.id} variants={cardVariants}>
                 <Card 
-                  className="h-80 hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group cursor-pointer"
-                  onClick={() => window.location.href = `/quiz?category=${exam.id}`}
+                  className={`h-80 hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group ${isComingSoon ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}`}
+                  onClick={() => {
+                    if (!isComingSoon) {
+                      window.location.href = `/quiz?category=${exam.id}`;
+                    }
+                  }}
                   data-testid={`exam-card-${exam.id}`}
                 >
                   <div className={`h-20 bg-gradient-to-r ${exam.color} relative`}>
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
+                    {isComingSoon && (
+                      <div className="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Çok Yakında
+                      </div>
+                    )}
                     <div className="relative h-full flex items-center justify-between px-6">
                       <div>
                         <h3 className="text-2xl font-bold text-white">{exam.name}</h3>

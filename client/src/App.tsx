@@ -41,6 +41,7 @@ const EnterpriseDashboard = lazy(() => import("@/pages/enterprise-dashboard"));
 const TeacherDashboard = lazy(() => import("@/pages/teacher-dashboard"));
 const AIEducationGenerator = lazy(() => import("@/pages/ai-education-generator"));
 const AIEducationNew = lazy(() => import("@/pages/ai-education-new"));
+const AIEducationPremium = lazy(() => import("@/pages/ai-education-premium"));
 const PdfManager = lazy(() => import("@/pages/pdf-manager"));
 
 // Fast loading component
@@ -69,7 +70,7 @@ function Router() {
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
         )} />
         <Route path="/ai-education" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><AIProtected><AIEducationNew /></AIProtected></Suspense></>
+          <><Navbar /><Suspense fallback={<PageLoader />}><AIProtected><AIEducationPremium /></AIProtected></Suspense></>
         )} />
         <Route path="/social" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Social /></Suspense></>
