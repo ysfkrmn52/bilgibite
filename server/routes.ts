@@ -216,6 +216,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Questions
+  // IMPORTANT: /counts route must come BEFORE /:categoryId to avoid conflicts
+  // Get question counts by category
+  app.get("/api/questions/counts", async (req, res) => {
+    try {
+      const { EXAM_CATEGORIES } = await import('@shared/categories');
+      
+      console.log('Question counts API called');
+      console.log('Using new category system');
+      
+      const counts: { [key: string]: number } = {};
+      
+      for (const category of EXAM_CATEGORIES) {
+        let totalCount = 0;
+        for (const dbCategory of category.dbCategories) {
+          const count = await storage.getQuestionCountByCategory(dbCategory);
+          console.log(`DB Category ${dbCategory}: ${count} questions`);
+          totalCount += count;
+        }
+        counts[category.id] = totalCount;
+        console.log(`Total for ${category.id} (${category.name}): ${totalCount}`);
+      }
+      
+      res.json(counts);
+    } catch (error) {
+      console.error('Error fetching question counts:', error);
+      res.status(500).json({ error: 'Failed to fetch question counts' });
+    }
+  });
+
   // Get questions by category (support both URL param and query param)
   app.get("/api/questions/:categoryId", async (req, res) => {
     try {
@@ -257,34 +286,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(questions);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get question counts by category
-  app.get("/api/questions/counts", async (req, res) => {
-    try {
-      const { EXAM_CATEGORIES } = await import('@shared/categories');
-      
-      console.log('Question counts API called');
-      console.log('Using new category system');
-      
-      const counts: { [key: string]: number } = {};
-      
-      for (const category of EXAM_CATEGORIES) {
-        let totalCount = 0;
-        for (const dbCategory of category.dbCategories) {
-          const count = await storage.getQuestionCountByCategory(dbCategory);
-          console.log(`DB Category ${dbCategory}: ${count} questions`);
-          totalCount += count;
-        }
-        counts[category.id] = totalCount;
-        console.log(`Total for ${category.id} (${category.name}): ${totalCount}`);
-      }
-      
-      res.json(counts);
-    } catch (error) {
-      console.error('Error fetching question counts:', error);
-      res.status(500).json({ error: 'Failed to fetch question counts' });
     }
   });
 
