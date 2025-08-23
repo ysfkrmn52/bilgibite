@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Book, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Book, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Question {
   id: string;
@@ -28,16 +29,50 @@ interface ExamCategory {
   name: string;
 }
 
+// Kategori mapping (admin panel ile aynı)
+const examCategories = [
+  { id: 'yks', name: 'YKS (TYT/AYT)' },
+  { id: 'kpss', name: 'KPSS' },
+  { id: 'ehliyet', name: 'Ehliyet' },
+  { id: 'src', name: 'SRC Sınavı' },
+  { id: 'ales', name: 'ALES' },
+  { id: 'dgs', name: 'DGS' },
+  { id: 'meb-ogretmenlik', name: 'MEB Öğretmenlik' }
+];
+
 export default function AdminQuestions() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['/api/exam-categories']
-  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: questions = [], isLoading: questionsLoading, refetch } = useQuery({
     queryKey: ['/api/questions', selectedCategory],
     enabled: !!selectedCategory
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      const response = await fetch(`/api/questions/${questionId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Soru silinemedi');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı!",
+        description: "Soru başarıyla silindi",
+      });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Soru silinirken hata oluştu",
+        variant: "destructive",
+      });
+    }
   });
 
   const getDifficultyColor = (difficulty: string) => {
@@ -79,7 +114,7 @@ export default function AdminQuestions() {
                   <SelectValue placeholder="Sınav kategorisi seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category: ExamCategory) => (
+                  {examCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
@@ -169,6 +204,20 @@ export default function AdminQuestions() {
                             </Badge>
                           )}
                         </div>
+                        <Button
+                          onClick={() => deleteQuestionMutation.mutate(question.id)}
+                          disabled={deleteQuestionMutation.isPending}
+                          variant="destructive"
+                          size="sm"
+                          className="ml-2"
+                        >
+                          {deleteQuestionMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                          Sil
+                        </Button>
                         <div className="text-xs text-gray-400">
                           {new Date(question.createdAt).toLocaleDateString('tr-TR')}
                         </div>

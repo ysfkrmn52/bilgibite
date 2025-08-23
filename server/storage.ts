@@ -51,6 +51,7 @@ export interface IStorage {
   getTotalQuestionCount(): Promise<number>;
   getQuestionCount(): Promise<number>;
   getQuestionCountByCategory(examType: string): Promise<number>;
+  deleteQuestion(id: string): Promise<boolean>;
 
   // User Progress
   getUserProgress(userId: string, examCategoryId: string): Promise<UserProgress | undefined>;
@@ -245,6 +246,17 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting question count by category:', error);
       return 0;
+    }
+  }
+
+  async deleteQuestion(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(questions).where(eq(questions.id, id));
+      console.log(`Delete question result:`, result);
+      return true;
+    } catch (error) {
+      console.error('Error deleting question:', error);
+      return false;
     }
   }
 

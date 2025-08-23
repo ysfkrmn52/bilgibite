@@ -219,10 +219,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get questions by category (support both URL param and query param)
   app.get("/api/questions/:categoryId", async (req, res) => {
     try {
+      const categoryMapping: { [key: string]: string[] } = {
+        'yks': ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji'],
+        'kpss': ['kpss-genel', 'kpss'],
+        'ehliyet': ['ehliyet'],
+        'src': ['src'],
+        'ales': ['ales'],
+        'dgs': ['dgs'],
+        'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
+      };
+
+      const categoryId = req.params.categoryId;
+      const dbCategories = categoryMapping[categoryId] || [categoryId];
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
-      const questions = await storage.getQuestionsByCategory(req.params.categoryId, limit);
-      res.json(questions);
+      
+      console.log(`Getting questions for category: ${categoryId}, DB categories: ${dbCategories}`);
+      
+      let allQuestions: any[] = [];
+      for (const dbCategory of dbCategories) {
+        const questions = await storage.getQuestionsByCategory(dbCategory, limit);
+        allQuestions = allQuestions.concat(questions);
+      }
+      
+      console.log(`Found ${allQuestions.length} questions for category ${categoryId}`);
+      res.json(allQuestions);
     } catch (error) {
+      console.error('Error getting questions by category:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -259,6 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
       };
       
+      console.log('Question counts API called');
       console.log('Category mapping debug:', categoryMapping);
       
       const counts: { [key: string]: number } = {};
@@ -789,13 +812,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/questions/:id", async (req, res) => {
+  app.delete("/api/questions/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      // Mock deletion - replace with database delete
-      res.json({ message: "Soru silindi", id });
+      console.log(`Deleting question: ${id}`);
+      const success = await storage.deleteQuestion(id);
+      if (success) {
+        res.json({ success: true, message: 'Soru başarıyla silindi' });
+      } else {
+        res.status(404).json({ error: 'Soru bulunamadı' });
+      }
     } catch (error) {
-      res.status(500).json({ error: "Soru silinemedi" });
+      console.error('Error deleting question:', error);
+      res.status(500).json({ error: 'Soru silinemedi' });
     }
   });
 
