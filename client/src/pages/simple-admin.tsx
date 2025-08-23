@@ -48,7 +48,7 @@ export default function SimpleAdmin() {
     subject: '',
     difficulty: 'medium',
     questionText: '',
-    options: ['', '', '', ''],
+    options: ['', '', '', '', ''],
     correctAnswer: 0,
     explanation: ''
   });
@@ -82,7 +82,7 @@ export default function SimpleAdmin() {
         subject: '',
         difficulty: 'medium',
         questionText: '',
-        options: ['', '', '', ''],
+        options: ['', '', '', '', ''],
         correctAnswer: 0,
         explanation: ''
       });
@@ -355,10 +355,10 @@ export default function SimpleAdmin() {
               </div>
 
               <div>
-                <Label>Seçenekler</Label>
+                <Label>Seçenekler (A, B, C, D, E)</Label>
                 {newQuestion.options.map((option, index) => (
                   <div key={index} className="flex items-center gap-2 mt-2">
-                    <span className="font-medium">{String.fromCharCode(65 + index)})</span>
+                    <span className="font-medium w-6">{String.fromCharCode(65 + index)})</span>
                     <Input
                       value={option}
                       onChange={(e) => {
@@ -367,13 +367,16 @@ export default function SimpleAdmin() {
                         setNewQuestion({...newQuestion, options: newOptions});
                       }}
                       placeholder={`Seçenek ${String.fromCharCode(65 + index)}`}
+                      className="flex-1"
                     />
                     <input
                       type="radio"
                       name="correctAnswer"
                       checked={newQuestion.correctAnswer === index}
                       onChange={() => setNewQuestion({...newQuestion, correctAnswer: index})}
+                      className="w-4 h-4"
                     />
+                    <span className="text-xs text-gray-500">Doğru</span>
                   </div>
                 ))}
               </div>

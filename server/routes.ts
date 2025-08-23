@@ -249,11 +249,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get question counts by category
   app.get("/api/questions/counts", async (req, res) => {
     try {
-      const categories = ['yks', 'kpss', 'ehliyet', 'src', 'ales', 'dgs', 'meb-ogretmenlik'];
+      const categoryMapping: { [key: string]: string[] } = {
+        'yks': ['tyt-genel', 'tyt-turkce', 'tyt-matematik', 'ayt-matematik', 'ayt-fizik', 'ayt-kimya', 'ayt-biyoloji'],
+        'kpss': ['kpss', 'kpss-genel'],
+        'ehliyet': ['ehliyet'],
+        'src': ['src'],
+        'ales': ['ales'],
+        'dgs': ['dgs'],
+        'meb-ogretmenlik': ['meb-ogretmenlik', 'meb']
+      };
+      
       const counts: { [key: string]: number } = {};
       
-      for (const category of categories) {
-        counts[category] = await storage.getQuestionCountByCategory(category);
+      for (const [displayCategory, dbCategories] of Object.entries(categoryMapping)) {
+        let totalCount = 0;
+        for (const dbCategory of dbCategories) {
+          totalCount += await storage.getQuestionCountByCategory(dbCategory);
+        }
+        counts[displayCategory] = totalCount;
       }
       
       res.json(counts);

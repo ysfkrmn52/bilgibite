@@ -78,7 +78,7 @@ export async function generateExamQuestions(examCategory: string, count: number 
 - Gerçek sınav formatında ${count} soru
 - Her soru özgün ve değerli olmalı
 - Türkçe dilbilgisi kurallarına uygun
-- 4 seçenek, sadece bir doğru cevap
+- 5 seçenek (A, B, C, D, E), sadece bir doğru cevap
 - Detaylı ve öğretici açıklama
 - Sınav seviyesinde zorluk
 
@@ -87,7 +87,7 @@ MUTLAKA JSON FORMATINDA DÖNDÜR:
   "questions": [
     {
       "question": "Soru metni burada",
-      "options": ["Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4"],
+      "options": ["Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4", "Seçenek 5"],
       "correctAnswer": 0,
       "explanation": "Detaylı çözüm açıklaması",
       "difficulty": "medium",
