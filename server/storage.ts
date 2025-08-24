@@ -249,6 +249,97 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Tekrar soru kontrolü için hash bazlı kontrol
+  async checkQuestionExists(questionText: string, category: string): Promise<boolean> {
+    try {
+      // Soruyu normalize et (boşlukları temizle, küçük harfe çevir)
+      const normalizedText = questionText.toLowerCase().trim().replace(/\s+/g, ' ');
+      
+      const [existing] = await db.select()
+        .from(questions)
+        .where(eq(questions.examCategoryId, category))
+        .limit(100); // Son 100 soruyu kontrol et (performans için)
+      
+      // Benzer soruları kontrol et (basit benzerlik)
+      for (const q of existing) {
+        const existingNormalized = q.questionText.toLowerCase().trim().replace(/\s+/g, ' ');
+        
+        // Exact match
+        if (existingNormalized === normalizedText) {
+          return true;
+        }
+        
+        // %80 benzerlik kontrolü (yaklaşık)
+        const similarity = this.calculateSimilarity(normalizedText, existingNormalized);
+        if (similarity > 0.8) {
+          console.log(`⚠️  Benzer soru bulundu (${(similarity * 100).toFixed(1)}%): ${questionText.substring(0, 50)}...`);
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking question existence:', error);
+      return false;
+    }
+  }
+
+  // Basit string benzerlik hesaplama
+  private calculateSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const distance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+  }
+
+  // Levenshtein distance algoritması
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix: number[][] = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  // Kategorideki son soruların özetini al (AI'ya context için)
+  async getRecentQuestionsContext(category: string, limit: number = 20): Promise<string[]> {
+    try {
+      const recentQuestions = await db.select({ questionText: questions.questionText })
+        .from(questions)
+        .where(eq(questions.examCategoryId, category))
+        .orderBy(questions.createdAt)
+        .limit(limit);
+      
+      return recentQuestions.map(q => q.questionText.substring(0, 100));
+    } catch (error) {
+      console.error('Error getting recent questions context:', error);
+      return [];
+    }
+  }
+
   async deleteQuestion(id: string): Promise<boolean> {
     try {
       const result = await db.delete(questions).where(eq(questions.id, id));

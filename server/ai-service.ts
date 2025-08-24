@@ -57,6 +57,11 @@ export interface StudyPlan {
 // Generate authentic exam questions for specific categories
 export async function generateExamQuestions(userId: string, examCategory: string, count: number = 5) {
   try {
+    // Maliyet optimizasyonu: Mevcut soruları kontrol et
+    const { storage } = await import('./storage');
+    const existingQuestionsContext = await storage.getRecentQuestionsContext(examCategory, 50);
+    console.log(`📚 ${examCategory} kategorisinde ${existingQuestionsContext.length} mevcut soru bulundu`);
+
     // Admin kullanıcıları için kredi kontrolünü atla
     const isAdminRequest = userId === 'admin' || userId === 'auto-system' || userId.startsWith('admin-') || userId === 'anonymous';
     
@@ -97,6 +102,10 @@ export async function generateExamQuestions(userId: string, examCategory: string
       'Zorluk seviyeleri: %30 kolay, %50 orta, %20 zor olacak şekilde rastgele dağıt.' :
       'Zorluk seviyelerini kolay, orta ve zor arasında rastgele dağıt.';
 
+    // Mevcut soruları AI'ya context olarak ver
+    const existingContext = existingQuestionsContext.length > 0 ? 
+      `\n\n🚫 TEKRAR ETME - Mevcut sorular (benzerlerini üretme):\n${existingQuestionsContext.slice(0, 20).map((q, i) => `${i+1}. ${q}...`).join('\n')}` : '';
+
     const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory as keyof typeof categoryPrompts] || 'Bu kategori için sorular üret.'} 
 
 ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
@@ -106,6 +115,9 @@ ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
 - 5 seçenek (A, B, C, D, E), sadece bir doğru cevap
 - Kısa ama net açıklama
 - ${difficultyPrompt}
+${existingContext}
+
+⚠️ ÖNEMLI: Yukarıdaki mevcut sorulara benzer sorular üretme! Farklı konulardan ve farklı açılardan sorular oluştur.
 
 ÖNEMLİ: Tam ${count} soru üret. JSON formatında döndür, başka hiçbir metin ekleme:
 

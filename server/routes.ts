@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI sorularını toplu kaydetme endpoint'i
+  // AI sorularını toplu kaydetme endpoint'i - Tekrar önlemeli
   app.post("/api/questions/bulk-save", async (req, res) => {
     try {
       const { questions } = req.body;
@@ -360,10 +360,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let savedCount = 0;
+      let skippedCount = 0;
+      let duplicates = [];
+
       for (const question of questions) {
         try {
-          await storage.createQuestion(question);
+          // Tekrar kontrolü yap
+          const questionText = question.text || question.questionText;
+          const category = question.category || question.examCategoryId;
+          
+          if (questionText && category) {
+            const isDuplicate = await storage.checkQuestionExists(questionText, category);
+            
+            if (isDuplicate) {
+              console.log(`⚠️  Tekrar soru atlandı: ${questionText.substring(0, 50)}...`);
+              skippedCount++;
+              duplicates.push(questionText.substring(0, 100));
+              continue;
+            }
+          }
+
+          // Soru format düzeltmesi
+          const questionToSave = {
+            examCategoryId: category,
+            subject: question.topic || category || 'AI',
+            difficulty: question.difficulty || 'medium',
+            questionText: questionText,
+            options: question.options || [],
+            correctAnswer: question.correctAnswer || 0,
+            explanation: question.explanation || null,
+            points: 10,
+            topic: question.topic || null
+          };
+
+          await storage.createQuestion(questionToSave);
           savedCount++;
+          console.log(`✅ Yeni soru kaydedildi: ${questionText.substring(0, 50)}...`);
         } catch (error) {
           console.error(`Failed to save question:`, error);
         }
@@ -372,7 +404,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         saved: savedCount,
-        message: `${savedCount} questions saved successfully`
+        skipped: skippedCount,
+        total: questions.length,
+        message: `${savedCount} soru kaydedildi, ${skippedCount} tekrar soru atlandı`,
+        duplicates: duplicates.length > 0 ? duplicates : undefined
       });
 
     } catch (error) {
