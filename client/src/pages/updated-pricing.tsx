@@ -237,7 +237,7 @@ export default function UpdatedPricing() {
                   relative border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
                   ${plan.popular ? 'border-purple-300 shadow-xl scale-105' : 'border-gray-200 shadow-lg'}
                   ${plan.isCredit ? 'border-orange-300 shadow-xl' : ''}
-                  bg-white overflow-hidden h-[650px] flex flex-col
+                  bg-white overflow-hidden h-[550px] flex flex-col
                 `}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -268,26 +268,9 @@ export default function UpdatedPricing() {
                     <p className="text-gray-600 font-medium">{plan.description}</p>
                   </CardHeader>
 
-                  <CardContent className="flex-1 flex flex-col relative z-10 p-6">
-                    {/* Price Section - Fixed Position */}
-                    <div className="text-center mb-6 h-20 flex flex-col justify-center">
-                      <div className="text-4xl font-bold text-gray-900">
-                        {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
-                        {plan.isCredit ? (
-                          <span className="text-lg text-gray-600 font-normal"> / 500 kredi</span>
-                        ) : plan.price > 0 ? (
-                          <span className="text-lg text-gray-600 font-normal">/ay</span>
-                        ) : null}
-                      </div>
-                      {plan.originalPrice && (
-                        <div className="text-sm text-gray-500 line-through mt-1">
-                          ₺{plan.originalPrice}
-                        </div>
-                      )}
-                    </div>
-
+                  <CardContent className="flex-1 flex flex-col relative z-10 p-6 min-h-[400px]">
                     {/* Features - Flexible Content */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 mb-6">
                       {plan.isCredit ? (
                         /* AI Kredi kartı sadece AI özellikleri gösterir */
                         <div>
@@ -321,8 +304,25 @@ export default function UpdatedPricing() {
                       )}
                     </div>
 
+                    {/* Price Section - Above Button */}
+                    <div className="text-center mb-4">
+                      <div className="text-3xl font-bold text-gray-900">
+                        {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
+                        {plan.isCredit ? (
+                          <span className="text-base text-gray-600 font-normal"> / 500 kredi</span>
+                        ) : plan.price > 0 ? (
+                          <span className="text-base text-gray-600 font-normal">/ay</span>
+                        ) : null}
+                      </div>
+                      {plan.originalPrice && (
+                        <div className="text-sm text-gray-500 line-through mt-1">
+                          ₺{plan.originalPrice}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Action Button - Fixed Position */}
-                    <div className="mt-6">
+                    <div>
                       <Button 
                         className={`
                           w-full h-12 transition-all duration-300 font-semibold text-lg shadow-lg
