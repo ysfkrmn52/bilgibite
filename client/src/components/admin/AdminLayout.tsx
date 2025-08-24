@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  Bell
+  Bell,
+  Brain
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -39,6 +40,12 @@ const sidebarItems = [
     icon: BookOpen,
   },
   {
+    href: '/admin/ai-generator',
+    label: 'AI Soru Üretici',
+    description: 'Yapay zeka ile soru oluştur',
+    icon: Brain,
+  },
+  {
     href: '/admin/analytics', 
     label: 'Analitik',
     description: 'İstatistik ve raporlar',
@@ -61,7 +68,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pageDescription = currentPage?.description || 'Admin paneline hoş geldiniz';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex overflow-hidden">
       {/* Mobile Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -75,39 +82,40 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar - Daha da küçültüldü */}
       <motion.aside
         initial={false}
         animate={{ 
-          x: isSidebarOpen ? 0 : -320,
+          x: isSidebarOpen ? 0 : -240,
         }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed left-0 top-0 bottom-0 w-80 bg-white border-r border-gray-200 z-50 lg:relative lg:translate-x-0 lg:z-0"
+        className="fixed left-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-xl z-50 lg:relative lg:translate-x-0 lg:z-0"
+        style={{ width: '240px' }}
       >
         <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          {/* Sidebar Header - Zenginleştirildi */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200/50 bg-gradient-to-r from-blue-600 to-purple-600">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">B</span>
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <span className="text-white font-bold text-lg">B</span>
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">BilgiBite</h2>
-                <p className="text-xs text-gray-500">Admin Panel</p>
+                <h2 className="font-bold text-white text-lg">BilgiBite</h2>
+                <p className="text-xs text-blue-100">Admin Panel</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarOpen(false)}
-              className="lg:hidden"
+              className="lg:hidden text-white hover:bg-white/20"
             >
               <X className="w-4 h-4" />
             </Button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6">
+          {/* Navigation - Zenginleştirildi */}
+          <nav className="flex-1 px-3 py-4">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
@@ -115,38 +123,53 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               return (
                 <Link key={item.href} href={item.href}>
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setIsSidebarOpen(false)}
                     className={`
-                      flex items-center gap-3 px-3 py-3 rounded-lg mb-2 transition-colors
+                      flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200
                       ${isActive 
-                        ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+                        : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
                       }
                     `}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{item.label}</div>
-                      <div className="text-xs opacity-75">{item.description}</div>
+                      <div className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                        {item.label}
+                      </div>
+                      <div className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
+                        {item.description}
+                      </div>
                     </div>
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="w-2 h-2 bg-white rounded-full"
+                      />
+                    )}
                   </motion.div>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Sidebar Footer */}
-          <div className="p-4 border-t border-gray-200">
+          {/* Sidebar Footer - Zenginleştirildi */}
+          <div className="p-4 border-t border-gray-200/50 bg-gradient-to-r from-gray-50 to-blue-50">
             <div className="flex items-center justify-between mb-3">
-              <Badge variant="outline" className="text-xs">Admin Yetkisi</Badge>
-              <Badge variant="secondary" className="text-xs">v1.0.0</Badge>
+              <Badge className="bg-green-100 text-green-700 border-green-200">
+                Admin Yetkisi
+              </Badge>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                v2.0.0
+              </Badge>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="w-full justify-start gap-2 text-gray-600 hover:text-gray-900"
+              className="w-full justify-start gap-2 text-gray-700 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Çıkış Yap
@@ -155,44 +178,47 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </motion.aside>
 
-      {/* Main Content */}
+      {/* Main Content - Sol boşluk kaldırıldı */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        {/* Top Header - Zenginleştirildi */}
+        <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 px-6 py-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-4">
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden"
+              className="lg:hidden hover:bg-gray-100"
             >
               <Menu className="w-5 h-5" />
             </Button>
             
             {/* Page Title - SOL ÜST KÖŞEDE */}
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {pageTitle}
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-600">
                 {pageDescription}
               </p>
             </div>
           </div>
 
-          {/* Header Actions */}
+          {/* Header Actions - Zenginleştirildi */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              <Bell className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
+                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+              </span>
             </Button>
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">A</span>
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold">A</span>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content - İyileştirildi */}
         <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>

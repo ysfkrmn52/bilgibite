@@ -299,6 +299,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI soru üretimi endpoint'i
+  app.post("/api/ai/generate-questions", async (req, res) => {
+    try {
+      const { category, count } = req.body;
+      
+      if (!category || !count) {
+        return res.status(400).json({ 
+          error: "Category and count are required" 
+        });
+      }
+
+      // Mock AI response for now - gerçek AI entegrasyonu için Claude API kullan
+      const mockQuestions = [];
+      for (let i = 0; i < count; i++) {
+        mockQuestions.push({
+          text: `AI Generated Question ${i + 1} for ${category}`,
+          category,
+          options: [
+            `Option A for question ${i + 1}`,
+            `Option B for question ${i + 1}`, 
+            `Option C for question ${i + 1}`,
+            `Option D for question ${i + 1}`
+          ],
+          correctAnswer: Math.floor(Math.random() * 4),
+          explanation: `AI generated explanation for question ${i + 1}`,
+          difficulty: "orta",
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      // Mock success response
+      res.json({
+        success: true,
+        count: mockQuestions.length,
+        message: `${count} questions generated successfully`,
+        questions: mockQuestions
+      });
+
+    } catch (error) {
+      console.error("AI generation error:", error);
+      res.status(500).json({ 
+        error: "AI question generation failed",
+        message: error.message 
+      });
+    }
+  });
+
   app.get("/api/questions", async (req, res) => {
     try {
       const categoryId = req.query.category as string;
