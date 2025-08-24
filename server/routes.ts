@@ -88,8 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/exam-categories", asyncHandler(async (req: Request, res: Response) => {
-    const categories = await storage.getExamCategories();
-    res.json(categories);
+    const { EXAM_CATEGORIES } = await import('@shared/categories');
+    res.json(EXAM_CATEGORIES);
   }));
 
   // Authentication endpoints (with moderate rate limiting for auth)
