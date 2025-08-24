@@ -1,6 +1,6 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +20,8 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { EXAM_CATEGORIES } from "@shared/categories";
 
 export default function AdminDashboard() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   // Queries
   const { data: adminStats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/admin/stats"],
@@ -44,12 +39,8 @@ export default function AdminDashboard() {
     queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
 
-  const getCategoryCount = (categoryId: string) => {
-    return questionCounts?.[categoryId] || 0;
-  };
-
   // Combine stats from both sources
-  const displayStats = subscriptionStats?.data || subscriptionStats || {};
+  const displayStats = (subscriptionStats?.data || subscriptionStats || {}) as any;
   const combinedStats = {
     ...adminStats,
     ...displayStats,
@@ -224,84 +215,59 @@ export default function AdminDashboard() {
                   data-testid="button-analytics"
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Detaylı Analytics
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/admin/users")}
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-user-management"
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Kullanıcı Yönetimi
+                  Analytics
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Kategori Başına Soru Dağılımı */}
+          {/* Son Aktiviteler */}
           <div className="lg:col-span-2">
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-600" />
-                  Kategori Başına Soru Dağılımı
+                  Son Aktiviteler
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {EXAM_CATEGORIES.map((category) => {
-                    const count = getCategoryCount(category.id);
-                    const percentage = Math.min(100, (count / 100) * 100);
-                    const isReady = count >= 50;
-                    return (
-                      <div
-                        key={category.id}
-                        className="p-4 border rounded-lg bg-gray-50"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-sm">
-                            {category.name}
-                          </span>
-                          <Badge
-                            variant={isReady ? "default" : "secondary"}
-                            className="text-xs"
-                          >
-                            {count} soru
-                          </Badge>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              isReady ? "bg-green-600" : "bg-blue-600"
-                            }`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {percentage.toFixed(0)}% tamamlandı
+                <div className="space-y-4">
+                  {adminStats?.recentActivities?.length ? (
+                    adminStats.recentActivities.map((activity: any, index: number) => (
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{activity.description}</div>
+                          <div className="text-xs text-gray-500">{activity.time}</div>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Target className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Henüz aktivite bulunmuyor
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Ana Yönetim Tabları */}
+        {/* Detaylı Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger
+              value="overview"
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
               Genel Bakış
-            </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              Soru Yönetimi
             </TabsTrigger>
             <TabsTrigger
               value="subscriptions"
@@ -413,54 +379,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Soru Yönetimi */}
-          <TabsContent value="questions">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                  Soru Yönetimi Merkezi
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Button
-                      onClick={() =>
-                        (window.location.href = "/admin/questions")
-                      }
-                      className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    >
-                      <BookOpen className="w-6 h-6" />
-                      <span>Soru Bankası Yönetimi</span>
-                    </Button>
-
-                    <Button
-                      onClick={() =>
-                        (window.location.href = "/admin/ai-questions")
-                      }
-                      className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                    >
-                      <Brain className="w-6 h-6" />
-                      <span>AI Soru Üretimi</span>
-                    </Button>
-                  </div>
-
-                  <div className="text-center py-8 border-t">
-                    <p className="text-gray-600 mb-4">
-                      Soru yönetimi ve AI destekli soru üretimi için yukarıdaki
-                      butonları kullanın.
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Tüm soru işlemleri ayrı sayfalarda detaylı şekilde
-                      yapılabilir.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Abonelik Durumu */}
@@ -615,6 +533,48 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Soru Yönetimi Bölümü */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-purple-600" />
+              Soru Yönetimi Merkezi
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Button
+                  onClick={() => (window.location.href = "/admin/questions")}
+                  className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <BookOpen className="w-6 h-6" />
+                  <span>Soru Bankası Yönetimi</span>
+                </Button>
+
+                <Button
+                  onClick={() => (window.location.href = "/admin/ai-questions")}
+                  className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                >
+                  <Brain className="w-6 h-6" />
+                  <span>AI Soru Üretimi</span>
+                </Button>
+              </div>
+
+              <div className="text-center py-8 border-t">
+                <p className="text-gray-600 mb-4">
+                  Soru yönetimi ve AI destekli soru üretimi için yukarıdaki
+                  butonları kullanın.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Tüm soru işlemleri ayrı sayfalarda detaylı şekilde
+                  yapılabilir.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
