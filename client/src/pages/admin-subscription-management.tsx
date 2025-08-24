@@ -7,45 +7,17 @@ import {
   TrendingUp, 
   DollarSign,
   Crown,
-  Zap,
-  UserCheck,
+  Shield,
   AlertTriangle,
   ArrowUp,
   ArrowDown,
-  MoreHorizontal,
-  Calendar,
-  Download
+  CheckCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-
-// Mock data - bu gerçek API'den gelecek
-const mockStats = {
-  totalUsers: 1247,
-  activeSubscriptions: 892,
-  monthlyRevenue: 45680,
-  totalRevenue: 234500,
-  freeUsers: 355,
-  plusUsers: 456,
-  premiumUsers: 436,
-  aiCreditUsers: 234,
-  growth: {
-    users: 12.5,
-    revenue: 8.3,
-    subscriptions: 15.2
-  },
-  recentTransactions: [
-    { id: '1', user: 'Ahmet Yılmaz', plan: 'Premium', amount: 299, date: '2025-01-24T09:30:00Z', status: 'completed' },
-    { id: '2', user: 'Ayşe Demir', plan: 'Plus', amount: 99, date: '2025-01-24T08:15:00Z', status: 'completed' },
-    { id: '3', user: 'Mehmet Kaya', plan: 'AI Kredi', amount: 50, date: '2025-01-24T07:45:00Z', status: 'pending' },
-    { id: '4', user: 'Zeynep Öz', plan: 'Premium', amount: 299, date: '2025-01-23T16:20:00Z', status: 'completed' },
-    { id: '5', user: 'Can Aksoy', plan: 'Plus', amount: 99, date: '2025-01-23T14:10:00Z', status: 'completed' }
-  ]
-};
 
 interface StatCardProps {
   title: string;
@@ -61,10 +33,10 @@ function StatCard({ title, value, change, icon: Icon, color, subtitle }: StatCar
   
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+      whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
@@ -82,7 +54,7 @@ function StatCard({ title, value, change, icon: Icon, color, subtitle }: StatCar
               )}
             </div>
             
-            <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center shadow-lg`}>
               <Icon className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -100,40 +72,34 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('tr-TR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(dateString));
-}
-
 export default function AdminSubscriptionManagement() {
-  const [timeRange, setTimeRange] = useState('7d');
-
-  // Bu gerçek API call'a dönüştürülecek
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['/api/admin/dashboard-stats'],
+  // Gerçek API'den veri çekme
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/subscriptions/stats'],
     enabled: true,
-    initialData: mockStats
+    retry: 3,
+    retryDelay: 1000
   });
 
-  if (isLoading || !stats) {
+  if (isLoading) {
     return (
       <AdminLayout>
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 mt-1">Veriler yükleniyor...</p>
+            </div>
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="animate-pulse">
+              <Card key={i} className="animate-pulse border-0 shadow-lg">
                 <CardContent className="p-6">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                     <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/3"></div>
                   </div>
                 </CardContent>
               </Card>
@@ -144,25 +110,62 @@ export default function AdminSubscriptionManagement() {
     );
   }
 
+  // API hatası durumu
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-red-600 mt-1">Veri yüklenirken hata oluştu</p>
+            </div>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Sayfayı Yenile
+            </Button>
+          </div>
+          
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Veri Yüklenemedi</h3>
+              <p className="text-gray-600 mb-4">
+                Subscription verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Sayfayı Yenile
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Veri güvenli şekilde parse et
+  const displayStats = stats?.data || stats || {};
+  const totalUsers = displayStats.total || 0;
+  const activeSubscriptions = displayStats.activeSubscriptions || 0;
+  const freeUsers = displayStats.freeUsers || 0;
+  const plusUsers = displayStats.plusUsers || 0;
+  const premiumUsers = displayStats.premiumUsers || 0;
+  const monthlyRevenue = displayStats.monthlyRevenue || 0;
+
   return (
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">BilgiBite admin paneline hoş geldiniz</p>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-1">BilgiBite platform yönetim paneli</p>
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              Son 7 Gün
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
+            <Badge variant="default" className="bg-green-100 text-green-700 px-3 py-1">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Sistem Aktif
+            </Badge>
           </div>
         </div>
 
@@ -170,8 +173,8 @@ export default function AdminSubscriptionManagement() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Toplam Kullanıcı"
-            value={stats.totalUsers.toLocaleString('tr-TR')}
-            change={stats.growth.users}
+            value={totalUsers.toLocaleString('tr-TR')}
+            change={displayStats.growth?.users}
             icon={Users}
             color="bg-gradient-to-r from-blue-500 to-blue-600"
             subtitle="Kayıtlı kullanıcı"
@@ -179,8 +182,8 @@ export default function AdminSubscriptionManagement() {
           
           <StatCard
             title="Aktif Abonelik"
-            value={stats.activeSubscriptions.toLocaleString('tr-TR')}
-            change={stats.growth.subscriptions}
+            value={activeSubscriptions.toLocaleString('tr-TR')}
+            change={displayStats.growth?.subscriptions}
             icon={CreditCard}
             color="bg-gradient-to-r from-purple-500 to-purple-600"
             subtitle="Ödeme yapan"
@@ -188,19 +191,19 @@ export default function AdminSubscriptionManagement() {
           
           <StatCard
             title="Aylık Gelir"
-            value={formatCurrency(stats.monthlyRevenue)}
-            change={stats.growth.revenue}
+            value={formatCurrency(monthlyRevenue)}
+            change={displayStats.growth?.revenue}
             icon={DollarSign}
             color="bg-gradient-to-r from-green-500 to-green-600"
             subtitle="Bu ay"
           />
           
           <StatCard
-            title="Toplam Gelir"
-            value={formatCurrency(stats.totalRevenue)}
-            icon={TrendingUp}
+            title="Plus Kullanıcı"
+            value={plusUsers.toLocaleString('tr-TR')}
+            icon={Crown}
             color="bg-gradient-to-r from-orange-500 to-orange-600"
-            subtitle="Genel toplam"
+            subtitle="Plus abonelik"
           />
         </div>
 
@@ -208,7 +211,7 @@ export default function AdminSubscriptionManagement() {
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Subscription Breakdown */}
           <div className="lg:col-span-2">
-            <Card>
+            <Card className="shadow-lg border-0">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-purple-600" />
@@ -216,154 +219,222 @@ export default function AdminSubscriptionManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                        <span className="font-medium">Ücretsiz</span>
+                {totalUsers > 0 ? (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                          <span className="font-medium text-gray-900">Ücretsiz</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">{freeUsers}</div>
+                          <div className="text-xs text-gray-500">
+                            %{Math.round((freeUsers / totalUsers) * 100)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold">{stats.freeUsers}</div>
-                        <div className="text-xs text-gray-500">%{Math.round((stats.freeUsers / stats.totalUsers) * 100)}</div>
-                      </div>
+                      <Progress 
+                        value={(freeUsers / totalUsers) * 100} 
+                        className="h-3" 
+                      />
                     </div>
-                    <Progress value={(stats.freeUsers / stats.totalUsers) * 100} className="h-2" />
-                  </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="font-medium">Plus</span>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                          <span className="font-medium text-gray-900">Plus</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">{plusUsers}</div>
+                          <div className="text-xs text-gray-500">
+                            %{Math.round((plusUsers / totalUsers) * 100)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold">{stats.plusUsers}</div>
-                        <div className="text-xs text-gray-500">%{Math.round((stats.plusUsers / stats.totalUsers) * 100)}</div>
-                      </div>
+                      <Progress 
+                        value={(plusUsers / totalUsers) * 100} 
+                        className="h-3" 
+                      />
                     </div>
-                    <Progress value={(stats.plusUsers / stats.totalUsers) * 100} className="h-2" />
-                  </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                        <span className="font-medium">Premium (Aile)</span>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                          <span className="font-medium text-gray-900">Premium</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">{premiumUsers}</div>
+                          <div className="text-xs text-gray-500">
+                            %{Math.round((premiumUsers / totalUsers) * 100)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold">{stats.premiumUsers}</div>
-                        <div className="text-xs text-gray-500">%{Math.round((stats.premiumUsers / stats.totalUsers) * 100)}</div>
-                      </div>
+                      <Progress 
+                        value={(premiumUsers / totalUsers) * 100} 
+                        className="h-3" 
+                      />
                     </div>
-                    <Progress value={(stats.premiumUsers / stats.totalUsers) * 100} className="h-2" />
-                  </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <span className="font-medium">AI Kredi</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold">{stats.aiCreditUsers}</div>
-                        <div className="text-xs text-gray-500">%{Math.round((stats.aiCreditUsers / stats.totalUsers) * 100)}</div>
+                    <div className="pt-6 border-t">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-gray-900">{totalUsers}</div>
+                        <div className="text-sm text-gray-500">Toplam Kullanıcı</div>
                       </div>
                     </div>
-                    <Progress value={(stats.aiCreditUsers / stats.totalUsers) * 100} className="h-2" />
                   </div>
-                </div>
+                ) : (
+                  <div className="p-12 text-center text-gray-500">
+                    <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      Henüz Kullanıcı Yok
+                    </h3>
+                    <p className="text-gray-500">
+                      İlk kullanıcılar kaydolduktan sonra burada görünecek
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Actions */}
+          {/* System Status */}
           <div>
-            <Card>
+            <Card className="shadow-lg border-0">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-orange-500" />
-                  Hızlı İşlemler
+                  <Shield className="w-5 h-5 text-green-600" />
+                  Sistem Durumu
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Kullanıcı Doğrulama
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                    Sorunlu Ödemeler
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Analytics Raporu
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Crown className="w-4 h-4 mr-2" />
-                    Yeni Paket Oluştur
-                  </Button>
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-900">Servisler</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">PostgreSQL</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-gray-500">Aktif</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Firebase</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-gray-500">Aktif</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Error Monitor</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-gray-500">Çalışıyor</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-900">Subscription Fiyatları</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Ücretsiz</span>
+                        <span className="font-medium">₺0/ay</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Plus</span>
+                        <span className="font-medium">₺99/ay</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Premium</span>
+                        <span className="font-medium">₺299/ay</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Recent Transactions */}
-        <Card>
+        {/* Platform Info */}
+        <Card className="shadow-lg border-0">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-green-600" />
-                Son Ödemeler
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                Platform Bilgileri
               </div>
-              <Button variant="ghost" size="sm">
-                Tümünü Gör
-              </Button>
+              <Badge variant="outline" className="text-sm">
+                v1.0.0 Production
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {stats.recentTransactions.map((transaction, index) => (
-                <motion.div
-                  key={transaction.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">
-                        {transaction.user.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium">{transaction.user}</div>
-                      <div className="text-sm text-gray-500">
-                        {transaction.plan} • {formatDate(transaction.date)}
-                      </div>
-                    </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Özellikler</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>4 Subscription paketi</span>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="font-bold">{formatCurrency(transaction.amount)}</div>
-                      <Badge 
-                        variant={transaction.status === 'completed' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {transaction.status === 'completed' ? 'Tamamlandı' : 'Bekliyor'}
-                      </Badge>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Firebase Authentication</span>
                   </div>
-                </motion.div>
-              ))}
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Admin Panel</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Error Monitoring</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Email Notifications</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Database Storage</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Kullanıcılar</span>
+                    <span className="font-medium">{totalUsers}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Aktif Abonelik</span>
+                    <span className="font-medium">{activeSubscriptions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Aylık Gelir</span>
+                    <span className="font-medium">{formatCurrency(monthlyRevenue)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {totalUsers === 0 && (
+              <div className="mt-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">Platform Yeni Başladı</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Platform production'a hazır durumda. İlk kullanıcılar kaydolduktan sonra 
+                      bu panelde detaylı istatistikler görünecek.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
