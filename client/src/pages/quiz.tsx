@@ -29,7 +29,19 @@ export default function Quiz() {
   const categoryId = urlParams.get('category');
 
   // Fetch questions for the category with different limits based on mode
-  const questionLimit = quizMode === 'quick' ? 10 : 40;
+  const getQuestionLimit = (mode: 'quick' | 'exam', category: string) => {
+    if (mode === 'quick') return 10;
+    
+    // Real exam question counts
+    switch (category) {
+      case 'yks': return 120; // TYT: 120 soru
+      case 'kpss': return 120; // Genel: 120 soru  
+      case 'ehliyet': return 50; // Ehliyet: 50 soru
+      default: return 40;
+    }
+  };
+  
+  const questionLimit = getQuestionLimit(quizMode, categoryId || '');
   const { data: questions = [], isLoading, error } = useQuery<Question[]>({
     queryKey: ["/api/questions", categoryId, quizMode],
     queryFn: async () => {

@@ -16,7 +16,25 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
     queryKey: ["/api/exam-categories"],
   });
 
+  const { data: questionCounts = {} } = useQuery<Record<string, number>>({
+    queryKey: ["/api/questions/counts"],
+  });
+
   const category = categories.find(cat => cat.id === categoryId);
+  
+  // Check if we have enough questions for exam mode
+  const getRequiredQuestions = (categoryId: string) => {
+    switch (categoryId) {
+      case 'yks': return 120;
+      case 'kpss': return 120; 
+      case 'ehliyet': return 50;
+      default: return 40;
+    }
+  };
+  
+  const availableQuestions = questionCounts[categoryId] || 0;
+  const requiredQuestions = getRequiredQuestions(categoryId);
+  const hasEnoughQuestions = availableQuestions >= requiredQuestions;
 
   if (!category) {
     return (
@@ -41,36 +59,36 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
 
   const categoryInfo = {
     yks: {
-      description: "Üniversiteye giriş sınavı. Matematik, Türkçe, Fen ve Sosyal alanları.",
-      duration: "2-5 dakika",
-      questionCount: "5-20 soru",
-      difficulty: "Orta",
+      description: "Üniversiteye giriş sınavı. TYT: 120 soru (165 dk), AYT: Bölümsel testler.",
+      duration: "Hızlı Quiz: 10 soru • Deneme: 120 soru",
+      questionCount: "10 soru",
+      difficulty: "Orta-Zor",
       tips: [
-        "Her soru için ortalama 15-30 saniye ayırın",
-        "Emin olmadığınız sorularda tahmin yapın", 
-        "Zaman yönetimi çok önemli"
+        "TYT: Türkçe 40, Matematik 40, Fen 20, Sosyal 20 soru",
+        "Negatif puanlama var: 4 yanlış = 1 doğru",
+        "Zaman yönetimi kritik: soru başına ortalama 1.4 dakika"
       ]
     },
     kpss: {
-      description: "Kamu kurumlarında çalışmak için gerekli sınav.",
-      duration: "2-5 dakika",
-      questionCount: "5-20 soru",
+      description: "Kamu Personeli Seçme Sınavı. Genel Yetenek, Genel Kültür, Eğitim Bilimleri.",
+      duration: "Hızlı Quiz: 10 soru • Deneme: 120 soru",
+      questionCount: "10 soru",
       difficulty: "Orta-Zor",
       tips: [
-        "Genel kültür sorularına dikkat edin",
-        "Güncel olayları takip etmeyi unutmayın",
-        "Analitik düşünme becerilerinizi geliştirin"
+        "Genel Yetenek-Genel Kültür: 60+60 soru",
+        "Eğitim Bilimleri (öğretmenler için): 80 soru",
+        "Güncel olayları ve mevzuatı takip edin"
       ]
     },
     ehliyet: {
-      description: "Sürücü belgesi almak için gerekli teorik sınav.",
-      duration: "2-5 dakika",
-      questionCount: "5-20 soru",
+      description: "Sürücü Kursu Teorik Sınavı. Trafik kuralları ve güvenlik.",
+      duration: "Hızlı Quiz: 10 soru • Deneme: 50 soru",
+      questionCount: "10 soru",
       difficulty: "Kolay-Orta",
       tips: [
-        "Trafik işaretlerini iyi öğrenin",
-        "Hız limitleri ve kuralları ezberleyin",
-        "Güvenlik önceliklerini unutmayın"
+        "Gerçek sınav: 50 soru, 45 dakika",
+        "En az 35 doğru yaparak geçebilirsiniz",
+        "Trafik işaretleri ve ilk yardım önemli"
       ]
     }
   };
@@ -200,11 +218,23 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
                   </div>
                   <p className="text-gray-700 mb-4">
                     Gerçek {category.name} sınav deneyimi yaşayın. Orijinal format ve zamanlama.
+                    {categoryId === 'yks' && ' (120 soru - 165 dk)'}
+                    {categoryId === 'kpss' && ' (120 soru - 150 dk)'}  
+                    {categoryId === 'ehliyet' && ' (50 soru - 45 dk)'}
                   </p>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" data-testid="button-exam-mode">
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed" 
+                    data-testid="button-exam-mode"
+                    disabled={!hasEnoughQuestions}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
-                    Deneme Sınavı Başlat
+                    {hasEnoughQuestions ? 'Deneme Sınavı Başlat' : 'Çok Yakında'}
                   </Button>
+                  {!hasEnoughQuestions && (
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      Deneme sınavı için {requiredQuestions} soru gerekli (Mevcut: {availableQuestions})
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
