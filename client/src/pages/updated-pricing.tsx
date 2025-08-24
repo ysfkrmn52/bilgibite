@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Check, 
   Sparkles, 
@@ -14,7 +16,10 @@ import {
   Brain,
   Rocket,
   Gift,
-  ChevronRight
+  ChevronRight,
+  Copy,
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 
 interface PricingPlan {
@@ -34,125 +39,108 @@ interface PricingPlan {
 
 const pricingPlans: PricingPlan[] = [
   {
-    id: 'basic',
-    name: 'Temel',
+    id: 'free',
+    name: 'Ücretsiz',
     basePrice: 0,
-    aiPrice: 29,
-    description: 'Öğrenmeye başlamak için ideal',
+    aiPrice: 0,
+    description: 'Hızlı quizler ve temel özellikler',
     icon: Star,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
     features: [
-      'Sınırlı quiz erişimi (50/ay)',
+      'Reklamlı kullanım',
+      'Sadece hızlı quiz',
       'Temel istatistikler',
-      'Mobil uygulama',
-      'Email destek'
+      'Mobil uygulama erişimi',
+      'Günde 3 deneme hakkı'
     ],
-    aiFeatures: [
-      'AI Öğretmen (100 soru/ay)',
-      'AI Chat Desteği (10 saat/ay)',
-      'Kişiselleştirilmiş öneriler',
-      'Akıllı soru üretimi',
-      'Performans analizi'
-    ]
+    aiFeatures: []
   },
   {
-    id: 'pro',
-    name: 'Pro',
-    basePrice: 49,
-    aiPrice: 69,
-    description: 'Ciddi öğrenciler için güçlü araçlar',
+    id: 'plus',
+    name: 'Plus',
+    basePrice: 99,
+    aiPrice: 99,
+    description: 'Reklamsız tam uygulama erişimi',
     icon: Zap,
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
     features: [
-      'Sınırsız quiz erişimi',
+      'Reklamsız deneyim',
+      'Tam uygulama erişimi',
+      'Sınırsız quiz',
       'Detaylı analitik raporlar',
-      'Sosyal öğrenme özellikleri',
       'Çevrimdışı çalışma',
-      'Öncelikli destek',
-      'PDF dışa aktarma'
+      'Öncelikli destek'
     ],
     aiFeatures: [
-      'AI Öğretmen (1000 soru/ay)',
-      'AI Chat Desteği (50 saat/ay)',
-      'Gelişmiş soru üretimi',
+      'AI kredi ile çalışır',
+      'AI Öğretmen erişimi',
+      'Akıllı soru üretimi',
       'Kişisel çalışma planları',
-      'Zayıf nokta analizi',
-      'AI mentor desteği',
-      'Adaptif öğrenme'
+      'Performans analizi'
     ],
     popular: true
   },
   {
     id: 'premium',
     name: 'Premium',
-    basePrice: 99,
-    aiPrice: 149,
-    description: 'Profesyonel hazırlık için eksiksiz paket',
+    basePrice: 299,
+    aiPrice: 299,
+    description: '4 kişilik aile paketi',
     icon: Crown,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
     features: [
-      'Pro\'nun tüm özellikleri',
-      'Birebir mentörlük (2 saat/ay)',
-      'Özel sınav simülasyonları',
-      'Video ders içerikleri',
-      'Canlı grup çalışmaları',
-      'Sertifika programları',
-      '7/24 destek'
+      'Plus\'ın tüm özellikleri',
+      '4 kullanıcı hesabı',
+      'Aile yönetimi paneli',
+      'Çocuk hesap koruması',
+      'Aile ilerleme raporları',
+      'Paylaşımlı çalışma grupları',
+      '7/24 aile desteği'
     ],
     aiFeatures: [
-      'AI Premium (1000 soru/ay)',
-      'AI Chat Desteği (150 saat/ay)',
-      'Gelişmiş AI mentor',
-      'Kişiselleştirilmiş müfredat',
-      'Gerçek zamanlı feedback',
-      'Tahminî başarı analizi',
-      'AI ile mock mülakatlar',
-      'Öncelikli AI desteği'
+      'AI kredi ile çalışır',
+      'Tüm AI özellikler',
+      'Aile için AI mentor',
+      'Çocuk güvenli AI',
+      'Ebeveyn kontrol paneli',
+      'Aile başarı analizi'
     ]
   },
   {
-    id: 'enterprise',
-    name: 'Kurumsal',
-    basePrice: 299,
-    aiPrice: 399,
-    description: 'Okullar ve kurumlar için özel çözümler',
-    icon: Rocket,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
+    id: 'ai-credits',
+    name: 'AI Kredi',
+    basePrice: 50,
+    aiPrice: 50,
+    description: '500 AI kredi paketi',
+    icon: Brain,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
     features: [
-      'Premium\'un tüm özellikleri',
-      'Sınırsız kullanıcı',
-      'Özel dashboard',
-      'API entegrasyonu',
-      'Beyaz etiket çözümü',
-      'Özel eğitim seansları',
-      'Dedike hesap yöneticisi'
+      '500 AI kredi',
+      'AI Öğretmen kullanımı',
+      'Soru üretimi',
+      'Çalışma planı oluşturma',
+      'Performans analizi',
+      'Kredi geçerlilik: 6 ay'
     ],
     aiFeatures: [
-      'AI Enterprise (Sınırsız)',
-      'AI Chat Desteği (Sınırsız)',
-      'Kuruma özel AI modeli',
-      'Toplu öğrenci analizi',
-      'AI ile otomatik raporlama',
-      'Özel AI algoritmaları',
-      'Kurumsal AI dashboard',
-      'AI consultant desteği'
-    ],
-    enterprise: true
+      'Soru üretimi: 5 kredi/10 soru',
+      'AI Öğretmen: 2 kredi/mesaj',
+      'Çalışma planı: 10 kredi',
+      'Analiz raporu: 8 kredi',
+      'Mock sınav: 15 kredi'
+    ]
   }
 ];
 
 export default function UpdatedPricing() {
   const [activeBillingPeriod, setActiveBillingPeriod] = useState('1'); // 1, 3, 6, 12 months
-  const [includeAI, setIncludeAI] = useState<Record<string, boolean>>({
-    basic: false,
-    pro: false,
-    premium: false,
-    enterprise: false
-  });
+  const [showReferral, setShowReferral] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const { toast } = useToast();
 
   const billingPeriods = [
     { value: '1', label: '1 Ay', discount: 0 },
@@ -161,27 +149,15 @@ export default function UpdatedPricing() {
     { value: '12', label: '12 Ay', discount: 30 }
   ];
 
-  const toggleAI = (planId: string) => {
-    setIncludeAI(prev => ({
-      ...prev,
-      [planId]: !prev[planId]
-    }));
+  const generateReferralCode = () => {
+    const codes = ['ARKADAS2025', 'OGRENCEM50', 'BASARI123', 'QUIZ2025', 'EGITIM50'];
+    return codes[Math.floor(Math.random() * codes.length)];
   };
 
   const getDiscountedPrice = (basePrice: number) => {
     const currentPeriod = billingPeriods.find(p => p.value === activeBillingPeriod);
     const discount = currentPeriod?.discount || 0;
     return Math.round(basePrice * (1 - discount / 100));
-  };
-
-  const getAILimits = (planId: string) => {
-    const limits = {
-      basic: { questions: 100, hours: 10 },
-      pro: { questions: 1000, hours: 50 },
-      premium: { questions: 5000, hours: 150 },
-      enterprise: { questions: 'Sınırsız', hours: 'Sınırsız' }
-    };
-    return limits[planId as keyof typeof limits];
   };
 
   const containerVariants = {
@@ -259,22 +235,29 @@ export default function UpdatedPricing() {
         >
           {pricingPlans.map((plan) => {
             const IconComponent = plan.icon;
-            const basePrice = includeAI[plan.id] ? plan.aiPrice : plan.basePrice;
-            const currentPrice = getDiscountedPrice(basePrice);
-            const aiLimits = getAILimits(plan.id);
+            const currentPrice = plan.id === 'ai-credits' ? plan.basePrice : getDiscountedPrice(plan.basePrice);
             
             return (
               <motion.div key={plan.id} variants={cardVariants}>
                 <Card className={`
                   h-[650px] relative border-2 transition-all duration-300 hover:shadow-xl
                   ${plan.popular ? 'border-purple-300 shadow-lg scale-105' : 'border-gray-200'}
-                  ${plan.enterprise ? 'border-green-300' : ''}
+                  ${plan.id === 'ai-credits' ? 'border-orange-300' : ''}
                 `}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1">
                         <Star className="w-3 h-3 mr-1" />
                         En Popüler
+                      </Badge>
+                    </div>
+                  )}
+
+                  {plan.id === 'ai-credits' && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1">
+                        <Brain className="w-3 h-3 mr-1" />
+                        AI Kredi
                       </Badge>
                     </div>
                   )}
@@ -293,50 +276,27 @@ export default function UpdatedPricing() {
                       <div className="text-center">
                         <div className="text-3xl font-bold">
                           {currentPrice === 0 ? 'Ücretsiz' : `₺${currentPrice}`}
-                          {currentPrice > 0 && <span className="text-lg text-muted-foreground">/ay</span>}
+                          {plan.id === 'ai-credits' ? (
+                            <span className="text-lg text-muted-foreground"> / 500 kredi</span>
+                          ) : currentPrice > 0 ? (
+                            <span className="text-lg text-muted-foreground">/ay</span>
+                          ) : null}
                         </div>
-                        {activeBillingPeriod !== '1' && basePrice > 0 && (
+                        {activeBillingPeriod !== '1' && plan.basePrice > 0 && plan.id !== 'ai-credits' && (
                           <div className="text-sm text-muted-foreground line-through">
-                            ₺{basePrice}/ay
+                            ₺{plan.basePrice}/ay
                           </div>
                         )}
-                        {activeBillingPeriod !== '1' && currentPrice > 0 && (
+                        {activeBillingPeriod !== '1' && currentPrice > 0 && plan.id !== 'ai-credits' && (
                           <div className="text-xs text-green-600 font-medium">
                             {billingPeriods.find(p => p.value === activeBillingPeriod)?.discount}% indirim
                           </div>
                         )}
                       </div>
 
-                      {/* AI Toggle */}
-                      {plan.basePrice >= 0 && (
-                        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                          <div className="flex items-center gap-2">
-                            <Brain className="w-4 h-4 text-purple-600" />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">AI Özellikleri</span>
-                              {includeAI[plan.id] && (
-                                <span className="text-xs text-gray-500">
-                                  {aiLimits.questions} soru/ay • {aiLimits.hours} saat/ay
-                                </span>
-                              )}
-                            </div>
-                            {includeAI[plan.id] && (
-                              <Badge variant="secondary" className="text-xs">
-                                +₺{plan.aiPrice - plan.basePrice}
-                              </Badge>
-                            )}
-                          </div>
-                          <Switch
-                            checked={includeAI[plan.id]}
-                            onCheckedChange={() => toggleAI(plan.id)}
-                            className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
-                          />
-                        </div>
-                      )}
-
                       {/* Features */}
                       <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-gray-900">Temel Özellikler:</h4>
+                        <h4 className="font-semibold text-sm text-gray-900">Özellikler:</h4>
                         <ul className="space-y-2">
                           {plan.features.map((feature, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm">
@@ -348,7 +308,7 @@ export default function UpdatedPricing() {
                           ))}
                         </ul>
 
-                        {includeAI[plan.id] && (
+                        {plan.aiFeatures.length > 0 && (
                           <>
                             <h4 className="font-semibold text-sm text-purple-900 pt-2">AI Özellikler:</h4>
                             <ul className="space-y-2">
@@ -373,22 +333,16 @@ export default function UpdatedPricing() {
                           w-full h-12 transition-all duration-300
                           ${plan.popular 
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white' 
-                            : plan.enterprise 
-                            ? 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white'
+                            : plan.id === 'ai-credits'
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
                             : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
                           }
                         `}
                         data-testid={`button-subscribe-${plan.id}`}
                       >
-                        {plan.basePrice === 0 ? 'Ücretsiz Başla' : 'Abonelik Başlat'}
+                        {plan.basePrice === 0 ? 'Ücretsiz Başla' : plan.id === 'ai-credits' ? 'Kredi Satın Al' : 'Abonelik Başlat'}
                         <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
-                      
-                      {plan.enterprise && (
-                        <p className="text-center text-xs text-muted-foreground mt-2">
-                          Özel fiyatlandırma için iletişime geçin
-                        </p>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -418,33 +372,40 @@ export default function UpdatedPricing() {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-3">Özellik</th>
-                        <th className="text-center p-3">Temel</th>
-                        <th className="text-center p-3">Pro</th>
+                        <th className="text-center p-3">Ücretsiz</th>
+                        <th className="text-center p-3">Plus</th>
                         <th className="text-center p-3">Premium</th>
-                        <th className="text-center p-3">Kurumsal</th>
+                        <th className="text-center p-3">AI Kredi</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b">
-                        <td className="p-3">Quiz Sayısı</td>
-                        <td className="text-center p-3">50/ay</td>
-                        <td className="text-center p-3">Sınırsız</td>
-                        <td className="text-center p-3">Sınırsız</td>
-                        <td className="text-center p-3">Sınırsız</td>
+                        <td className="p-3">Reklam</td>
+                        <td className="text-center p-3">✅ Var</td>
+                        <td className="text-center p-3">❌ Yok</td>
+                        <td className="text-center p-3">❌ Yok</td>
+                        <td className="text-center p-3">-</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="p-3">AI Öğretmen</td>
-                        <td className="text-center p-3">+₺29</td>
-                        <td className="text-center p-3">+₺20</td>
-                        <td className="text-center p-3">+₺50</td>
-                        <td className="text-center p-3">+₺100</td>
+                        <td className="p-3">Quiz Türü</td>
+                        <td className="text-center p-3">Sadece Hızlı</td>
+                        <td className="text-center p-3">Tam Uygulama</td>
+                        <td className="text-center p-3">Tam Uygulama</td>
+                        <td className="text-center p-3">-</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="p-3">Sosyal Özellikler</td>
+                        <td className="p-3">Kullanıcı Sayısı</td>
+                        <td className="text-center p-3">1</td>
+                        <td className="text-center p-3">1</td>
+                        <td className="text-center p-3">4 Kişi</td>
+                        <td className="text-center p-3">-</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="p-3">AI Özellikler</td>
                         <td className="text-center p-3">❌</td>
-                        <td className="text-center p-3">✅</td>
-                        <td className="text-center p-3">✅</td>
-                        <td className="text-center p-3">✅</td>
+                        <td className="text-center p-3">AI Kredi ile</td>
+                        <td className="text-center p-3">AI Kredi ile</td>
+                        <td className="text-center p-3">500 Kredi</td>
                       </tr>
                     </tbody>
                   </table>
@@ -508,6 +469,93 @@ export default function UpdatedPricing() {
               </div>
             </TabsContent>
           </Tabs>
+        </motion.div>
+
+        {/* Referral System */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-12"
+        >
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-green-800 mb-2">Arkadaşını Davet Et</h3>
+                <p className="text-green-700 max-w-2xl mx-auto">
+                  Arkadaşın Plus veya Premium paketine abone olduğunda her ikiniz de 1 ay ücretsiz kazanırsınız!
+                </p>
+              </div>
+
+              <div className="max-w-2xl mx-auto">
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">Sen Kazanırsın:</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        1 ay ücretsiz abonelik
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        50 bonus AI kredi
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">Arkadaşın Kazanır:</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        İlk ay %50 indirim
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        25 bonus AI kredi
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Input
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
+                    placeholder="Arkadaşının referans kodunu gir"
+                    className="flex-1"
+                    data-testid="input-referral-code"
+                  />
+                  <Button
+                    onClick={() => {
+                      if (!referralCode.trim()) {
+                        const newCode = generateReferralCode();
+                        setReferralCode(newCode);
+                        navigator.clipboard.writeText(newCode);
+                        toast({
+                          title: "Referans Kodu Oluşturuldu!",
+                          description: "Kodun kopyalandı. Arkadaşlarınla paylaş!"
+                        });
+                      } else {
+                        navigator.clipboard.writeText(referralCode);
+                        toast({
+                          title: "Kopyalandı!",
+                          description: "Referans kodu panoya kopyalandı."
+                        });
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                    data-testid="button-copy-referral"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    {referralCode ? 'Kopyala' : 'Kod Oluştur'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* CTA Section */}

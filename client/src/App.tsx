@@ -73,7 +73,7 @@ function Router() {
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
         )} />
         <Route path="/ai-education" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><AIProtected><AIEducationPremium /></AIProtected></Suspense></>
+          <><Navbar /><Suspense fallback={<PageLoader />}><AIEducationNew /></Suspense></>
         )} />
         <Route path="/social" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Social /></Suspense></>
