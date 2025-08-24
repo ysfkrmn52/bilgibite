@@ -310,32 +310,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const difficulties = ['kolay', 'orta', 'zor'];
-      const mockQuestions = [];
+      console.log(`🤖 Claude AI ile ${count} adet ${category} sorusu üretiliyor...`);
+
+      // Use real Claude AI service
+      const aiResult = await generateExamQuestions('admin-user', category, count);
       
-      for (let i = 0; i < count; i++) {
-        const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
-        mockQuestions.push({
-          text: `${category} kategorisi için AI üretimi soru ${i + 1}. Bu soru gerçek müfredata uygun olarak hazırlanmıştır.`,
-          category,
-          options: [
-            `A seçeneği - Soru ${i + 1}`,
-            `B seçeneği - Soru ${i + 1}`, 
-            `C seçeneği - Soru ${i + 1}`,
-            `D seçeneği - Soru ${i + 1}`,
-            `E seçeneği - Soru ${i + 1}`
-          ],
-          correctAnswer: Math.floor(Math.random() * 5), // 0-4 arası 5 şık için
-          explanation: `${randomDifficulty} seviyesinde AI üretimi açıklama ${i + 1}`,
-          difficulty: randomDifficulty,
-          createdAt: new Date().toISOString(),
-        });
+      if (!aiResult || !aiResult.questions || aiResult.questions.length === 0) {
+        throw new Error('AI\'dan geçerli sorular üretilemedi');
       }
+
+      // Format questions for preview
+      const formattedQuestions = aiResult.questions.map((q: any, i: number) => ({
+        text: q.question || q.questionText,
+        category,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer || 0,
+        explanation: q.explanation || 'AI üretimi açıklama',
+        difficulty: q.difficulty || 'orta',
+        topic: q.topic || category,
+        createdAt: new Date().toISOString(),
+      }));
+
+      console.log(`✅ ${formattedQuestions.length} gerçek soru Claude AI tarafından üretildi`);
 
       res.json({
         success: true,
-        count: mockQuestions.length,
-        questions: mockQuestions
+        count: formattedQuestions.length,
+        questions: formattedQuestions
       });
 
     } catch (error) {
@@ -2684,33 +2685,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Haftalık otomatik AI soru üretim sistemi (demo)
+  // Haftalık otomatik AI soru üretim sistemi - GERÇEKten Claude AI kullanır
   app.post("/api/ai/weekly-auto-generate", async (req, res) => {
     try {
       console.log('🤖 Haftalık otomatik AI soru üretimi başlatıldı...');
       
       // Gerçek uygulamada cron job ile her Pazartesi 03:00'da çalışır
-      // Bu endpoint manuel test için
       const totalQuestions = 1000;
       const categories = ['yks', 'kpss', 'ehliyet', 'ales', 'dgs'];
       const questionsPerCategory = Math.floor(totalQuestions / categories.length);
       
       let generatedTotal = 0;
+      let successfulCategories = 0;
+      
+      // Gerçek AI ile her kategori için soru üret
       for (const category of categories) {
-        // Mock AI üretimi simülasyonu
-        generatedTotal += questionsPerCategory;
-        console.log(`${category} kategorisi için ${questionsPerCategory} soru üretildi`);
+        try {
+          console.log(`🧠 ${category} kategorisi için ${questionsPerCategory} gerçek soru üretiliyor...`);
+          
+          // Gerçek Claude AI ile soru üret
+          const aiResult = await generateExamQuestions('auto-system', category, questionsPerCategory);
+          
+          if (aiResult && aiResult.questions && aiResult.questions.length > 0) {
+            // Soruları veritabanına kaydet
+            const formattedQuestions = aiResult.questions.map((q: any) => ({
+              examCategoryId: category,
+              subject: q.topic || category,
+              difficulty: q.difficulty || 'medium',
+              questionText: q.question || q.questionText,
+              options: q.options || [],
+              correctAnswer: q.correctAnswer || 0,
+              explanation: q.explanation || null,
+              points: 10,
+              topic: q.topic || null
+            }));
+            
+            await storage.addQuestions(formattedQuestions);
+            generatedTotal += formattedQuestions.length;
+            successfulCategories++;
+            
+            console.log(`✅ ${category}: ${formattedQuestions.length} gerçek soru veritabanına eklendi`);
+          } else {
+            console.log(`❌ ${category}: AI'dan geçerli soru alınamadı`);
+          }
+        } catch (categoryError) {
+          console.error(`❌ ${category} kategorisi için AI üretimi hatası:`, categoryError);
+        }
+        
+        // Rate limiting - kategoriler arası 2 saniye bekle
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
+
+      console.log(`🎉 Otomatik sistem tamamlandı: ${generatedTotal}/${totalQuestions} gerçek soru üretildi`);
 
       res.json({
         success: true,
         generated: generatedTotal,
-        categories: categories.length,
-        message: `Haftalık otomatik sistem: ${generatedTotal} soru üretildi`
+        targetTotal: totalQuestions,
+        successfulCategories,
+        totalCategories: categories.length,
+        message: `Haftalık otomatik sistem: ${generatedTotal}/${totalQuestions} gerçek soru Claude AI ile üretilip kaydedildi`
       });
+      
     } catch (error) {
       console.error('Weekly auto generate error:', error);
-      res.status(500).json({ error: 'Haftalık otomatik üretim hatası' });
+      res.status(500).json({ error: 'Haftalık otomatik üretim hatası: ' + error.message });
     }
   });
 
