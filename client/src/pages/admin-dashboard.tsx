@@ -1,15 +1,15 @@
-import { AdminLayout } from '@/components/admin/AdminLayout';
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BookOpen, 
-  Users, 
-  Target, 
-  Zap, 
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BookOpen,
+  Users,
+  Target,
+  Zap,
   Brain,
   Crown,
   DollarSign,
@@ -18,10 +18,10 @@ import {
   BarChart3,
   AlertTriangle,
   CheckCircle,
-  ArrowRight
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { EXAM_CATEGORIES } from '@shared/categories';
+  ArrowRight,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { EXAM_CATEGORIES } from "@shared/categories";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -29,19 +29,19 @@ export default function AdminDashboard() {
 
   // Queries
   const { data: adminStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/admin/stats'],
-    queryFn: () => fetch('/api/admin/stats').then(res => res.json())
+    queryKey: ["/api/admin/stats"],
+    queryFn: () => fetch("/api/admin/stats").then((res) => res.json()),
   });
 
   const { data: subscriptionStats, isLoading: subStatsLoading } = useQuery({
-    queryKey: ['/api/admin/subscriptions/stats'],
+    queryKey: ["/api/admin/subscriptions/stats"],
     retry: 3,
-    retryDelay: 1000
+    retryDelay: 1000,
   });
 
   const { data: questionCounts } = useQuery({
-    queryKey: ['/api/questions/counts'],
-    queryFn: () => fetch('/api/questions/counts').then(res => res.json())
+    queryKey: ["/api/questions/counts"],
+    queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
 
   const getCategoryCount = (categoryId: string) => {
@@ -58,14 +58,14 @@ export default function AdminDashboard() {
     monthlyRevenue: displayStats.monthlyRevenue || 0,
     plusUsers: displayStats.plusUsers || 0,
     freeUsers: displayStats.freeUsers || 0,
-    premiumUsers: displayStats.premiumUsers || adminStats?.premiumUsers || 0
+    premiumUsers: displayStats.premiumUsers || adminStats?.premiumUsers || 0,
   };
 
   const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -75,20 +75,27 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">BilgiBite Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Platform yönetim merkezi - Soru üretimi ve yönetimi</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              BilgiBite Admin Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Platform yönetim merkezi - Soru üretimi ve yönetimi
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => window.location.href = '/admin/questions'}
+            <Button
+              onClick={() => (window.location.href = "/admin/questions")}
               variant="outline"
               className="flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
               Detaylı Soru Yönetimi
             </Button>
-            <Badge variant="default" className="bg-green-100 text-green-700 px-3 py-1">
+            <Badge
+              variant="default"
+              className="bg-green-100 text-green-700 px-3 py-1"
+            >
               <CheckCircle className="w-4 h-4 mr-1" />
               Sistem Aktif
             </Badge>
@@ -99,7 +106,9 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">Toplam Sorular</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Toplam Sorular
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
@@ -113,10 +122,12 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Toplam Kullanıcılar</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-700">
+                Toplam Kullanıcılar
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
@@ -124,16 +135,20 @@ export default function AdminDashboard() {
                   <div className="text-2xl font-bold text-green-900">
                     {combinedStats.totalUsers}
                   </div>
-                  <div className="text-xs text-green-600">Kayıtlı kullanıcı</div>
+                  <div className="text-xs text-green-600">
+                    Kayıtlı kullanıcı
+                  </div>
                 </div>
                 <Users className="w-8 h-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">Aktif Abonelik</CardTitle>
+              <CardTitle className="text-sm font-medium text-purple-700">
+                Aktif Abonelik
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
@@ -147,10 +162,12 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">Aylık Gelir</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-700">
+                Aylık Gelir
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
@@ -178,9 +195,9 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  onClick={() => window.location.href = '/admin/questions'}
-                  variant="outline" 
+                <Button
+                  onClick={() => (window.location.href = "/admin/questions")}
+                  variant="outline"
                   className="w-full justify-start"
                   data-testid="button-question-management"
                 >
@@ -188,9 +205,11 @@ export default function AdminDashboard() {
                   Soru Yönetimi
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
-                <Button 
-                  onClick={() => window.location.href = '/admin/subscriptions'}
-                  variant="outline" 
+                <Button
+                  onClick={() =>
+                    (window.location.href = "/admin/subscriptions")
+                  }
+                  variant="outline"
                   className="w-full justify-start"
                   data-testid="button-subscription-management"
                 >
@@ -198,9 +217,9 @@ export default function AdminDashboard() {
                   Abonelik Yönetimi
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
-                <Button 
-                  onClick={() => window.location.href = '/admin/analytics'}
-                  variant="outline" 
+                <Button
+                  onClick={() => (window.location.href = "/admin/analytics")}
+                  variant="outline"
                   className="w-full justify-start"
                   data-testid="button-analytics"
                 >
@@ -208,9 +227,9 @@ export default function AdminDashboard() {
                   Detaylı Analytics
                   <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
-                <Button 
-                  onClick={() => window.location.href = '/admin/users'}
-                  variant="outline" 
+                <Button
+                  onClick={() => (window.location.href = "/admin/users")}
+                  variant="outline"
                   className="w-full justify-start"
                   data-testid="button-user-management"
                 >
@@ -233,22 +252,30 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {EXAM_CATEGORIES.map(category => {
+                  {EXAM_CATEGORIES.map((category) => {
                     const count = getCategoryCount(category.id);
                     const percentage = Math.min(100, (count / 100) * 100);
                     const isReady = count >= 50;
                     return (
-                      <div key={category.id} className="p-4 border rounded-lg bg-gray-50">
+                      <div
+                        key={category.id}
+                        className="p-4 border rounded-lg bg-gray-50"
+                      >
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-sm">{category.name}</span>
-                          <Badge variant={isReady ? "default" : "secondary"} className="text-xs">
+                          <span className="font-medium text-sm">
+                            {category.name}
+                          </span>
+                          <Badge
+                            variant={isReady ? "default" : "secondary"}
+                            className="text-xs"
+                          >
                             {count} soru
                           </Badge>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className={`h-2 rounded-full transition-all duration-500 ${
-                              isReady ? 'bg-green-600' : 'bg-blue-600'
+                              isReady ? "bg-green-600" : "bg-blue-600"
                             }`}
                             style={{ width: `${percentage}%` }}
                           />
@@ -276,7 +303,10 @@ export default function AdminDashboard() {
               <Brain className="w-4 h-4" />
               Soru Yönetimi
             </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+            <TabsTrigger
+              value="subscriptions"
+              className="flex items-center gap-2"
+            >
               <Crown className="w-4 h-4" />
               Abonelik Durumu
             </TabsTrigger>
@@ -296,19 +326,27 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Toplam Sorular</span>
-                      <span className="font-semibold">{adminStats?.totalQuestions || 0}</span>
+                      <span className="font-semibold">
+                        {adminStats?.totalQuestions || 0}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Aktif Kullanıcılar</span>
-                      <span className="font-semibold">{combinedStats.totalUsers}</span>
+                      <span className="font-semibold">
+                        {combinedStats.totalUsers}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Bu Ay Oluşturulan Sorular</span>
-                      <span className="font-semibold text-green-600">+{adminStats?.monthlyQuestions || 0}</span>
+                      <span className="font-semibold text-green-600">
+                        +{adminStats?.monthlyQuestions || 0}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Quiz Çözme Oranı</span>
-                      <span className="font-semibold text-blue-600">%{adminStats?.completionRate || 0}</span>
+                      <span className="font-semibold text-blue-600">
+                        %{adminStats?.completionRate || 0}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -330,7 +368,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-gray-500">Aktif</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Firebase Admin SDK</span>
                       <div className="flex items-center gap-2">
@@ -338,7 +376,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-gray-500">Aktif</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <span className="text-sm">AI Claude API</span>
                       <div className="flex items-center gap-2">
@@ -360,9 +398,12 @@ export default function AdminDashboard() {
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 text-blue-600 mt-0.5" />
                           <div className="text-xs">
-                            <div className="font-medium text-blue-900">Platform Hazır</div>
+                            <div className="font-medium text-blue-900">
+                              Platform Hazır
+                            </div>
                             <div className="text-blue-700">
-                              İlk kullanıcılar kaydolduktan sonra burada istatistikler görünecek.
+                              İlk kullanıcılar kaydolduktan sonra burada
+                              istatistikler görünecek.
                             </div>
                           </div>
                         </div>
@@ -386,16 +427,20 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <Button 
-                      onClick={() => window.location.href = '/admin/questions'}
+                    <Button
+                      onClick={() =>
+                        (window.location.href = "/admin/questions")
+                      }
                       className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     >
                       <BookOpen className="w-6 h-6" />
                       <span>Soru Bankası Yönetimi</span>
                     </Button>
-                    
-                    <Button 
-                      onClick={() => window.location.href = '/admin/ai-questions'}
+
+                    <Button
+                      onClick={() =>
+                        (window.location.href = "/admin/ai-questions")
+                      }
                       className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                     >
                       <Brain className="w-6 h-6" />
@@ -405,10 +450,12 @@ export default function AdminDashboard() {
 
                   <div className="text-center py-8 border-t">
                     <p className="text-gray-600 mb-4">
-                      Soru yönetimi ve AI destekli soru üretimi için yukarıdaki butonları kullanın.
+                      Soru yönetimi ve AI destekli soru üretimi için yukarıdaki
+                      butonları kullanın.
                     </p>
                     <p className="text-sm text-gray-500">
-                      Tüm soru işlemleri ayrı sayfalarda detaylı şekilde yapılabilir.
+                      Tüm soru işlemleri ayrı sayfalarda detaylı şekilde
+                      yapılabilir.
                     </p>
                   </div>
                 </div>
@@ -432,9 +479,19 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Ücretsiz Kullanıcılar</span>
                         <div className="text-right">
-                          <div className="font-semibold" data-testid="text-free-users">{combinedStats.freeUsers || 0}</div>
+                          <div
+                            className="font-semibold"
+                            data-testid="text-free-users"
+                          >
+                            {combinedStats.freeUsers || 0}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            %{Math.round(((combinedStats.freeUsers || 0) / combinedStats.totalUsers) * 100)}
+                            %
+                            {Math.round(
+                              ((combinedStats.freeUsers || 0) /
+                                combinedStats.totalUsers) *
+                                100,
+                            )}
                           </div>
                         </div>
                       </div>
@@ -442,9 +499,19 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Plus Aboneler</span>
                         <div className="text-right">
-                          <div className="font-semibold" data-testid="text-plus-users">{combinedStats.plusUsers || 0}</div>
+                          <div
+                            className="font-semibold"
+                            data-testid="text-plus-users"
+                          >
+                            {combinedStats.plusUsers || 0}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            %{Math.round(((combinedStats.plusUsers || 0) / combinedStats.totalUsers) * 100)}
+                            %
+                            {Math.round(
+                              ((combinedStats.plusUsers || 0) /
+                                combinedStats.totalUsers) *
+                                100,
+                            )}
                           </div>
                         </div>
                       </div>
@@ -452,16 +519,28 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Premium Aboneler</span>
                         <div className="text-right">
-                          <div className="font-semibold" data-testid="text-premium-users">{combinedStats.premiumUsers || 0}</div>
+                          <div
+                            className="font-semibold"
+                            data-testid="text-premium-users"
+                          >
+                            {combinedStats.premiumUsers || 0}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            %{Math.round(((combinedStats.premiumUsers || 0) / combinedStats.totalUsers) * 100)}
+                            %
+                            {Math.round(
+                              ((combinedStats.premiumUsers || 0) /
+                                combinedStats.totalUsers) *
+                                100,
+                            )}
                           </div>
                         </div>
                       </div>
 
                       <div className="pt-4 border-t">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Toplam Aylık Gelir</span>
+                          <span className="text-sm font-medium">
+                            Toplam Aylık Gelir
+                          </span>
                           <span className="font-bold text-green-600">
                             {formatCurrency(combinedStats.monthlyRevenue || 0)}
                           </span>
@@ -469,9 +548,14 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8" data-testid="no-users-message">
+                    <div
+                      className="text-center py-8"
+                      data-testid="no-users-message"
+                    >
                       <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                      <p className="text-sm text-gray-500">Henüz kullanıcı verisi bulunmuyor</p>
+                      <p className="text-sm text-gray-500">
+                        Henüz kullanıcı verisi bulunmuyor
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -489,30 +573,38 @@ export default function AdminDashboard() {
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <span className="font-medium">Ücretsiz</span>
-                        <div className="text-xs text-gray-500">Temel özellikler</div>
+                        <div className="text-xs text-gray-500">
+                          Temel özellikler
+                        </div>
                       </div>
                       <span className="font-bold">₺0/ay</span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                       <div>
                         <span className="font-medium">Plus</span>
-                        <div className="text-xs text-gray-500">Gelişmiş özellikler</div>
+                        <div className="text-xs text-gray-500">
+                          Gelişmiş özellikler
+                        </div>
                       </div>
                       <span className="font-bold text-blue-600">₺99/ay</span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
                       <div>
                         <span className="font-medium">Premium</span>
-                        <div className="text-xs text-gray-500">Tüm özellikler + AI</div>
+                        <div className="text-xs text-gray-500">
+                          Tüm özellikler + AI
+                        </div>
                       </div>
                       <span className="font-bold text-purple-600">₺299/ay</span>
                     </div>
 
-                    <Button 
-                      onClick={() => window.location.href = '/admin/subscriptions'}
-                      variant="outline" 
+                    <Button
+                      onClick={() =>
+                        (window.location.href = "/admin/subscriptions")
+                      }
+                      variant="outline"
                       className="w-full mt-4"
                     >
                       Detaylı Abonelik Yönetimi
