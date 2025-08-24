@@ -69,6 +69,7 @@ function Router() {
         <Route path="/" component={() => (<><Navbar /><Home /></>)} />
         <Route path="/admin" component={XAdmin} />
         <Route path="/xadmin" component={XAdmin} />
+        <Route path="/admin/questions/:categoryId" component={AdminQuestions} />
         <Route path="/admin/users" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
         )} />

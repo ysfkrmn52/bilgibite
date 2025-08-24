@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -34,23 +34,34 @@ interface AdminStats {
   }>;
 }
 
+interface SuperadminData {
+  totalRevenue: number;
+  packagesSold: number;
+  monthlyRevenue: number;
+  premiumSubscriptions: number;
+}
+
 interface QuestionCounts {
   [key: string]: number;
 }
 
 export default function XAdmin() {
   const [aiLoading, setAiLoading] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [quickQuestion, setQuickQuestion] = useState({
     text: "",
     category: "",
-    options: ["", "", "", ""],
+    options: ["", "", "", "", ""], // 5 şık
     correctAnswer: 0,
     explanation: ""
   });
   const [aiPrompt, setAiPrompt] = useState({
     category: "",
-    count: 5
+    count: 10
   });
+  const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,6 +80,20 @@ export default function XAdmin() {
     queryKey: ["/api/questions/counts"],
     queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
+
+  const { data: superadminData } = useQuery<SuperadminData>({
+    queryKey: ["/api/admin/superadmin-stats"],
+    queryFn: () => fetch("/api/admin/superadmin-stats").then((res) => res.json()),
+    enabled: isSuperAdmin,
+  });
+
+  // Superadmin kontrol (basit demo için localStorage kullanıyorum)
+  useEffect(() => {
+    const loginEmail = localStorage.getItem('adminEmail') || 'ysfkrmn@bilgibite.com'; // Demo için otomatik
+    if (loginEmail === 'ysfkrmn@bilgibite.com') {
+      setIsSuperAdmin(true);
+    }
+  }, []);
 
   const displayStats = subscriptionStats?.data || subscriptionStats || {};
   const combinedStats = {
@@ -101,7 +126,7 @@ export default function XAdmin() {
       setQuickQuestion({
         text: "",
         category: "",
-        options: ["", "", "", ""],
+        options: ["", "", "", "", ""], // 5 şık
         correctAnswer: 0,
         explanation: ""
       });
@@ -117,38 +142,66 @@ export default function XAdmin() {
     },
   });
 
-  // AI Question Generation - Basitleştirildi
-  const generateAIQuestionsMutation = useMutation({
+  // AI Question Preview - Önce göster sonra kaydet
+  const generateAIPreviewMutation = useMutation({
     mutationFn: async (aiData: any) => {
-      setAiLoading(true);
-      const response = await fetch("/api/ai/generate-questions", {
+      setPreviewLoading(true);
+      const response = await fetch("/api/ai/generate-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...aiData,
-          difficulty: "orta", // Otomatik
-          language: "turkish", // Otomatik Türkçe
-          topic: "Genel müfredat konuları" // Otomatik
+          language: "turkish" // Otomatik Türkçe
         }),
       });
       if (!response.ok) throw new Error("AI soru üretimi başarısız");
       return response.json();
     },
     onSuccess: (data) => {
-      setAiLoading(false);
+      setPreviewLoading(false);
+      setAiGeneratedQuestions(data.questions || []);
+      setShowPreview(true);
       toast({
-        title: "🤖 AI Başarılı",
-        description: `${data.count || aiPrompt.count} adet soru başarıyla üretildi ve eklendi!`,
+        title: "🤖 Sorular Hazır!",
+        description: `${data.questions?.length || 0} soru önizleme için hazırlandı`,
       });
-      setAiPrompt({ category: "", count: 5 });
+    },
+    onError: () => {
+      setPreviewLoading(false);
+      toast({
+        title: "🤖 AI Hata",
+        description: "AI soru üretimi sırasında hata oluştu",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // AI Sorularını Veritabanına Kaydet
+  const saveAIQuestionsMutation = useMutation({
+    mutationFn: async (questions: any[]) => {
+      const response = await fetch("/api/questions/bulk-save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questions }),
+      });
+      if (!response.ok) throw new Error("Sorular kaydedilemedi");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Tamamlandı!",
+        description: `${data.saved} soru veritabanına kaydedildi`,
+      });
+      setShowPreview(false);
+      setAiGeneratedQuestions([]);
+      setAiPrompt({ category: "", count: 10 });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/questions/counts"] });
     },
     onError: () => {
-      setAiLoading(false);
       toast({
-        title: "🤖 AI Hata",
-        description: "AI soru üretimi sırasında hata oluştu",
+        title: "❌ Hata",
+        description: "Sorular kaydedilirken hata oluştu",
         variant: "destructive"
       });
     },
@@ -165,10 +218,10 @@ export default function XAdmin() {
     }
 
     const validOptions = quickQuestion.options.filter(opt => opt.trim().length > 0);
-    if (validOptions.length < 2) {
+    if (validOptions.length < 5) {
       toast({
         title: "⚠️ Eksik Seçenekler", 
-        description: "En az 2 seçenek girilmelidir",
+        description: "5 seçenek de girilmelidir",
         variant: "destructive"
       });
       return;
@@ -190,7 +243,20 @@ export default function XAdmin() {
       return;
     }
 
-    generateAIQuestionsMutation.mutate(aiPrompt);
+    generateAIPreviewMutation.mutate(aiPrompt);
+  };
+
+  const handleSaveAIQuestions = () => {
+    if (aiGeneratedQuestions.length === 0) {
+      toast({
+        title: "⚠️ Soru Yok",
+        description: "Kaydedilecek soru bulunamadı",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    saveAIQuestionsMutation.mutate(aiGeneratedQuestions);
   };
 
   const getCategoryCount = (categoryId: string) => {
@@ -279,26 +345,98 @@ export default function XAdmin() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-100">
-              Premium Kullanıcı
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-3xl font-bold" data-testid="text-premium-users">
-                  {combinedStats.premiumUsers}
+        {isSuperAdmin ? (
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-orange-100">
+                💰 Toplam Gelir
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold" data-testid="text-total-revenue">
+                    ₺{superadminData?.totalRevenue || 0}
+                  </div>
+                  <div className="text-xs text-orange-200">Toplam kazanç</div>
                 </div>
-                <div className="text-xs text-orange-200">Aktif</div>
+                <Crown className="w-10 h-10 text-white/80" />
               </div>
-              <Crown className="w-10 h-10 text-white/80" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-orange-100">
+                Premium Kullanıcı
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold" data-testid="text-premium-users">
+                    {combinedStats.premiumUsers}
+                  </div>
+                  <div className="text-xs text-orange-200">Aktif</div>
+                </div>
+                <Crown className="w-10 h-10 text-white/80" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Superadmin Extra Stats */}
+      {isSuperAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-2 border-yellow-200 shadow-xl bg-gradient-to-br from-yellow-50 to-amber-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-yellow-800 flex items-center gap-2">
+                <Crown className="w-4 h-4" />
+                💼 Satılan Paketler
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-900">
+                {superadminData?.packagesSold || 0}
+              </div>
+              <div className="text-xs text-yellow-700">Toplam satış</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-emerald-200 shadow-xl bg-gradient-to-br from-emerald-50 to-green-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-emerald-800 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                📊 Aylık Gelir
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-900">
+                ₺{superadminData?.monthlyRevenue || 0}
+              </div>
+              <div className="text-xs text-emerald-700">Bu ay</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-purple-200 shadow-xl bg-gradient-to-br from-purple-50 to-indigo-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-purple-800 flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                👑 Premium Abonelik
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-900">
+                {superadminData?.premiumSubscriptions || 0}
+              </div>
+              <div className="text-xs text-purple-700">Aktif premium</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -416,7 +554,7 @@ export default function XAdmin() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3">
                     {quickQuestion.options.map((option, index) => (
                       <div key={index} className="space-y-2">
                         <Label>Seçenek {index + 1}</Label>
@@ -528,11 +666,11 @@ export default function XAdmin() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="3">3 Soru</SelectItem>
-                          <SelectItem value="5">5 Soru</SelectItem>
                           <SelectItem value="10">10 Soru</SelectItem>
-                          <SelectItem value="15">15 Soru</SelectItem>
                           <SelectItem value="20">20 Soru</SelectItem>
+                          <SelectItem value="30">30 Soru</SelectItem>
+                          <SelectItem value="40">40 Soru</SelectItem>
+                          <SelectItem value="50">50 Soru</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -541,37 +679,87 @@ export default function XAdmin() {
                   <div className="p-4 bg-purple-100 rounded-lg">
                     <h4 className="font-medium text-purple-900 mb-2">Otomatik Ayarlar:</h4>
                     <ul className="text-sm text-purple-700 space-y-1">
-                      <li>• Zorluk Seviyesi: Orta</li>
+                      <li>• Zorluk Seviyesi: Rastgele (Kolay/Orta/Zor)</li>
+                      <li>• Seçenek Sayısı: 5 şık</li>
                       <li>• Dil: Türkçe</li>
-                      <li>• Müfredat: Genel konular</li>
+                      <li>• Müfredat: Gerçek sınav konuları</li>
                       <li>• AI Model: Claude</li>
                     </ul>
                   </div>
 
-                  {aiLoading && (
+                  {previewLoading && (
                     <div className="space-y-3 p-4 bg-purple-100 rounded-lg">
                       <div className="flex items-center gap-2 text-purple-700">
                         <Cpu className="w-5 h-5 animate-spin" />
                         <span className="font-medium">AI Soru Üretiyor...</span>
                       </div>
-                      <Progress value={75} className="h-2" />
+                      <Progress value={65} className="h-2" />
                       <p className="text-sm text-purple-600">
                         Claude AI ile {aiPrompt.count} adet soru oluşturuluyor...
                       </p>
                     </div>
                   )}
 
+                  {showPreview && aiGeneratedQuestions.length > 0 && (
+                    <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-green-900">🎉 {aiGeneratedQuestions.length} Soru Hazır!</h4>
+                        <Badge className="bg-green-100 text-green-700">Önizleme</Badge>
+                      </div>
+                      
+                      <div className="max-h-60 overflow-y-auto space-y-3">
+                        {aiGeneratedQuestions.slice(0, 3).map((q: any, index: number) => (
+                          <div key={index} className="p-3 bg-white rounded-lg shadow-sm">
+                            <p className="font-medium text-gray-900 mb-2">{q.text}</p>
+                            <div className="grid grid-cols-1 gap-1 text-sm">
+                              {q.options?.map((opt: string, i: number) => (
+                                <span key={i} className={`p-1 rounded ${i === q.correctAnswer ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600'}`}>
+                                  {String.fromCharCode(65 + i)}) {opt}
+                                </span>
+                              ))}
+                            </div>
+                            <Badge variant="secondary" className="mt-2">{q.difficulty}</Badge>
+                          </div>
+                        ))}
+                        {aiGeneratedQuestions.length > 3 && (
+                          <p className="text-center text-gray-500 text-sm">
+                            ... ve {aiGeneratedQuestions.length - 3} soru daha
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={handleSaveAIQuestions}
+                          disabled={saveAIQuestionsMutation.isPending}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          {saveAIQuestionsMutation.isPending ? "Kaydediliyor..." : `✅ Tümünü Kaydet (${aiGeneratedQuestions.length})`}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowPreview(false);
+                            setAiGeneratedQuestions([]);
+                          }}
+                        >
+                          ❌ İptal
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <Button 
                     onClick={handleAIGenerate}
-                    disabled={aiLoading}
+                    disabled={previewLoading || showPreview}
                     className="w-full flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   >
-                    {aiLoading ? (
+                    {previewLoading ? (
                       <Cpu className="w-4 h-4 animate-spin" />
                     ) : (
                       <Brain className="w-4 h-4" />
                     )}
-                    {aiLoading ? "AI Çalışıyor..." : "🚀 AI ile Üret"}
+                    {previewLoading ? "AI Çalışıyor..." : showPreview ? "Sorular Hazır ✅" : "🚀 AI ile Üret"}
                   </Button>
                 </CardContent>
               </Card>
@@ -601,7 +789,12 @@ export default function XAdmin() {
                       <BookOpen className="w-6 h-6 text-blue-600" />
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => window.open(`/admin/questions/${category.id}`, '_blank')}
+                  >
                     📝 Soruları Görüntüle
                   </Button>
                 </CardContent>
@@ -682,6 +875,61 @@ export default function XAdmin() {
                   <div className="flex justify-between">
                     <span className="text-sm">Mod</span>
                     <Badge className="bg-orange-100 text-orange-700">Basit</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Otomatik AI Sistemi */}
+            <Card className="shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-900">
+                  <Clock className="w-6 h-6" />
+                  🕒 Otomatik AI Sistemi
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-green-800">
+                        Haftalık Üretim
+                      </span>
+                      <Badge className="bg-green-200 text-green-800">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Aktif
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-green-700 mt-1">
+                      Her Pazartesi 03:00'da 1000 soru üretilir
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-2 bg-white rounded border">
+                      <div className="font-medium text-gray-900">Son Çalışma</div>
+                      <div className="text-xs text-gray-600">21 Ağustos 03:00</div>
+                    </div>
+                    <div className="p-2 bg-white rounded border">
+                      <div className="font-medium text-gray-900">Sonraki Çalışma</div>
+                      <div className="text-xs text-gray-600">28 Ağustos 03:00</div>
+                    </div>
+                    <div className="p-2 bg-white rounded border">
+                      <div className="font-medium text-gray-900">Üretilen Soru</div>
+                      <div className="text-xs text-gray-600">950 adet</div>
+                    </div>
+                    <div className="p-2 bg-white rounded border">
+                      <div className="font-medium text-gray-900">Başarı Oranı</div>
+                      <div className="text-xs text-gray-600">95%</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span>Bu haftaki ilerleme</span>
+                      <span>950/1000</span>
+                    </div>
+                    <Progress value={95} className="h-2" />
                   </div>
                 </div>
               </CardContent>
