@@ -235,27 +235,10 @@ export default function UpdatedPricing() {
               <motion.div key={plan.id} variants={cardVariants}>
                 <Card className={`
                   relative border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
-                  ${plan.popular ? 'border-purple-300 shadow-xl scale-105' : 'border-gray-200 shadow-lg'}
+                  ${plan.popular ? 'border-purple-300 shadow-xl' : 'border-gray-200 shadow-lg'}
                   ${plan.isCredit ? 'border-orange-300 shadow-xl' : ''}
                   bg-white overflow-hidden h-[650px] flex flex-col
                 `}>
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 shadow-lg">
-                        <Star className="w-3 h-3 mr-1" />
-                        En Popüler
-                      </Badge>
-                    </div>
-                  )}
-
-                  {plan.isCredit && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 shadow-lg">
-                        <Brain className="w-3 h-3 mr-1" />
-                        Her Zaman Al
-                      </Badge>
-                    </div>
-                  )}
 
                   {/* Gradient Background */}
                   <div className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${plan.bgColor} opacity-60`}></div>
