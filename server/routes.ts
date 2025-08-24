@@ -282,9 +282,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      const questions = await storage.getQuestionsByCategory(categoryId, limit);
-      res.json(questions);
+      const { getDbCategoriesForExam } = await import('@shared/categories');
+      const dbCategories = getDbCategoriesForExam(categoryId);
+      
+      console.log(`Getting questions for category: ${categoryId}, DB categories: ${dbCategories}`);
+      
+      let allQuestions: any[] = [];
+      for (const dbCategory of dbCategories) {
+        const questions = await storage.getQuestionsByCategory(dbCategory, limit);
+        allQuestions = allQuestions.concat(questions);
+      }
+      
+      console.log(`Found ${allQuestions.length} questions for category ${categoryId}`);
+      res.json(allQuestions);
     } catch (error) {
+      console.error('Error getting questions by category:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
