@@ -22,14 +22,20 @@ export default function Quiz() {
   const [quizSession, setQuizSession] = useState<QuizSession | null>(null);
   const [quizMetrics, setQuizMetrics] = useState<any>(null);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [quizMode, setQuizMode] = useState<'quick' | 'exam'>('quick');
 
   // Get category ID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('category');
 
-  // Fetch questions for the category
+  // Fetch questions for the category with different limits based on mode
+  const questionLimit = quizMode === 'quick' ? 10 : 40;
   const { data: questions = [], isLoading, error } = useQuery<Question[]>({
-    queryKey: ["/api/questions", categoryId],
+    queryKey: ["/api/questions", categoryId, quizMode],
+    queryFn: async () => {
+      const response = await fetch(`/api/questions?category=${categoryId}&limit=${questionLimit}`);
+      return response.json();
+    },
     enabled: !!categoryId && quizStarted,
   });
 
@@ -145,7 +151,8 @@ export default function Quiz() {
   };
 
   // Handle quiz start
-  const handleStartQuiz = () => {
+  const handleStartQuiz = (mode: 'quick' | 'exam' = 'quick') => {
+    setQuizMode(mode);
     setQuizStarted(true);
   };
 

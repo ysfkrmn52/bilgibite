@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Target, Trophy, BookOpen, ArrowRight, Play } from "lucide-react";
+import { Clock, Target, Trophy, BookOpen, ArrowRight, Play, FileText } from "lucide-react";
 import { ExamCategory } from "@shared/schema";
 
 interface QuizLandingProps {
   categoryId: string;
-  onStartQuiz: () => void;
+  onStartQuiz: (mode?: 'quick' | 'exam') => void;
 }
 
 export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProps) {
@@ -47,13 +47,13 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
       difficulty: "Orta",
       tips: [
         "Her soru için ortalama 15-30 saniye ayırın",
-        "Emin olmadığınız sorularda tahmin yapın",
+        "Emin olmadığınız sorularda tahmin yapın", 
         "Zaman yönetimi çok önemli"
       ]
     },
     kpss: {
       description: "Kamu kurumlarında çalışmak için gerekli sınav.",
-      duration: "2-5 dakika", 
+      duration: "2-5 dakika",
       questionCount: "5-20 soru",
       difficulty: "Orta-Zor",
       tips: [
@@ -65,7 +65,7 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
     ehliyet: {
       description: "Sürücü belgesi almak için gerekli teorik sınav.",
       duration: "2-5 dakika",
-      questionCount: "5-20 soru", 
+      questionCount: "5-20 soru",
       difficulty: "Kolay-Orta",
       tips: [
         "Trafik işaretlerini iyi öğrenin",
@@ -75,135 +75,159 @@ export default function QuizLanding({ categoryId, onStartQuiz }: QuizLandingProp
     }
   };
 
-  const info = categoryInfo[categoryId as keyof typeof categoryInfo] || categoryInfo.yks;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <motion.div
+      <div className="container mx-auto px-4 py-8">
+        <motion.div 
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          transition={{ duration: 0.6 }}
         >
-          <Badge variant="secondary" className="mb-4">
-            {category.name} Sınavı
-          </Badge>
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-            {category.name} Quiz'e Hoş Geldiniz
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {info.description}
-          </p>
-        </motion.div>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <motion.div
+              className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+            >
+              <BookOpen className="w-10 h-10 text-white" />
+            </motion.div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">{category.name}</h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {categoryInfo[categoryId as keyof typeof categoryInfo]?.description || category.description}
+            </p>
+          </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Quiz Information */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          {/* Quick Stats */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  Quiz Bilgileri
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    Süre
-                  </span>
-                  <Badge variant="outline">{info.duration}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <Target className="w-4 h-4" />
-                    Soru Sayısı
-                  </span>
-                  <Badge variant="outline">{info.questionCount}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <Trophy className="w-4 h-4" />
-                    Zorluk
-                  </span>
-                  <Badge variant="outline">{info.difficulty}</Badge>
-                </div>
+              <CardContent className="p-6 text-center">
+                <Clock className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-1">Süre</h3>
+                <p className="text-gray-600">{categoryInfo[categoryId as keyof typeof categoryInfo]?.duration}</p>
               </CardContent>
             </Card>
-          </motion.div>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Target className="w-8 h-8 text-green-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-1">Soru Sayısı</h3>
+                <p className="text-gray-600">{categoryInfo[categoryId as keyof typeof categoryInfo]?.questionCount}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Trophy className="w-8 h-8 text-amber-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-1">Zorluk</h3>
+                <Badge variant="secondary">
+                  {categoryInfo[categoryId as keyof typeof categoryInfo]?.difficulty}
+                </Badge>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Tips */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  İpuçları
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {info.tips.map((tip, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <ArrowRight className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Start Quiz Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-8"
-        >
-          <Card className="max-w-md mx-auto">
-            <CardContent className="pt-6">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Play className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Hazır mısınız?</h3>
-                <p className="text-muted-foreground text-sm">
-                  Quiz başlatıldıktan sonra geri dönemezsiniz.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <Button 
-                  onClick={onStartQuiz}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700"
-                  size="lg"
-                  data-testid="start-quiz-button"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Quiz'i Başlat
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => window.location.href = "/exams"}
-                  className="w-full"
-                  data-testid="back-to-exams-button"
-                >
-                  Sınavlara Dön
-                </Button>
-              </div>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Target className="w-5 h-5 mr-2" />
+                Başarı İpuçları
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {categoryInfo[categoryId as keyof typeof categoryInfo]?.tips.map((tip, index) => (
+                  <motion.li 
+                    key={index}
+                    className="flex items-start"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                  >
+                    <ArrowRight className="w-4 h-4 text-indigo-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{tip}</span>
+                  </motion.li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
+
+          {/* Quiz Mode Selection */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group h-full" onClick={() => onStartQuiz('quick')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-green-200 transition-colors">
+                      <Play className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Hızlı Quiz</h3>
+                      <p className="text-sm text-gray-600">10 soru • 5-10 dakika</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-4">
+                    Karışık sorularla hızlı pratik yapın. Her soru sonrası detaylı açıklama görün.
+                  </p>
+                  <Button className="w-full bg-green-600 hover:bg-green-700" data-testid="button-quick-quiz">
+                    <Play className="w-4 h-4 mr-2" />
+                    Quiz Başlat
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group h-full" onClick={() => onStartQuiz('exam')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-200 transition-colors">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Deneme Sınavı</h3>
+                      <p className="text-sm text-gray-600">Gerçek sınav formatı</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-4">
+                    Gerçek {category.name} sınav deneyimi yaşayın. Orijinal format ve zamanlama.
+                  </p>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" data-testid="button-exam-mode">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Deneme Sınavı Başlat
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Back Button */}
+          <div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <Button 
+                onClick={() => window.location.href = "/exams"}
+                variant="outline" 
+                size="lg"
+                className="px-8 py-3 text-lg"
+                data-testid="button-back-to-exams"
+              >
+                Sınavlara Dön
+              </Button>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>
