@@ -67,8 +67,8 @@ function Router() {
         
         {/* All other routes with navbar */}
         <Route path="/" component={() => (<><Navbar /><Home /></>)} />
-        <Route path="/admin" component={() => (<><Navbar /><XAdmin /></>)} />
-        <Route path="/xadmin" component={() => (<><Navbar /><XAdmin /></>)} />
+        <Route path="/admin" component={XAdmin} />
+        <Route path="/xadmin" component={XAdmin} />
         <Route path="/admin/users" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
         )} />
