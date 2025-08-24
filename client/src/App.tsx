@@ -71,30 +71,18 @@ function Router() {
             <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
           );
         }} />
-        <Route path="/admin/users" component={() => {
-          const AdminUsers = lazy(() => import("@/pages/admin-users"));
-          return (
-            <Suspense fallback={<PageLoader />}><AdminUsers /></Suspense>
-          );
-        }} />
-        <Route path="/admin/subscriptions" component={() => {
-          const AdminSubscriptions = lazy(() => import("@/pages/admin-subscriptions"));
-          return (
-            <Suspense fallback={<PageLoader />}><AdminSubscriptions /></Suspense>
-          );
-        }} />
-        <Route path="/admin/payments" component={() => {
-          const AdminPayments = lazy(() => import("@/pages/admin-payments"));
-          return (
-            <Suspense fallback={<PageLoader />}><AdminPayments /></Suspense>
-          );
-        }} />
-        <Route path="/admin/analytics" component={() => {
-          const AdminAnalytics = lazy(() => import("@/pages/admin-analytics"));
-          return (
-            <Suspense fallback={<PageLoader />}><AdminAnalytics /></Suspense>
-          );
-        }} />
+        <Route path="/admin/users" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+        )} />
+        <Route path="/admin/subscriptions" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+        )} />
+        <Route path="/admin/payments" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+        )} />
+        <Route path="/admin/analytics" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+        )} />
         <Route path="/admin-simple" component={() => (<><Navbar /><SimpleAdmin /></>)} />
         <Route path="/profile" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>

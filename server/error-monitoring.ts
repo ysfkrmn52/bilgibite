@@ -30,10 +30,10 @@ class ErrorMonitoringService {
   private generateErrorId(error: Error, req?: Request): string {
     const endpoint = req?.path || 'unknown';
     const message = error.message || 'unknown-error';
-    const stack = error.stack?.split('\n')[1] || '';
+    const stack = (error.stack?.split('\n')[1]) || '';
     
     // Create hash from message + endpoint + first stack line
-    return Buffer.from(`${message}-${endpoint}-${stack}`).toString('base64').substring(0, 16);
+    return Buffer.from(`${message}-${endpoint}-${stack}`, 'utf8').toString('base64').substring(0, 16);
   }
 
   // Log error with metadata
@@ -77,7 +77,9 @@ class ErrorMonitoringService {
       // Clean up old errors if we exceed max
       if (this.errors.size > this.maxErrors) {
         const oldestKey = this.errors.keys().next().value;
-        this.errors.delete(oldestKey);
+        if (oldestKey) {
+          this.errors.delete(oldestKey);
+        }
       }
     }
 
@@ -191,11 +193,15 @@ class ErrorMonitoringService {
   // Clear resolved errors
   clearResolvedErrors(): number {
     const initialSize = this.errors.size;
-    for (const [key, error] of this.errors) {
+    const keysToDelete: string[] = [];
+    
+    this.errors.forEach((error, key) => {
       if (error.resolved) {
-        this.errors.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    keysToDelete.forEach(key => this.errors.delete(key));
     return initialSize - this.errors.size;
   }
 }
@@ -209,12 +215,12 @@ export const errorCaptureMiddleware = (req: Request, res: Response, next: NextFu
   const originalSend = res.send;
 
   // Capture response errors
-  res.end = function(chunk?: any) {
+  res.end = function(chunk?: any, encoding?: BufferEncoding) {
     if (res.statusCode >= 400) {
       const error = new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`);
       errorMonitoring.logError(error, req, { responseStatus: res.statusCode });
     }
-    return originalEnd.call(this, chunk);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   res.send = function(body?: any) {

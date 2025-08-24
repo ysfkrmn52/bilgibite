@@ -272,15 +272,16 @@ class EmailService {
       
       // Önceliğe göre sırala
       this.emailQueue.sort((a, b) => {
-        const priorityOrder = { high: 3, normal: 2, low: 1 };
+        const priorityOrder: Record<string, number> = { high: 3, normal: 2, low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       });
 
       return { success: true, messageId: emailJob.id };
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Email queue error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: errorMessage };
     }
   }
 
