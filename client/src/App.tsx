@@ -20,7 +20,7 @@ import Home from "@/pages/simplified-home";
 import SimpleAdmin from "@/pages/simple-admin";
 import AdminQuestions from "@/pages/admin-questions";
 import AdminSubscriptionManagement from "@/pages/admin-subscription-management";
-import AdminDashboard from "@/pages/admin-dashboard";
+import XAdmin from "@/pages/xadmin";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -67,7 +67,8 @@ function Router() {
         
         {/* All other routes with navbar */}
         <Route path="/" component={() => (<><Navbar /><Home /></>)} />
-        <Route path="/admin" component={() => (<><Navbar /><AdminDashboard /></>)} />
+        <Route path="/admin" component={() => (<><Navbar /><XAdmin /></>)} />
+        <Route path="/xadmin" component={() => (<><Navbar /><XAdmin /></>)} />
         <Route path="/admin/users" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
         )} />
