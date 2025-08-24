@@ -239,6 +239,26 @@ export default function UpdatedPricing() {
                   ${plan.isCredit ? 'border-orange-300 shadow-xl' : ''}
                   bg-white overflow-hidden h-[650px] flex flex-col
                 `}>
+                  
+                  {/* Corner Badge for Popular */}
+                  {plan.popular && (
+                    <div className="absolute top-4 right-4 z-20">
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 text-xs font-semibold shadow-lg">
+                        <Star className="w-3 h-3 mr-1" />
+                        En Popüler
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Corner Badge for AI Credits */}
+                  {plan.isCredit && (
+                    <div className="absolute top-4 right-4 z-20">
+                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 text-xs font-semibold shadow-lg">
+                        <Brain className="w-3 h-3 mr-1" />
+                        Her Zaman Al
+                      </Badge>
+                    </div>
+                  )}
 
                   {/* Gradient Background */}
                   <div className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${plan.bgColor} opacity-60`}></div>
