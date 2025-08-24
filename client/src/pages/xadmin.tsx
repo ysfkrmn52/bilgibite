@@ -1,72 +1,68 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import {
-  BookOpen,
-  Users,
-  Target,
-  Zap,
-  Brain,
-  Crown,
-  DollarSign,
-  CreditCard,
-  Settings,
-  BarChart3,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight,
-  Plus,
-  Upload,
-  FileText,
-  TrendingUp,
-  UserPlus,
-  Activity,
-  Eye,
-  Edit,
-  Trash2
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Plus, Users, BookOpen, TrendingUp, CheckCircle, 
+  Target, Award, Calendar, BarChart3, Activity,
+  Settings, Database, Crown
 } from "lucide-react";
-import { EXAM_CATEGORIES } from "@shared/categories";
+import { useToast } from "@/hooks/use-toast";
+import { EXAM_CATEGORIES } from "../../../shared/categories";
+
+interface AdminStats {
+  totalQuestions: number;
+  activeUsers: number;
+  dailyQuizzes: number;
+  premiumUsers: number;
+  tytQuestions: number;
+  kpssQuestions: number;
+  educationMaterials: number;
+  recentActivities: Array<{
+    description: string;
+    time: string;
+  }>;
+}
+
+interface QuestionCounts {
+  [key: string]: number;
+}
 
 export default function XAdmin() {
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickQuestion, setQuickQuestion] = useState({
+    text: "",
+    category: "",
+    options: ["", "", "", ""],
+    correctAnswer: 0,
+    explanation: ""
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showQuestionForm, setShowQuestionForm] = useState(false);
-  const [newQuestion, setNewQuestion] = useState({
-    category: '',
-    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    questionText: '',
-    options: ['', '', '', '', ''],
-    correctAnswer: 0,
-    explanation: ''
-  });
 
-  // Queries
-  const { data: adminStats, isLoading: statsLoading } = useQuery({
+  // Data fetching
+  const { data: adminStats } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
     queryFn: () => fetch("/api/admin/stats").then((res) => res.json()),
   });
 
-  const { data: subscriptionStats, isLoading: subStatsLoading } = useQuery({
+  const { data: subscriptionStats } = useQuery({
     queryKey: ["/api/admin/subscriptions/stats"],
-    retry: 3,
-    retryDelay: 1000,
+    queryFn: () => fetch("/api/admin/subscriptions/stats").then((res) => res.json()),
   });
 
-  const { data: questionCounts } = useQuery({
+  const { data: questionCounts } = useQuery<QuestionCounts>({
     queryKey: ["/api/questions/counts"],
     queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
 
-  // Stats combination
   const displayStats = subscriptionStats?.data || subscriptionStats || {};
   const combinedStats = {
     ...adminStats,
@@ -79,75 +75,66 @@ export default function XAdmin() {
     premiumUsers: (displayStats as any)?.premiumUsers || adminStats?.premiumUsers || 0,
   };
 
-  // Mutations
+  // Question mutation
   const createQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
-      const response = await fetch('/api/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData)
+      const response = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(questionData),
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Soru ekleme başarısız');
-      }
+      if (!response.ok) throw new Error("Soru eklenemedi");
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Başarılı!",
-        description: "Yeni soru başarıyla eklendi."
+        title: "Başarılı",
+        description: "Soru başarıyla eklendi",
       });
-      setNewQuestion({
-        category: '',
-        difficulty: 'medium',
-        questionText: '',
-        options: ['', '', '', '', ''],
+      setQuickQuestion({
+        text: "",
+        category: "",
+        options: ["", "", "", ""],
         correctAnswer: 0,
-        explanation: ''
+        explanation: ""
       });
-      setShowQuestionForm(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/questions/counts'] });
+      setShowQuickAdd(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/questions/counts"] });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Hata",
-        description: error.message || "Soru eklenirken hata oluştu",
-        variant: "destructive",
+        description: "Soru eklenirken bir hata oluştu",
+        variant: "destructive"
       });
-    }
+    },
   });
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "TRY",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const handleQuestionSubmit = () => {
-    if (!newQuestion.category || !newQuestion.questionText.trim()) {
+  const handleQuickAdd = () => {
+    if (!quickQuestion.text.trim() || !quickQuestion.category) {
       toast({
         title: "Eksik Bilgi",
-        description: "Kategori ve soru metni zorunludur.",
+        description: "Soru metni ve kategori zorunludur",
         variant: "destructive"
       });
       return;
     }
 
-    const validOptions = newQuestion.options.filter(opt => opt.trim().length > 0);
+    const validOptions = quickQuestion.options.filter(opt => opt.trim().length > 0);
     if (validOptions.length < 2) {
       toast({
-        title: "Eksik Seçenekler",
-        description: "En az 2 seçenek girilmelidir.",
+        title: "Eksik Seçenekler", 
+        description: "En az 2 seçenek girilmelidir",
         variant: "destructive"
       });
       return;
     }
 
-    createQuestionMutation.mutate(newQuestion);
+    createQuestionMutation.mutate({
+      ...quickQuestion,
+      options: validOptions,
+    });
   };
 
   const getCategoryCount = (categoryId: string) => {
@@ -156,617 +143,402 @@ export default function XAdmin() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              BilgiBite Admin Merkezi
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Komple platform yönetimi ve kontrol merkezi
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setShowQuestionForm(!showQuestionForm)}
-              className="flex items-center gap-2"
-              data-testid="button-add-question"
-            >
-              <Plus className="w-4 h-4" />
-              Hızlı Soru Ekle
-            </Button>
-            <Badge
-              variant="default"
-              className="bg-green-100 text-green-700 px-3 py-1"
-            >
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Sistem Aktif
-            </Badge>
-          </div>
-        </div>
-
-        {/* Ana İstatistikler */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">
-                Toplam Sorular
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-blue-900" data-testid="text-total-questions">
-                    {adminStats?.totalQuestions || 0}
-                  </div>
-                  <div className="text-xs text-blue-600">Veritabanında</div>
-                </div>
-                <BookOpen className="w-8 h-8 text-blue-600" />
+      {/* Quick Add Form */}
+      {showQuickAdd && (
+        <Card className="mb-6 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-lg text-blue-900">Hızlı Soru Ekleme</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Kategori</Label>
+                <Select
+                  value={quickQuestion.category}
+                  onValueChange={(value) => setQuickQuestion(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kategori seç" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXAM_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">
-                Toplam Kullanıcılar
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-green-900" data-testid="text-total-users">
-                    {combinedStats.totalUsers}
-                  </div>
-                  <div className="text-xs text-green-600">Kayıtlı kullanıcı</div>
-                </div>
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label>Soru Metni</Label>
+              <Textarea
+                placeholder="Soru metnini yazın..."
+                value={quickQuestion.text}
+                onChange={(e) => setQuickQuestion(prev => ({ ...prev, text: e.target.value }))}
+                rows={3}
+              />
+            </div>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">
-                Aktif Abonelik
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-purple-900" data-testid="text-active-subscriptions">
-                    {combinedStats.activeSubscriptions}
-                  </div>
-                  <div className="text-xs text-purple-600">Ödeme yapan</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {quickQuestion.options.map((option, index) => (
+                <div key={index} className="space-y-2">
+                  <Label>Seçenek {index + 1}</Label>
+                  <Input
+                    placeholder={`${index + 1}. seçenek`}
+                    value={option}
+                    onChange={(e) => {
+                      const newOptions = [...quickQuestion.options];
+                      newOptions[index] = e.target.value;
+                      setQuickQuestion(prev => ({ ...prev, options: newOptions }));
+                    }}
+                  />
                 </div>
-                <CreditCard className="w-8 h-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">
-                Aylık Gelir
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-orange-900" data-testid="text-monthly-revenue">
-                    {formatCurrency(combinedStats.monthlyRevenue || 0)}
-                  </div>
-                  <div className="text-xs text-orange-600">Bu ay</div>
-                </div>
-                <DollarSign className="w-8 h-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Hızlı Soru Ekleme Formu */}
-        {showQuestionForm && (
-          <Card className="border-0 shadow-lg border-blue-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="w-5 h-5 text-blue-600" />
-                Hızlı Soru Ekleme
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Kategori</Label>
-                  <Select 
-                    value={newQuestion.category} 
-                    onValueChange={(value) => setNewQuestion({...newQuestion, category: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Kategori seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXAM_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="difficulty">Zorluk</Label>
-                  <Select 
-                    value={newQuestion.difficulty} 
-                    onValueChange={(value: 'easy' | 'medium' | 'hard') => setNewQuestion({...newQuestion, difficulty: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="easy">Kolay</SelectItem>
-                      <SelectItem value="medium">Orta</SelectItem>
-                      <SelectItem value="hard">Zor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="questionText">Soru Metni</Label>
-                <Textarea
-                  id="questionText"
-                  value={newQuestion.questionText}
-                  onChange={(e) => setNewQuestion({...newQuestion, questionText: e.target.value})}
-                  placeholder="Soru metnini buraya yazın..."
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div>
-                <Label>Seçenekler</Label>
-                <div className="space-y-2">
-                  {newQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="correctAnswer"
-                        checked={newQuestion.correctAnswer === index}
-                        onChange={() => setNewQuestion({...newQuestion, correctAnswer: index})}
-                        className="mt-1"
-                      />
-                      <Input
-                        value={option}
-                        onChange={(e) => {
-                          const newOptions = [...newQuestion.options];
-                          newOptions[index] = e.target.value;
-                          setNewQuestion({...newQuestion, options: newOptions});
-                        }}
-                        placeholder={`Seçenek ${String.fromCharCode(65 + index)}`}
-                      />
-                    </div>
+            <div className="space-y-2">
+              <Label>Doğru Cevap</Label>
+              <Select
+                value={quickQuestion.correctAnswer.toString()}
+                onValueChange={(value) => setQuickQuestion(prev => ({ ...prev, correctAnswer: parseInt(value) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Doğru cevabı seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  {quickQuestion.options.map((option, index) => (
+                    option.trim() && (
+                      <SelectItem key={index} value={index.toString()}>
+                        {index + 1}. seçenek: {option.slice(0, 30)}...
+                      </SelectItem>
+                    )
                   ))}
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
+            </div>
 
+            <div className="space-y-2">
+              <Label>Açıklama (Opsiyonel)</Label>
+              <Textarea
+                placeholder="Cevap açıklaması..."
+                value={quickQuestion.explanation}
+                onChange={(e) => setQuickQuestion(prev => ({ ...prev, explanation: e.target.value }))}
+                rows={2}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={handleQuickAdd}
+                disabled={createQuestionMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                {createQuestionMutation.isPending ? "Ekleniyor..." : "Soruyu Ekle"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowQuickAdd(false)}
+              >
+                İptal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Action Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <Badge variant="default" className="bg-green-100 text-green-700 px-3 py-1">
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Sistem Aktif
+          </Badge>
+          <Badge variant="secondary" className="px-3 py-1">
+            v1.0.0
+          </Badge>
+        </div>
+        <Button
+          onClick={() => setShowQuickAdd(!showQuickAdd)}
+          className="flex items-center gap-2"
+          data-testid="button-add-question"
+        >
+          <Plus className="w-4 h-4" />
+          Hızlı Soru Ekle
+        </Button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-blue-700">
+              Toplam Sorular
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="explanation">Açıklama (Opsiyonel)</Label>
-                <Textarea
-                  id="explanation"
-                  value={newQuestion.explanation}
-                  onChange={(e) => setNewQuestion({...newQuestion, explanation: e.target.value})}
-                  placeholder="Sorunun açıklaması..."
-                />
+                <div className="text-2xl font-bold text-blue-900" data-testid="text-total-questions">
+                  {adminStats?.totalQuestions || 0}
+                </div>
+                <div className="text-xs text-blue-600">Veritabanında</div>
               </div>
+              <BookOpen className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleQuestionSubmit}
-                  disabled={createQuestionMutation.isPending}
-                  data-testid="button-submit-question"
-                >
-                  {createQuestionMutation.isPending ? "Ekleniyor..." : "Soru Ekle"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowQuestionForm(false)}
-                >
-                  İptal
-                </Button>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-green-700">
+              Toplam Kullanıcılar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-green-900" data-testid="text-total-users">
+                  {combinedStats.totalUsers}
+                </div>
+                <div className="text-xs text-green-600">Kayıtlı</div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <Users className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Ana Yönetim Paneli */}
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Hızlı Aksiyonlar */}
-          <div className="lg:col-span-1">
-            <Card className="border-0 shadow-lg">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-purple-700">
+              Quiz Oturumları
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-purple-900" data-testid="text-quiz-sessions">
+                  {adminStats?.dailyQuizzes || 0}
+                </div>
+                <div className="text-xs text-purple-600">Tamamlandı</div>
+              </div>
+              <Activity className="w-8 h-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-orange-700">
+              Premium Kullanıcı
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-orange-900" data-testid="text-premium-users">
+                  {combinedStats.premiumUsers}
+                </div>
+                <div className="text-xs text-orange-600">Aktif</div>
+              </div>
+              <Crown className="w-8 h-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid grid-cols-4 w-full max-w-md">
+          <TabsTrigger value="overview">Genel</TabsTrigger>
+          <TabsTrigger value="questions">Sorular</TabsTrigger>
+          <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="analytics">Analitik</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activities */}
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-blue-600" />
-                  Hızlı İşlemler
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={() => (window.location.href = "/admin/questions")}
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-question-management"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Soru Yönetimi
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/admin/subscriptions")}
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-subscription-management"
-                >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Abonelik Yönetimi
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/admin/analytics")}
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-analytics"
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Analytics
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/admin/ai-questions")}
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-ai-questions"
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  AI Soru Üretimi
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Son Aktiviteler */}
-          <div className="lg:col-span-2">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-green-600" />
+                  <Activity className="w-5 h-5" />
                   Son Aktiviteler
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4" data-testid="recent-activities">
-                  {adminStats?.recentActivities?.length ? (
-                    adminStats.recentActivities.map((activity: any, index: number) => (
-                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">{activity.description}</div>
-                          <div className="text-xs text-gray-500">{activity.time}</div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Activity className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        Henüz aktivite bulunmuyor
-                      </p>
+                <div className="space-y-3">
+                  {adminStats?.recentActivities?.map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <span className="text-sm text-gray-700">{activity.description}</span>
+                      <span className="text-xs text-gray-500">{activity.time}</span>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Hızlı İstatistikler
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Ücretsiz Kullanıcılar</span>
+                  <Badge variant="secondary">{combinedStats.freeUsers}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Plus Kullanıcılar</span>
+                  <Badge variant="default">{combinedStats.plusUsers}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Aktif Abonelikler</span>
+                  <Badge variant="outline">{combinedStats.activeSubscriptions}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Aylık Gelir</span>
+                  <Badge variant="secondary">₺{combinedStats.monthlyRevenue}</Badge>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </TabsContent>
 
-        {/* Detaylı Yönetim Sekmeleri */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Genel Bakış
-            </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Sorular
-            </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Kullanıcılar
-            </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="flex items-center gap-2">
-              <Crown className="w-4 h-4" />
-              Abonelikler
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Genel Bakış */}
-          <TabsContent value="overview">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-blue-600" />
-                    Platform İstatistikleri
+        <TabsContent value="questions" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {EXAM_CATEGORIES.map((category) => (
+              <Card key={category.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-gray-700">
+                    {category.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Toplam Sorular</span>
-                      <span className="font-semibold">{adminStats?.totalQuestions || 0}</span>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {getCategoryCount(category.id)}
+                      </div>
+                      <div className="text-xs text-gray-500">soru</div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Aktif Kullanıcılar</span>
-                      <span className="font-semibold">{combinedStats.totalUsers}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Günlük Quiz</span>
-                      <span className="font-semibold text-green-600">{adminStats?.dailyQuizzes || 0}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Premium Kullanıcılar</span>
-                      <span className="font-semibold text-purple-600">{combinedStats.premiumUsers}</span>
-                    </div>
+                    <Target className="w-6 h-6 text-gray-400" />
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-green-600" />
-                    Sistem Durumu
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4" data-testid="system-status">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">PostgreSQL</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs text-gray-500">Aktif</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">AI Claude API</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs text-gray-500">Hazır</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Error Monitoring</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs text-gray-500">Çalışıyor</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+        <TabsContent value="users" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
+              <CardHeader>
+                <CardTitle className="text-blue-900">Toplam Kullanıcılar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-900">{combinedStats.totalUsers}</div>
+                <p className="text-blue-600 text-sm">Kayıtlı kullanıcı sayısı</p>
+              </CardContent>
+            </Card>
 
-          {/* Sorular Sekmesi */}
-          <TabsContent value="questions">
-            <div className="grid gap-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-purple-600" />
-                    Kategorilere Göre Soru Dağılımı
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {EXAM_CATEGORIES.map((category) => (
-                      <div key={category.id} className="p-4 border rounded-lg bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{category.name}</span>
-                          <Badge variant="secondary">{getCategoryCount(category.id)}</Badge>
-                        </div>
-                        <div className="text-xs text-gray-500">{category.description}</div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            <Card className="bg-gradient-to-br from-green-50 to-green-100">
+              <CardHeader>
+                <CardTitle className="text-green-900">Ücretsiz Kullanıcılar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-900">{combinedStats.freeUsers}</div>
+                <p className="text-green-600 text-sm">Temel plan kullanıcıları</p>
+              </CardContent>
+            </Card>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <Button
-                  onClick={() => (window.location.href = "/admin/questions")}
-                  className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  <BookOpen className="w-6 h-6" />
-                  <span>Detaylı Soru Yönetimi</span>
-                </Button>
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
+              <CardHeader>
+                <CardTitle className="text-purple-900">Premium Kullanıcılar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-purple-900">{combinedStats.premiumUsers}</div>
+                <p className="text-purple-600 text-sm">Ücretli plan kullanıcıları</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-                <Button
-                  onClick={() => (window.location.href = "/admin/ai-questions")}
-                  className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                >
-                  <Brain className="w-6 h-6" />
-                  <span>AI Soru Üretimi</span>
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Platform Metrikleri
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm">Toplam Sorular</span>
+                  <span className="font-semibold">{adminStats?.totalQuestions || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Günlük Quiz</span>
+                  <span className="font-semibold">{adminStats?.dailyQuizzes || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">KPSS Soruları</span>
+                  <span className="font-semibold">{getCategoryCount('kpss')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">YKS Soruları</span>
+                  <span className="font-semibold">{getCategoryCount('yks')}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Kullanıcılar Sekmesi */}
-          <TabsContent value="users">
-            <div className="grid gap-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-green-600" />
-                    Kullanıcı İstatistikleri
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-900">{combinedStats.freeUsers || 0}</div>
-                      <div className="text-sm text-blue-600">Ücretsiz</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-900">{combinedStats.plusUsers || 0}</div>
-                      <div className="text-sm text-purple-600">Plus</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-900">{combinedStats.premiumUsers || 0}</div>
-                      <div className="text-sm text-orange-600">Premium</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>Kullanıcı Yönetimi</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => (window.location.href = "/admin/users")}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Kullanıcıları Görüntüle
-                    </Button>
-                    <Button
-                      onClick={() => (window.location.href = "/admin/verification")}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Doğrulamalar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Abonelikler Sekmesi */}
-          <TabsContent value="subscriptions">
-            <div className="grid gap-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-purple-600" />
-                    Abonelik Durumu
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {combinedStats.totalUsers > 0 ? (
-                    <div className="space-y-4" data-testid="subscription-details">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900">
-                            {combinedStats.freeUsers || 0}
-                          </div>
-                          <div className="text-sm text-gray-600">Ücretsiz</div>
-                          <div className="text-xs text-gray-500">
-                            %{Math.round(((combinedStats.freeUsers || 0) / combinedStats.totalUsers) * 100)}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-blue-50 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-900">
-                            {combinedStats.plusUsers || 0}
-                          </div>
-                          <div className="text-sm text-blue-600">Plus</div>
-                          <div className="text-xs text-blue-500">
-                            %{Math.round(((combinedStats.plusUsers || 0) / combinedStats.totalUsers) * 100)}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-purple-50 rounded-lg">
-                          <div className="text-2xl font-bold text-purple-900">
-                            {combinedStats.premiumUsers || 0}
-                          </div>
-                          <div className="text-sm text-purple-600">Premium</div>
-                          <div className="text-xs text-purple-500">
-                            %{Math.round(((combinedStats.premiumUsers || 0) / combinedStats.totalUsers) * 100)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Toplam Aylık Gelir</span>
-                          <span className="font-bold text-green-600 text-lg">
-                            {formatCurrency(combinedStats.monthlyRevenue || 0)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8" data-testid="no-subscription-data">
-                      <Crown className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                      <p className="text-sm text-gray-500">Henüz abonelik verisi bulunmuyor</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                    Paket Fiyatları
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <span className="font-medium">Ücretsiz</span>
-                        <div className="text-xs text-gray-500">Temel özellikler</div>
-                      </div>
-                      <span className="font-bold">₺0/ay</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <div>
-                        <span className="font-medium">Plus</span>
-                        <div className="text-xs text-gray-500">Gelişmiş özellikler</div>
-                      </div>
-                      <span className="font-bold text-blue-600">₺99/ay</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                      <div>
-                        <span className="font-medium">Premium</span>
-                        <div className="text-xs text-gray-500">Tüm özellikler + AI</div>
-                      </div>
-                      <span className="font-bold text-purple-600">₺299/ay</span>
-                    </div>
-                    <Button
-                      onClick={() => (window.location.href = "/admin/subscriptions")}
-                      variant="outline"
-                      className="w-full mt-4"
-                    >
-                      Detaylı Abonelik Yönetimi
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  Sistem Durumu
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Veritabanı</span>
+                  <Badge className="bg-green-100 text-green-700">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Online
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">API</span>
+                  <Badge className="bg-green-100 text-green-700">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Çalışıyor
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">AI Servisler</span>
+                  <Badge className="bg-green-100 text-green-700">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Aktif
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Ödemeler</span>
+                  <Badge className="bg-green-100 text-green-700">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Güvenli
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
   );
 }
