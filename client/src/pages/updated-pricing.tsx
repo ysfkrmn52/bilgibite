@@ -237,7 +237,7 @@ export default function UpdatedPricing() {
                   relative border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
                   ${plan.popular ? 'border-purple-300 shadow-xl scale-105' : 'border-gray-200 shadow-lg'}
                   ${plan.isCredit ? 'border-orange-300 shadow-xl' : ''}
-                  bg-white overflow-hidden h-[550px] flex flex-col
+                  bg-white overflow-hidden h-[650px] flex flex-col
                 `}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -304,28 +304,11 @@ export default function UpdatedPricing() {
                       )}
                     </div>
 
-                    {/* Price Section - Above Button */}
-                    <div className="text-center mb-4">
-                      <div className="text-3xl font-bold text-gray-900">
-                        {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
-                        {plan.isCredit ? (
-                          <span className="text-base text-gray-600 font-normal"> / 500 kredi</span>
-                        ) : plan.price > 0 ? (
-                          <span className="text-base text-gray-600 font-normal">/ay</span>
-                        ) : null}
-                      </div>
-                      {plan.originalPrice && (
-                        <div className="text-sm text-gray-500 line-through mt-1">
-                          ₺{plan.originalPrice}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action Button - Fixed Position */}
+                    {/* Action Button with Price Inside */}
                     <div>
                       <Button 
                         className={`
-                          w-full h-12 transition-all duration-300 font-semibold text-lg shadow-lg
+                          w-full h-14 transition-all duration-300 font-semibold text-lg shadow-lg flex flex-col items-center justify-center gap-1
                           ${plan.popular 
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-purple-300' 
                             : plan.isCredit
@@ -337,12 +320,22 @@ export default function UpdatedPricing() {
                         `}
                         data-testid={`button-subscribe-${plan.id}`}
                       >
-                        {plan.price === 0 
-                          ? 'Ücretsiz Başla' 
-                          : plan.isCredit 
-                          ? 'Kredi Satın Al' 
-                          : 'Paketi Seç'}
-                        <ChevronRight className="w-4 h-4 ml-2" />
+                        <div className="font-bold text-lg">
+                          {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
+                          {plan.isCredit ? (
+                            <span className="text-sm font-normal"> / 500 kredi</span>
+                          ) : plan.price > 0 ? (
+                            <span className="text-sm font-normal">/ay</span>
+                          ) : null}
+                        </div>
+                        <div className="text-sm opacity-90 flex items-center gap-1">
+                          {plan.price === 0 
+                            ? 'Hemen Başla' 
+                            : plan.isCredit 
+                            ? 'Satın Al' 
+                            : 'Paketi Seç'}
+                          <ChevronRight className="w-3 h-3" />
+                        </div>
                       </Button>
                     </div>
                   </CardContent>
@@ -440,13 +433,6 @@ export default function UpdatedPricing() {
                           500 Kredi
                         </span>
                       </td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="p-6 font-semibold text-gray-800">Destek</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">Email</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">Öncelikli</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">7/24 Aile</td>
-                      <td className="text-center p-6 text-gray-500">-</td>
                     </tr>
                   </tbody>
                 </table>
