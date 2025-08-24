@@ -116,6 +116,24 @@ export const familyMembers = pgTable('family_members', {
   userIdIdx: index('family_members_user_id_idx').on(table.userId)
 }));
 
+// Referral System
+export const referrals = pgTable('referrals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  referrerId: text('referrer_id').notNull(),
+  refereeId: text('referee_id').notNull(),
+  referralCode: text('referral_code').notNull().unique(),
+  status: text('status').notNull(), // pending, completed, expired
+  reward: text('reward').notNull(), // +1_month, discount_20, etc
+  expiresAt: timestamp('expires_at'),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => ({
+  referrerIdIdx: index('referrals_referrer_id_idx').on(table.referrerId),
+  referralCodeIdx: index('referrals_referral_code_idx').on(table.referralCode),
+  statusIdx: index('referrals_status_idx').on(table.status)
+}));
+
 // Relations
 export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
   subscriptions: many(subscriptions)
@@ -138,6 +156,17 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   })
 }));
 
+export const referralsRelations = relations(referrals, ({ one }) => ({
+  referrer: one(subscriptions, {
+    fields: [referrals.referrerId],
+    references: [subscriptions.userId]
+  }),
+  referee: one(subscriptions, {
+    fields: [referrals.refereeId], 
+    references: [subscriptions.userId]
+  })
+}));
+
 // Schemas
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
 export const insertSubscriptionSchema = createInsertSchema(subscriptions);
@@ -145,6 +174,7 @@ export const insertPaymentSchema = createInsertSchema(payments);
 export const insertSubscriptionUsageSchema = createInsertSchema(subscriptionUsage);
 export const insertStudentVerificationSchema = createInsertSchema(studentVerifications);
 export const insertFamilyMemberSchema = createInsertSchema(familyMembers);
+export const insertReferralSchema = createInsertSchema(referrals);
 
 // Types
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
@@ -159,6 +189,8 @@ export type StudentVerification = typeof studentVerifications.$inferSelect;
 export type InsertStudentVerification = z.infer<typeof insertStudentVerificationSchema>;
 export type FamilyMember = typeof familyMembers.$inferSelect;
 export type InsertFamilyMember = z.infer<typeof insertFamilyMemberSchema>;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
 
 // Enums and Constants
 export const SUBSCRIPTION_STATUS = {

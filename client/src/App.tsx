@@ -65,9 +65,36 @@ function Router() {
         
         {/* All other routes with navbar */}
         <Route path="/" component={() => (<><Navbar /><Home /></>)} />
-        <Route path="/admin" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
-        )} />
+        <Route path="/admin" component={() => {
+          const AdminDashboard = lazy(() => import("@/pages/admin-subscription-management"));
+          return (
+            <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
+          );
+        }} />
+        <Route path="/admin/users" component={() => {
+          const AdminUsers = lazy(() => import("@/pages/admin-users"));
+          return (
+            <Suspense fallback={<PageLoader />}><AdminUsers /></Suspense>
+          );
+        }} />
+        <Route path="/admin/subscriptions" component={() => {
+          const AdminSubscriptions = lazy(() => import("@/pages/admin-subscriptions"));
+          return (
+            <Suspense fallback={<PageLoader />}><AdminSubscriptions /></Suspense>
+          );
+        }} />
+        <Route path="/admin/payments" component={() => {
+          const AdminPayments = lazy(() => import("@/pages/admin-payments"));
+          return (
+            <Suspense fallback={<PageLoader />}><AdminPayments /></Suspense>
+          );
+        }} />
+        <Route path="/admin/analytics" component={() => {
+          const AdminAnalytics = lazy(() => import("@/pages/admin-analytics"));
+          return (
+            <Suspense fallback={<PageLoader />}><AdminAnalytics /></Suspense>
+          );
+        }} />
         <Route path="/admin-simple" component={() => (<><Navbar /><SimpleAdmin /></>)} />
         <Route path="/profile" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
