@@ -253,7 +253,7 @@ export default function UpdatedPricing() {
                   relative border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1
                   ${plan.popular ? 'border-purple-300 shadow-xl scale-105' : 'border-gray-200 shadow-lg'}
                   ${plan.isCredit ? 'border-orange-300 shadow-xl' : ''}
-                  bg-white overflow-hidden h-[600px]
+                  bg-white overflow-hidden h-[650px] flex flex-col
                 `}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -284,61 +284,59 @@ export default function UpdatedPricing() {
                     <p className="text-gray-600 font-medium">{plan.description}</p>
                   </CardHeader>
 
-                  <CardContent className="flex flex-col justify-between h-[420px] relative z-10">
-                    <div className="space-y-6">
-                      {/* Price Section */}
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-gray-900">
-                          {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
-                          {plan.isCredit ? (
-                            <span className="text-lg text-gray-600 font-normal"> / 500 kredi</span>
-                          ) : plan.price > 0 ? (
-                            <span className="text-lg text-gray-600 font-normal">/ay</span>
-                          ) : null}
+                  <CardContent className="flex-1 flex flex-col relative z-10 p-6">
+                    {/* Price Section - Fixed Position */}
+                    <div className="text-center mb-6 h-20 flex flex-col justify-center">
+                      <div className="text-4xl font-bold text-gray-900">
+                        {plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}`}
+                        {plan.isCredit ? (
+                          <span className="text-lg text-gray-600 font-normal"> / 500 kredi</span>
+                        ) : plan.price > 0 ? (
+                          <span className="text-lg text-gray-600 font-normal">/ay</span>
+                        ) : null}
+                      </div>
+                      {plan.originalPrice && (
+                        <div className="text-sm text-gray-500 line-through mt-1">
+                          ₺{plan.originalPrice}
                         </div>
-                        {plan.originalPrice && (
-                          <div className="text-sm text-gray-500 line-through">
-                            ₺{plan.originalPrice}
-                          </div>
-                        )}
+                      )}
+                    </div>
+
+                    {/* Features - Flexible Content */}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-sm text-gray-900 mb-3">Özellikler:</h4>
+                        <ul className="space-y-2">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-gray-800 font-medium">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
 
-                      {/* Features */}
-                      <div className="space-y-4">
+                      {plan.aiFeatures.length > 0 && (
                         <div>
-                          <h4 className="font-semibold text-sm text-gray-900 mb-3">Özellikler:</h4>
+                          <h4 className="font-semibold text-sm text-purple-900 mb-3">AI Özellikler:</h4>
                           <ul className="space-y-2">
-                            {plan.features.map((feature, index) => (
+                            {plan.aiFeatures.map((feature, index) => (
                               <li key={index} className="flex items-start gap-2 text-sm">
-                                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                                  <Check className="w-3 h-3 text-white" />
+                                <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                  <Sparkles className="w-3 h-3 text-white" />
                                 </div>
                                 <span className="text-gray-800 font-medium">{feature}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
-
-                        {plan.aiFeatures.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold text-sm text-purple-900 mb-3">AI Özellikler:</h4>
-                            <ul className="space-y-2">
-                              {plan.aiFeatures.map((feature, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm">
-                                  <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                                    <Sparkles className="w-3 h-3 text-white" />
-                                  </div>
-                                  <span className="text-gray-800 font-medium">{feature}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="pt-4">
+                    {/* Action Button - Fixed Position */}
+                    <div className="mt-6">
                       <Button 
                         className={`
                           w-full h-12 transition-all duration-300 font-semibold text-lg shadow-lg
@@ -346,12 +344,18 @@ export default function UpdatedPricing() {
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-purple-300' 
                             : plan.isCredit
                             ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-orange-300'
+                            : plan.price === 0
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-300'
                             : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-blue-300'
                           }
                         `}
                         data-testid={`button-subscribe-${plan.id}`}
                       >
-                        {plan.price === 0 ? 'Ücretsiz Başla' : plan.isCredit ? 'Kredi Satın Al' : 'Aylık Abonelik'}
+                        {plan.price === 0 
+                          ? 'Ücretsiz Başla' 
+                          : plan.isCredit 
+                          ? 'Kredi Satın Al' 
+                          : 'Paketi Seç'}
                         <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
