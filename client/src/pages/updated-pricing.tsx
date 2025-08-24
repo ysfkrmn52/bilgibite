@@ -72,15 +72,10 @@ const pricingPlans: PricingPlan[] = [
       'Sınırsız quiz',
       'Detaylı analitik raporlar',
       'Çevrimdışı çalışma',
-      'Öncelikli destek'
+      'Öncelikli destek',
+      'AI kredi ile AI özellikler'
     ],
-    aiFeatures: [
-      'AI kredi ile çalışır',
-      'AI Öğretmen erişimi',
-      'Akıllı soru üretimi',
-      'Kişisel çalışma planları',
-      'Performans analizi'
-    ],
+    aiFeatures: [],
     popular: true
   },
   {
@@ -98,16 +93,10 @@ const pricingPlans: PricingPlan[] = [
       'Çocuk hesap koruması',
       'Aile ilerleme raporları',
       'Paylaşımlı çalışma grupları',
-      '7/24 aile desteği'
+      '7/24 aile desteği',
+      'AI kredi ile AI özellikler'
     ],
-    aiFeatures: [
-      'AI kredi ile çalışır',
-      'Tüm AI özellikler',
-      'Aile için AI mentor',
-      'Çocuk güvenli AI',
-      'Ebeveyn kontrol paneli',
-      'Aile başarı analizi'
-    ]
+    aiFeatures: []
   },
   {
     id: 'ai-credits',
@@ -117,20 +106,15 @@ const pricingPlans: PricingPlan[] = [
     icon: Brain,
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
-    features: [
-      '500 AI kredi',
-      'AI Öğretmen kullanımı',
-      'Soru üretimi',
-      'Çalışma planı oluşturma',
-      'Performans analizi',
-      'Kredi geçerlilik: 6 ay'
-    ],
+    features: [],
     aiFeatures: [
-      'Soru üretimi: 5 kredi/10 soru',
+      '500 AI kredi (6 ay geçerli)',
       'AI Öğretmen: 2 kredi/mesaj',
+      'Soru üretimi: 5 kredi/10 soru',
       'Çalışma planı: 10 kredi',
       'Analiz raporu: 8 kredi',
-      'Mock sınav: 15 kredi'
+      'Mock sınav: 15 kredi',
+      'Plus/Premium ile kullanılır'
     ],
     isCredit: true
   }
@@ -303,29 +287,31 @@ export default function UpdatedPricing() {
                     </div>
 
                     {/* Features - Flexible Content */}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 mb-3">Özellikler:</h4>
-                        <ul className="space-y-2">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                                <Check className="w-3 h-3 text-white" />
-                              </div>
-                              <span className="text-gray-800 font-medium">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {plan.aiFeatures.length > 0 && (
+                    <div className="flex-1 overflow-y-auto">
+                      {plan.isCredit ? (
+                        /* AI Kredi kartı sadece AI özellikleri gösterir */
                         <div>
-                          <h4 className="font-semibold text-sm text-purple-900 mb-3">AI Özellikler:</h4>
+                          <h4 className="font-semibold text-sm text-orange-900 mb-3">AI Kredi Özellikleri:</h4>
                           <ul className="space-y-2">
                             {plan.aiFeatures.map((feature, index) => (
                               <li key={index} className="flex items-start gap-2 text-sm">
-                                <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                                  <Sparkles className="w-3 h-3 text-white" />
+                                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                  <Brain className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-gray-800 font-medium">{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        /* Diğer kartlar sadece normal özellikler */
+                        <div>
+                          <h4 className="font-semibold text-sm text-gray-900 mb-3">Özellikler:</h4>
+                          <ul className="space-y-2">
+                            {plan.features.map((feature, index) => (
+                              <li key={index} className="flex items-start gap-2 text-sm">
+                                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                                  <Check className="w-3 h-3 text-white" />
                                 </div>
                                 <span className="text-gray-800 font-medium">{feature}</span>
                               </li>
