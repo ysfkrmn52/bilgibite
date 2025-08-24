@@ -13,7 +13,7 @@ export const EXAM_CATEGORIES: ExamCategory[] = [
     id: 'yks',
     name: 'YKS (TYT/AYT)', 
     description: 'Yükseköğretime Geçiş Sınavı - Tüm TYT ve AYT konuları',
-    dbCategories: ['tyt-turkce'] // Sadece aktif olan kategoriler
+    dbCategories: ['yks'] // Database'deki gerçek kategori adı
   },
   {
     id: 'kpss',
