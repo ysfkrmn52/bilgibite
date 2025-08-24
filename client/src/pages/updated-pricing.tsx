@@ -216,7 +216,7 @@ export default function UpdatedPricing() {
           >
             <Coins className="w-5 h-5 text-yellow-500" />
             <span className="font-semibold text-gray-800">
-              Mevcut AI Kredi: {creditBalance?.balance || 0}
+              Mevcut AI Kredi: {(creditBalance as any)?.balance || 0}
             </span>
           </motion.div>
         </motion.div>

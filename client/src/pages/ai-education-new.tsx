@@ -125,7 +125,7 @@ export default function AIEducationNew() {
   });
 
   // Default balance to prevent undefined errors
-  const currentBalance = creditBalance?.balance || 0;
+  const currentBalance = (creditBalance as any)?.balance || 0;
 
   // Fetch user's weak areas from quiz performance
   const { data: weakAreas, isLoading: weakAreasLoading } = useQuery({
@@ -415,7 +415,7 @@ export default function AIEducationNew() {
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {(weakAreas || [])?.map((area: WeakArea, index: number) => (
+                      {(weakAreas as WeakArea[] || [])?.map((area: WeakArea, index: number) => (
                         <motion.div
                           key={index}
                           initial={{ opacity: 0, y: 10 }}
@@ -489,7 +489,7 @@ export default function AIEducationNew() {
                     <div>
                       <h3 className="font-semibold mb-4">Son Sohbetler</h3>
                       <div className="grid gap-3">
-                        {(chatSessions || [])?.map((session: ChatSession, index: number) => (
+                        {(chatSessions as ChatSession[] || [])?.map((session: ChatSession, index: number) => (
                           <motion.div
                             key={session.id}
                             initial={{ opacity: 0, x: -20 }}

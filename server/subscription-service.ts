@@ -7,7 +7,7 @@ import {
   type Subscription, type SubscriptionPlan, type Payment,
   type InsertSubscription, type InsertPayment
 } from '@shared/subscription-schema';
-import { subscriptionPlans, subscriptions, payments, referrals } from '@shared/schema';
+import { subscriptionPlans, subscriptions, payments, referrals } from '@shared/subscription-schema';
 import { iyzicoService, type IyzicoPaymentRequest, type IyzicoSubscriptionRequest } from './iyzico-service';
 
 export class SubscriptionService {
