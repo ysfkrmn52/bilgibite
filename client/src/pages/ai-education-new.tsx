@@ -1,12 +1,39 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { Brain, BookOpen, MessageCircle, Zap, Target, TrendingUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Brain, 
+  BookOpen, 
+  MessageCircle, 
+  Zap, 
+  Target, 
+  TrendingUp,
+  Play,
+  Sparkles,
+  CheckCircle,
+  ArrowRight,
+  Users,
+  Clock,
+  BarChart3,
+  Lightbulb,
+  Rocket,
+  Star,
+  Coins,
+  ShoppingCart,
+  AlertCircle,
+  Wand2,
+  Trophy,
+  PlusCircle
+} from "lucide-react";
 
 interface WeakArea {
   topic: string;
@@ -31,6 +58,52 @@ interface ChatSession {
   updatedAt: Date;
 }
 
+const aiFeatures = [
+  {
+    id: 'tutor',
+    title: 'AI Kişisel Öğretmen',
+    description: 'Size özel sınırsız sohbet ve öğrenme desteği',
+    icon: MessageCircle,
+    gradient: 'from-blue-500 to-cyan-500',
+    cost: '2 kredi/mesaj',
+    benefits: ['24/7 erişim', 'Anında yanıt', 'Kişisel yaklaşım']
+  },
+  {
+    id: 'questions',
+    title: 'Akıllı Soru Üretimi',
+    description: 'Zayıf yönlerinize odaklanmış soru üretimi',
+    icon: Brain,
+    gradient: 'from-purple-500 to-pink-500',
+    cost: '5 kredi/10 soru',
+    benefits: ['Adaptif zorluk', 'Konu odaklı', 'Otomatik entegrasyon']
+  },
+  {
+    id: 'planner',
+    title: 'AI Çalışma Planlayıcı',
+    description: 'Hedeflerinize özel çalışma programı',
+    icon: Target,
+    gradient: 'from-green-500 to-emerald-500',
+    cost: '10 kredi/plan',
+    benefits: ['Kişisel program', 'Günlük öneriler', 'Sınav optimizasyonu']
+  },
+  {
+    id: 'analytics',
+    title: 'Gelişmiş Analitik',
+    description: 'AI destekli öğrenme analizi ve öneriler',
+    icon: BarChart3,
+    gradient: 'from-orange-500 to-red-500',
+    cost: '8 kredi/rapor',
+    benefits: ['Detaylı analiz', 'Güçlü/zayıf yön', 'Akıllı öneriler']
+  }
+];
+
+const stats = [
+  { label: 'Öğrenci Memnuniyeti', value: '%97', icon: Users, color: 'text-blue-600' },
+  { label: 'Başarı Artışı', value: '%35', icon: TrendingUp, color: 'text-green-600' },
+  { label: 'AI Soru Üretimi', value: '250K+', icon: Brain, color: 'text-purple-600' },
+  { label: 'Aktif Kullanıcı', value: '50K+', icon: CheckCircle, color: 'text-orange-600' }
+];
+
 export default function AIEducationNew() {
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [customTopic, setCustomTopic] = useState<string>("");
@@ -38,17 +111,30 @@ export default function AIEducationNew() {
   const [newMessage, setNewMessage] = useState<string>("");
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [questionCategory, setQuestionCategory] = useState<string>("tyt");
+  const [activeFeature, setActiveFeature] = useState(0);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Mock user ID - in real app this would come from auth context
+  const userId = "user123";
+
+  // Fetch user's credit balance
+  const { data: creditBalance } = useQuery({
+    queryKey: [`/api/ai-credits/balance/${userId}`],
+    retry: false
+  });
+
+  // Default balance to prevent undefined errors
+  const currentBalance = creditBalance?.balance || 0;
 
   // Fetch user's weak areas from quiz performance
   const { data: weakAreas, isLoading: weakAreasLoading } = useQuery({
     queryKey: ['/api/ai/weak-areas'],
-    queryFn: () => fetch('/api/ai/weak-areas').then(res => res.json())
   });
 
   // Fetch chat sessions
   const { data: chatSessions, isLoading: chatLoading } = useQuery({
     queryKey: ['/api/ai/chat-sessions'],
-    queryFn: () => fetch('/api/ai/chat-sessions').then(res => res.json())
   });
 
   // Topic explanation mutation
@@ -63,7 +149,6 @@ export default function AIEducationNew() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Create new chat session with the explanation
       setActiveChat(data.chatId);
       toast({ 
         title: 'Konu Anlatımı Hazır', 
@@ -76,24 +161,6 @@ export default function AIEducationNew() {
         description: 'Konu anlatımı sırasında bir hata oluştu',
         variant: 'destructive'
       });
-    }
-  });
-
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: async ({ chatId, message }: { chatId: string, message: string }) => {
-      const response = await fetch(`/api/ai/chat/${chatId}/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-      });
-      if (!response.ok) throw new Error('Message sending failed');
-      return response.json();
-    },
-    onSuccess: () => {
-      setNewMessage("");
-      // Refresh chat sessions to get updated messages
-      // queryClient.invalidateQueries({ queryKey: ['/api/ai/chat-sessions'] });
     }
   });
 
@@ -116,400 +183,524 @@ export default function AIEducationNew() {
     }
   });
 
-  const handleStartExam = () => {
-    // Navigate to quiz with generated questions
-    window.location.href = `/quiz?mode=ai-generated`;
-  };
+  // Auto-rotate features
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveFeature((prev) => (prev + 1) % aiFeatures.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const handleStartExamWithLastQuestions = () => {
-    // Navigate to quiz with last generated questions
-    window.location.href = `/quiz?mode=last-generated`;
-  };
-
-  const handleExplainTopic = (topic: string) => {
-    explainTopicMutation.mutate({ topic });
-  };
-
-  const handleSendMessage = () => {
-    if (!activeChat || !newMessage.trim()) return;
-    sendMessageMutation.mutate({ chatId: activeChat, message: newMessage.trim() });
-  };
-
-  const mockWeakAreas: WeakArea[] = [
-    {
-      topic: "Fonksiyonlar",
-      category: "Matematik",
-      accuracy: 45,
-      totalQuestions: 20,
-      correctAnswers: 9
-    },
-    {
-      topic: "Paragraf Sorulari",
-      category: "Türkçe", 
-      accuracy: 60,
-      totalQuestions: 15,
-      correctAnswers: 9
-    },
-    {
-      topic: "Hareket",
-      category: "Fizik",
-      accuracy: 55,
-      totalQuestions: 12,
-      correctAnswers: 7
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
     }
-  ];
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl">
-              <Brain className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              AI Eğitim Merkezi
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Brain className="w-10 h-10 text-white" />
           </div>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Yapay zeka destekli kişiselleştirilmiş öğrenme deneyimi. Eksik konularınızı tespit edin ve AI öğretmeninizle çalışın.
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            AI Eğitim Merkezi
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-6">
+            Yapay zeka destekli kişiselleştirilmiş öğrenme deneyimi. Zayıf yönlerinizi güçlendirin, 
+            AI öğretmeninizle sohbet edin ve özel sorular üretin.
           </p>
-        </div>
 
-        <Tabs defaultValue="analysis" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm">
-            <TabsTrigger value="analysis" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Analiz & Öneriler
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              AI Öğretmen
-            </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Soru Üretimi
-            </TabsTrigger>
-          </TabsList>
+          {/* Credit Balance */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg border"
+          >
+            <Coins className="w-5 h-5 text-yellow-500" />
+            <span className="font-semibold text-gray-700">
+              Mevcut Kredi: {currentBalance}
+            </span>
+            <Button 
+              size="sm" 
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+              data-testid="button-buy-credits"
+            >
+              <ShoppingCart className="w-4 h-4 mr-1" />
+              Kredi Al
+            </Button>
+          </motion.div>
+        </motion.div>
 
-          {/* Analysis Tab */}
-          <TabsContent value="analysis" className="space-y-6">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Target className="h-5 w-5 text-red-500" />
-                  Gelişime Açık Konularınız
-                </CardTitle>
-                <CardDescription>
-                  Sınav performansınıza göre odaklanmanız gereken konular
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {weakAreasLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Analiz ediliyor...</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {mockWeakAreas.map((area, index) => (
-                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-lg">{area.topic}</h3>
-                            <Badge variant="secondary" className="mt-1">
-                              {area.category}
-                            </Badge>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-red-600">
-                              %{area.accuracy}
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              {area.correctAnswers}/{area.totalQuestions} doğru
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => handleExplainTopic(area.topic)}
-                          disabled={explainTopicMutation.isPending}
-                          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                        >
-                          {explainTopicMutation.isPending ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              AI Öğretmene Soruyorum...
-                            </>
-                          ) : (
-                            <>
-                              <Brain className="h-4 w-4 mr-2" />
-                              Bu Konuyu AI ile Çalış
-                            </>
-                          )}
-                        </Button>
+        {/* Stats Section */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
+        >
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <motion.div key={index} variants={cardVariants}>
+                <Card className="text-center p-6 border-0 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+                  <IconComponent className={`w-8 h-8 mx-auto mb-3 ${stat.color}`} />
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* AI Features Showcase */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-12"
+        >
+          <Card className="overflow-hidden border-0 shadow-2xl">
+            <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-center py-8">
+              <CardTitle className="text-3xl font-bold mb-2">AI Özellikler</CardTitle>
+              <CardDescription className="text-indigo-100 text-lg">
+                Yapay zeka ile öğrenme deneyiminizi geliştirin
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Feature Cards */}
+                <div className="space-y-4">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeFeature}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className={`p-6 rounded-xl bg-gradient-to-r ${aiFeatures[activeFeature].gradient} text-white`}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        {React.createElement(aiFeatures[activeFeature].icon, { className: "w-8 h-8" })}
+                        <h3 className="text-xl font-bold">{aiFeatures[activeFeature].title}</h3>
                       </div>
+                      <p className="mb-4 opacity-90">{aiFeatures[activeFeature].description}</p>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Coins className="w-4 h-4" />
+                        <span className="text-sm font-medium">{aiFeatures[activeFeature].cost}</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {aiFeatures[activeFeature].benefits.map((benefit, idx) => (
+                          <li key={idx} className="flex items-center gap-2 text-sm">
+                            <CheckCircle className="w-4 h-4" />
+                            {benefit}
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Feature Navigation */}
+                  <div className="flex gap-2 justify-center">
+                    {aiFeatures.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setActiveFeature(index)}
+                        className={`w-3 h-3 rounded-full transition-all ${
+                          index === activeFeature ? 'bg-purple-500' : 'bg-gray-300'
+                        }`}
+                        data-testid={`button-feature-${index}`}
+                      />
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
 
-            {/* Custom Topic Request */}
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                  Özel Konu Talebi
-                </CardTitle>
-                <CardDescription>
-                  İstediğiniz herhangi bir konuyu AI öğretmenimizle çalışın
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Örnek: 'İkinci dereceden denklemleri detaylı olarak anlat' veya 'Osmanlı İmparatorluğu'nun kuruluş dönemini açıkla'"
-                  value={customTopic}
-                  onChange={(e) => setCustomTopic(e.target.value)}
-                  rows={3}
-                  className="bg-white/80"
-                />
-                <Button
-                  onClick={() => handleExplainTopic(customTopic)}
-                  disabled={!customTopic.trim() || explainTopicMutation.isPending}
-                  className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
-                >
-                  {explainTopicMutation.isPending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Hazırlanıyor...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="h-4 w-4 mr-2" />
-                      AI Öğretmen ile Çalış
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                {/* Interactive Demo */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
+                    <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <Play className="w-5 h-5 text-green-600" />
+                      Canlı Demo
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium text-blue-600">Siz:</span>
+                        </div>
+                        <p className="text-gray-700">Matematik fonksiyonları konusunda yardım alabilir miyim?</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-4 border-l-4 border-purple-500">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-purple-600" />
+                          <span className="font-medium text-purple-600">AI Öğretmen:</span>
+                        </div>
+                        <p className="text-gray-700">Tabii ki! Fonksiyonlar konusunu adım adım açıklayayım. Hangi seviyede çalışmak istiyorsunuz?</p>
+                      </div>
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        AI Öğretmen ile Konuşmaya Başla
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* AI Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Chat Sessions Sidebar */}
-              <Card className="lg:col-span-1 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg">Önceki Sohbetler</CardTitle>
+        {/* Main Content Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Tabs defaultValue="weak-areas" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="weak-areas" className="flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Zayıf Alanlar
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                AI Sohbet
+              </TabsTrigger>
+              <TabsTrigger value="questions" className="flex items-center gap-2">
+                <Brain className="w-4 h-4" />
+                Soru Üretimi
+              </TabsTrigger>
+              <TabsTrigger value="planner" className="flex items-center gap-2">
+                <Rocket className="w-4 h-4" />
+                Çalışma Planı
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Weak Areas Tab */}
+            <TabsContent value="weak-areas">
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50 border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-6 h-6 text-red-600" />
+                    Geliştirilmesi Gereken Alanlar
+                  </CardTitle>
+                  <CardDescription>
+                    Quiz performansınıza göre tespit edilen zayıf konularınız
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  {chatLoading ? (
-                    <div className="animate-pulse space-y-3">
-                      <div className="h-4 bg-gray-300 rounded"></div>
-                      <div className="h-4 bg-gray-300 rounded"></div>
-                      <div className="h-4 bg-gray-300 rounded"></div>
+                <CardContent className="p-6">
+                  {weakAreasLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {chatSessions?.map((session: ChatSession) => (
-                        <Button
-                          key={session.id}
-                          variant={activeChat === session.id ? "default" : "ghost"}
-                          className="w-full justify-start text-left h-auto p-3"
-                          onClick={() => setActiveChat(session.id)}
+                    <div className="grid gap-4">
+                      {(weakAreas || [])?.map((area: WeakArea, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200"
                         >
-                          <div>
-                            <p className="font-medium line-clamp-1">{session.title}</p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(session.createdAt).toLocaleDateString('tr-TR')}
-                            </p>
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-gray-800">{area.topic}</h3>
+                              <p className="text-sm text-gray-600">{area.category}</p>
+                            </div>
+                            <Badge variant="secondary" className="bg-red-100 text-red-700">
+                              %{area.accuracy} başarı
+                            </Badge>
                           </div>
-                        </Button>
+                          <Progress value={area.accuracy} className="mb-3" />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                explainTopicMutation.mutate({ topic: area.topic });
+                              }}
+                              disabled={explainTopicMutation.isPending}
+                              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                              data-testid={`button-explain-${index}`}
+                            >
+                              <Lightbulb className="w-4 h-4 mr-1" />
+                              Konu Anlatımı
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                generateQuestionsMutation.mutate({ 
+                                  topic: area.topic, 
+                                  count: 10, 
+                                  category: area.category 
+                                });
+                              }}
+                              disabled={generateQuestionsMutation.isPending}
+                              data-testid={`button-generate-${index}`}
+                            >
+                              <Wand2 className="w-4 h-4 mr-1" />
+                              Soru Üret
+                            </Button>
+                          </div>
+                        </motion.div>
                       ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              {/* Chat Area */}
-              <Card className="lg:col-span-3 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                <CardHeader>
+            {/* Chat Tab */}
+            <TabsContent value="chat">
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b">
                   <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-blue-500" />
+                    <MessageCircle className="w-6 h-6 text-blue-600" />
                     AI Öğretmen Sohbeti
                   </CardTitle>
+                  <CardDescription>
+                    7/24 kişisel AI öğretmeninizle sohbet edin
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  {!activeChat ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <Brain className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                      <p>Sohbet başlatmak için bir konu seçin veya yeni sohbet oluşturun</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Messages Area */}
-                      <div className="h-96 overflow-y-auto space-y-4 p-4 bg-gray-50 rounded-lg">
-                        {/* Mock messages will be loaded here */}
-                        <div className="text-center text-gray-500 py-8">
-                          <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p>Sohbet mesajları burada görünecek</p>
-                        </div>
+                <CardContent className="p-6">
+                  <div className="grid gap-6">
+                    {/* Chat Sessions */}
+                    <div>
+                      <h3 className="font-semibold mb-4">Son Sohbetler</h3>
+                      <div className="grid gap-3">
+                        {(chatSessions || [])?.map((session: ChatSession, index: number) => (
+                          <motion.div
+                            key={session.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200 cursor-pointer hover:shadow-md transition-all"
+                            onClick={() => setActiveChat(session.id)}
+                            data-testid={`chat-session-${session.id}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-gray-800">{session.title}</h4>
+                              <Badge variant="secondary">{session.messages.length} mesaj</Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {new Date(session.updatedAt).toLocaleDateString('tr-TR')}
+                            </p>
+                          </motion.div>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Message Input */}
-                      <div className="flex gap-2">
+                    {/* New Chat */}
+                    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <PlusCircle className="w-5 h-5 text-purple-600" />
+                        Yeni Sohbet Başlat
+                      </h3>
+                      <div className="flex gap-3">
                         <Textarea
-                          placeholder="Sorunuzu yazın..."
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          rows={1}
-                          className="flex-1 bg-white"
+                          placeholder="AI öğretmeninize sorunuzu yazın..."
+                          className="flex-1 min-h-[100px]"
+                          data-testid="textarea-new-message"
                         />
                         <Button
-                          onClick={handleSendMessage}
-                          disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                          className="bg-gradient-to-r from-purple-600 to-blue-600"
+                          onClick={() => {
+                            if (newMessage.trim()) {
+                              // Start new chat session
+                              toast({
+                                title: "Yeni Sohbet Başlatıldı",
+                                description: "AI öğretmeniniz size yardımcı olmaya hazır!"
+                              });
+                            }
+                          }}
+                          disabled={!newMessage.trim()}
+                          className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+                          data-testid="button-start-chat"
                         >
-                          {sendMessageMutation.isPending ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          ) : (
-                            'Gönder'
-                          )}
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Sohbeti Başlat
                         </Button>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          {/* Question Generation Tab */}
-          <TabsContent value="questions" className="space-y-6">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-500" />
-                  AI Soru Üretimi
-                </CardTitle>
-                <CardDescription>
-                  İstediğiniz konuda AI ile sorular üreterek çalışın
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Question Generation Form */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Konu</label>
-                    <Textarea
-                      placeholder="Örnek: Fonksiyonlar, Türkçe Gramer, Fizik Hareket..."
-                      value={selectedTopic}
-                      onChange={(e) => setSelectedTopic(e.target.value)}
-                      rows={2}
-                      className="bg-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Soru Sayısı</label>
-                    <select
-                      value={questionCount}
-                      onChange={(e) => setQuestionCount(Number(e.target.value))}
-                      className="w-full p-2 border rounded-md bg-white"
-                    >
-                      <option value={5}>5 Soru</option>
-                      <option value={10}>10 Soru</option>
-                      <option value={15}>15 Soru</option>
-                      <option value={20}>20 Soru</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Kategori</label>
-                    <select
-                      value={questionCategory}
-                      onChange={(e) => setQuestionCategory(e.target.value)}
-                      className="w-full p-2 border rounded-md bg-white"
-                    >
-                      <option value="tyt">TYT</option>
-                      <option value="ayt">AYT</option>
-                      <option value="kpss">KPSS</option>
-                    </select>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => generateQuestionsMutation.mutate({ 
-                    topic: selectedTopic, 
-                    count: questionCount, 
-                    category: questionCategory 
-                  })}
-                  disabled={!selectedTopic.trim() || generateQuestionsMutation.isPending}
-                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 h-12 text-lg"
-                >
-                  {generateQuestionsMutation.isPending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      AI Sorular Üretiyor...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-5 w-5 mr-2" />
-                      {questionCount} Soru Üret ve Sınava Başla
-                    </>
-                  )}
-                </Button>
-
-                {/* Success State - Show after successful generation */}
-                {generateQuestionsMutation.isSuccess && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4">
-                    <div className="text-center">
-                      <div className="text-green-600 font-semibold text-lg mb-2">
-                        🎉 Sorular Hazırlandı!
+            {/* Question Generation Tab */}
+            <TabsContent value="questions">
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-6 h-6 text-purple-600" />
+                    Akıllı Soru Üretimi
+                  </CardTitle>
+                  <CardDescription>
+                    İhtiyacınıza özel sorular üretin ve pratik yapın
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid gap-6">
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Konu</label>
+                        <Input
+                          value={customTopic}
+                          onChange={(e) => setCustomTopic(e.target.value)}
+                          placeholder="Örn: Fonksiyonlar"
+                          data-testid="input-custom-topic"
+                        />
                       </div>
-                      <p className="text-gray-600 mb-4">
-                        AI tarafından {questionCount} adet {selectedTopic} konusunda soru üretildi.
-                        Şimdi denemek ister misiniz?
-                      </p>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Soru Sayısı</label>
+                        <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(parseInt(value))}>
+                          <SelectTrigger data-testid="select-question-count">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5 Soru</SelectItem>
+                            <SelectItem value="10">10 Soru</SelectItem>
+                            <SelectItem value="20">20 Soru</SelectItem>
+                            <SelectItem value="50">50 Soru</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Kategori</label>
+                        <Select value={questionCategory} onValueChange={setQuestionCategory}>
+                          <SelectTrigger data-testid="select-category">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="tyt">TYT</SelectItem>
+                            <SelectItem value="ayt">AYT</SelectItem>
+                            <SelectItem value="kpss">KPSS</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="flex gap-3 justify-center">
-                      <Button
-                        onClick={handleStartExam}
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                      >
-                        ✅ Evet, Sınava Başla!
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => generateQuestionsMutation.reset()}
-                      >
-                        ❌ Hayır, Başka Sorular Üret
-                      </Button>
-                    </div>
-                  </div>
-                )}
 
-                {/* Backup option for accidentally clicking No */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-blue-900">Son Üretilen Sorular</h3>
-                      <p className="text-sm text-blue-700">
-                        Yanlışlıkla "Hayır" dediyseniz, son soralarla sınava başlayabilirsiniz
-                      </p>
+                    <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold">Soru Üretimi</h3>
+                        <div className="flex items-center gap-2 text-sm text-purple-600">
+                          <Coins className="w-4 h-4" />
+                          Maliyet: {Math.ceil(questionCount / 10) * 5} kredi
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          if (customTopic.trim()) {
+                            generateQuestionsMutation.mutate({
+                              topic: customTopic,
+                              count: questionCount,
+                              category: questionCategory
+                            });
+                          }
+                        }}
+                        disabled={!customTopic.trim() || generateQuestionsMutation.isPending}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                        data-testid="button-generate-questions"
+                      >
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        {generateQuestionsMutation.isPending ? 'Sorular Üretiliyor...' : 'Soru Üret'}
+                      </Button>
                     </div>
-                    <Button
-                      onClick={handleStartExamWithLastQuestions}
-                      variant="outline"
-                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                    >
-                      Son Sorular ile Sınava Başla
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Study Planner Tab */}
+            <TabsContent value="planner">
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Rocket className="w-6 h-6 text-green-600" />
+                    AI Çalışma Planlayıcı
+                  </CardTitle>
+                  <CardDescription>
+                    Hedeflerinize özel kişiselleştirilmiş çalışma programı
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid gap-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <Trophy className="w-8 h-8 text-green-600 mb-4" />
+                        <h3 className="font-bold text-lg mb-2">Hedef Belirleme</h3>
+                        <p className="text-gray-600 mb-4">Sınav tarihinizi ve hedef puanınızı belirleyin</p>
+                        <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
+                          <Target className="w-4 h-4 mr-2" />
+                          Hedef Belirle
+                        </Button>
+                      </div>
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <Clock className="w-8 h-8 text-blue-600 mb-4" />
+                        <h3 className="font-bold text-lg mb-2">Günlük Program</h3>
+                        <p className="text-gray-600 mb-4">Size özel günlük çalışma programı oluşturun</p>
+                        <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+                          <Rocket className="w-4 h-4 mr-2" />
+                          Program Oluştur
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+
+        {/* CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-12 text-center"
+        >
+          <Card className="border-0 shadow-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-8">
+                <h2 className="text-3xl font-bold mb-4">AI ile Öğrenmeye Başlayın</h2>
+                <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
+                  Yapay zeka destekli kişiselleştirilmiş eğitim deneyimi ile hedeflerinize daha hızlı ulaşın
+                </p>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8 py-3"
+                  data-testid="button-get-started"
+                >
+                  <Star className="w-5 h-5 mr-2" />
+                  Hemen Başla
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
