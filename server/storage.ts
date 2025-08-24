@@ -203,7 +203,7 @@ export class DatabaseStorage implements IStorage {
       const [question] = await db
         .insert(questions)
         .values({
-          examCategoryId: questionData.examCategoryId || 'tyt',
+          examCategoryId: questionData.examCategoryId || questionData.category || 'tyt',
           subject: questionData.subject || questionData.category || 'Genel',
           difficulty: questionData.difficulty || 'medium',
           questionText: questionData.text || questionData.questionText,
