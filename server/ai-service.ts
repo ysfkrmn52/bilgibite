@@ -1,5 +1,6 @@
 // AI Service for Claude Integration
 import Anthropic from '@anthropic-ai/sdk';
+import { AICreditService } from './ai-credits-service';
 
 /*
 <important_code_snippet_instructions>
@@ -54,8 +55,19 @@ export interface StudyPlan {
 }
 
 // Generate authentic exam questions for specific categories
-export async function generateExamQuestions(examCategory: string, count: number = 5) {
+export async function generateExamQuestions(userId: string, examCategory: string, count: number = 5) {
   try {
+    // Check if user has enough credits
+    const creditCheck = await AICreditService.checkCredits(userId, 'AI_QUESTION_GENERATION');
+    if (!creditCheck.hasCredits) {
+      throw new Error(`Yetersiz AI kredisi: ${creditCheck.message}`);
+    }
+
+    // Consume credits before proceeding
+    const creditsConsumed = await AICreditService.consumeCredits(userId, 'AI_QUESTION_GENERATION');
+    if (!creditsConsumed) {
+      throw new Error('Kredi tüketimi sırasında hata oluştu');
+    }
     const categoryPrompts = {
       'yks': 'YKS (TYT/AYT) sınavları için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, fen bilimleri, sosyal bilimler.',
       'tyt-turkce': 'TYT Türkçe dersi için gerçek sınav tarzında sorular üret. Konular: sözcük bilgisi, cümle bilgisi, yazım kuralları, paragraf, ses bilgisi.',
@@ -78,7 +90,7 @@ export async function generateExamQuestions(examCategory: string, count: number 
       'Zorluk seviyeleri: %30 kolay, %50 orta, %20 zor olacak şekilde rastgele dağıt.' :
       'Zorluk seviyelerini kolay, orta ve zor arasında rastgele dağıt.';
 
-    const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory] || 'Bu kategori için sorular üret.'} 
+    const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory as keyof typeof categoryPrompts] || 'Bu kategori için sorular üret.'} 
 
 ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
 - Gerçek sınav formatında tam ${count} soru
@@ -143,7 +155,7 @@ ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
         const parsed = JSON.parse(text);
         if (parsed.questions && Array.isArray(parsed.questions)) {
           // Validate each question has required fields
-          const validQuestions = parsed.questions.filter(q => 
+          const validQuestions = parsed.questions.filter((q: any) => 
             q.question && q.options && Array.isArray(q.options) && 
             q.options.length === 5 && typeof q.correctAnswer === 'number' &&
             q.explanation && q.difficulty && q.topic
@@ -158,7 +170,7 @@ ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
         
         // Try to extract partial questions if possible
         try {
-          const partialMatch = text.match(/"questions":\s*\[(.*?)\]/s);
+          const partialMatch = text.match(/"questions":\s*\[(.*?)\]/u);
           if (partialMatch) {
             console.log('Kısmi soru çıkarımı deneniyor...');
             const questionsText = '[' + partialMatch[1] + ']';
@@ -176,7 +188,7 @@ ${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
     throw new Error('AI servisinden geçerli yanıt alınamadı');
   } catch (error) {
     console.error('AI soru üretim hatası:', error);
-    throw new Error('AI soru üretimi başarısız oldu: ' + error.message);
+    throw new Error('AI soru üretimi başarısız oldu: ' + (error as Error).message);
   }
 }
 
@@ -233,11 +245,23 @@ function parseResponse(response: any) {
 
 // Analyze user performance and provide insights
 export async function analyzeLearningPerformance(
+  userId: string,
   quizHistory: any[],
   userProgress: any[],
   currentLevel: number
 ): Promise<LearningAnalysis> {
   try {
+    // Check if user has enough credits
+    const creditCheck = await AICreditService.checkCredits(userId, 'AI_PERFORMANCE_ANALYSIS');
+    if (!creditCheck.hasCredits) {
+      throw new Error(`Yetersiz AI kredisi: ${creditCheck.message}`);
+    }
+
+    // Consume credits before proceeding
+    const creditsConsumed = await AICreditService.consumeCredits(userId, 'AI_PERFORMANCE_ANALYSIS');
+    if (!creditsConsumed) {
+      throw new Error('Kredi tüketimi sırasında hata oluştu');
+    }
     const prompt = `Sen bir öğrenme analizi uzmanısın. Aşağıdaki kullanıcı verilerini analiz et:
 
 Quiz Geçmişi: ${JSON.stringify(quizHistory.slice(-10))}
@@ -287,11 +311,13 @@ JSON formatında döndür:
     
     // Fallback
     return {
-      insights: ["Performans verisi yetersiz"],
-      recommendations: ["Daha fazla quiz çözmek"],
-      strengths: ["Henüz belirlenemiyor"],
-      weaknesses: ["Henüz belirlenemiyor"],
-      overallScore: 0
+      strongAreas: ["Henüz belirlenemiyor"],
+      weakAreas: ["Performans verisi yetersiz"],
+      difficultyRecommendation: 'beginner' as const,
+      studyTimeRecommendation: 30,
+      nextTopics: ["Genel konu tekrarı"],
+      learningPattern: "Veri yetersiz",
+      insights: ["Daha fazla quiz çözmeye devam edin"]
     };
   } catch (error) {
     console.error('AI Performance Analysis Error:', error);
@@ -301,12 +327,24 @@ JSON formatında döndür:
 
 // Generate personalized study plan
 export async function generateStudyPlan(
+  userId: string,
   userGoals: string[],
   availableTime: number,
   currentLevel: number,
   examDate?: string
 ): Promise<StudyPlan> {
   try {
+    // Check if user has enough credits
+    const creditCheck = await AICreditService.checkCredits(userId, 'AI_STUDY_PLAN');
+    if (!creditCheck.hasCredits) {
+      throw new Error(`Yetersiz AI kredisi: ${creditCheck.message}`);
+    }
+
+    // Consume credits before proceeding
+    const creditsConsumed = await AICreditService.consumeCredits(userId, 'AI_STUDY_PLAN');
+    if (!creditsConsumed) {
+      throw new Error('Kredi tüketimi sırasında hata oluştu');
+    }
     const prompt = `Kişiselleştirilmiş çalışma planı oluştur:
 
 Kullanıcı Hedefleri: ${userGoals.join(', ')}
@@ -378,18 +416,18 @@ JSON formatında döndür:
     
     // Fallback
     return {
-      weeklyPlan: {
-        monday: ["Matematik - 30 dk"],
-        tuesday: ["Türkçe - 30 dk"],
-        wednesday: ["Fen - 30 dk"],
-        thursday: ["Sosyal - 30 dk"],
-        friday: ["Tekrar - 30 dk"],
-        saturday: ["Test - 60 dk"],
-        sunday: ["Dinlenme"]
-      },
-      milestones: ["1. hafta: Temel konular", "2. hafta: Orta seviye"],
-      totalWeeks: 4,
-      estimatedImprovement: "20%"
+      weeklyGoal: "Temel konuları güçlendirme",
+      dailyTasks: [
+        { day: "Pazartesi", tasks: ["Matematik - 30 dk"], estimatedTime: 30 },
+        { day: "Salı", tasks: ["Türkçe - 30 dk"], estimatedTime: 30 },
+        { day: "Çarşamba", tasks: ["Fen - 30 dk"], estimatedTime: 30 }
+      ],
+      priorityTopics: ["Matematik", "Türkçe"],
+      reviewSchedule: ["Hafta sonu tekrar"],
+      milestones: [
+        { week: 1, goal: "Temel konular", metrics: ["Doğru cevap %70"] },
+        { week: 2, goal: "Orta seviye", metrics: ["Doğru cevap %80"] }
+      ]
     };
   } catch (error) {
     console.error('AI Study Plan Generation Error:', error);
@@ -399,6 +437,7 @@ JSON formatında döndür:
 
 // AI Tutor Chatbot
 export async function getTutorResponse(
+  userId: string,
   studentQuestion: string,
   context: {
     currentTopic?: string;
@@ -407,6 +446,17 @@ export async function getTutorResponse(
   }
 ) {
   try {
+    // Check if user has enough credits
+    const creditCheck = await AICreditService.checkCredits(userId, 'AI_TUTOR_RESPONSE');
+    if (!creditCheck.hasCredits) {
+      throw new Error(`Yetersiz AI kredisi: ${creditCheck.message}`);
+    }
+
+    // Consume credits before proceeding
+    const creditsConsumed = await AICreditService.consumeCredits(userId, 'AI_TUTOR_RESPONSE');
+    if (!creditsConsumed) {
+      throw new Error('Kredi tüketimi sırasında hata oluştu');
+    }
     const prompt = `Sen BilgiBite'ın AI öğretmenisin. Öğrencinin sorularını samimi ve destekleyici bir şekilde yanıtla.
 
 Öğrenci Sorusu: "${studentQuestion}"

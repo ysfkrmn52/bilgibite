@@ -335,7 +335,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async addQuestions(questionList: any[]): Promise<Question[]> {
+  async addQuestionsFromList(questionList: any[]): Promise<Question[]> {
     try {
       const formattedQuestions = questionList.map(q => ({
         ...q,

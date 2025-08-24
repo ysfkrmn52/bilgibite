@@ -212,7 +212,7 @@ export const storeItems = pgTable("store_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  type: text("type").notNull(), // "life_refill", "streak_freeze", "xp_boost", "theme"
+  type: text("type").notNull(), // "life_refill", "streak_freeze", "xp_boost", "theme", "ai_credits"
   cost: integer("cost").notNull(),
   icon: text("icon").notNull(),
   isActive: boolean("is_active").notNull().default(true),

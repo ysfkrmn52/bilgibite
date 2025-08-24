@@ -21,6 +21,7 @@ import {
   updateUserXP
 } from "./gamification";
 import { registerSubscriptionRoutes } from "./subscription-routes";
+import { seedAICredits } from "./ai-credits-init";
 import { db } from "./db";
 import { questions, users, quizSessions } from "@shared/schema";
 import { sql } from "drizzle-orm";
@@ -314,7 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Count must be between 10-100 and multiple of 10' });
       }
 
-      const result = await generateExamQuestions(examCategory, count);
+      // TODO: Get userId from authentication middleware
+      const userId = "user123"; // Temporary - needs proper auth
+      const result = await generateExamQuestions(userId, examCategory, count);
       res.json(result);
     } catch (error) {
       console.error('AI Question Generation Error:', error);
@@ -1167,6 +1170,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.log('Education data already seeded or error occurred:', error);
   }
+
+  // Initialize AI Credits
+  try {
+    await seedAICredits();
+  } catch (error) {
+    console.log('AI Credits already seeded or error occurred:', error);
+  }
+
+  // AI Credits API endpoints
+  app.get("/api/ai-credits/balance/:userId", async (req, res) => {
+    try {
+      const { AICreditService } = await import("./ai-credits-service");
+      const userId = req.params.userId;
+      const balance = await AICreditService.getUserCreditBalance(userId);
+      res.json({ balance, userId });
+    } catch (error) {
+      console.error('Error getting credit balance:', error);
+      res.status(500).json({ error: 'Kredi bakiyesi alınamadı' });
+    }
+  });
+
+  app.post("/api/ai-credits/check", async (req, res) => {
+    try {
+      const { AICreditService } = await import("./ai-credits-service");
+      const { userId, feature } = req.body;
+      
+      if (!userId || !feature) {
+        return res.status(400).json({ error: 'userId and feature are required' });
+      }
+
+      const result = await AICreditService.checkCredits(userId, feature);
+      res.json(result);
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      res.status(500).json({ error: 'Kredi kontrolü yapılamadı' });
+    }
+  });
+
+  app.post("/api/ai-credits/purchase", async (req, res) => {
+    try {
+      const { AICreditService } = await import("./ai-credits-service");
+      const { userId, creditAmount } = req.body;
+      
+      if (!userId || !creditAmount) {
+        return res.status(400).json({ error: 'userId and creditAmount are required' });
+      }
+
+      // In a real app, this would integrate with payment processing
+      const success = await AICreditService.addCredits(userId, creditAmount);
+      if (success) {
+        const newBalance = await AICreditService.getUserCreditBalance(userId);
+        res.json({ success: true, newBalance, message: `${creditAmount} kredi eklendi` });
+      } else {
+        res.status(500).json({ error: 'Kredi eklenemedi' });
+      }
+    } catch (error) {
+      console.error('Error purchasing credits:', error);
+      res.status(500).json({ error: 'Kredi satın alınamadı' });
+    }
+  });
+
+  app.get("/api/ai-credits/info", async (req, res) => {
+    try {
+      const { AI_CREDIT_CONFIG } = await import("@shared/ai-credits-schema");
+      res.json({
+        package: AI_CREDIT_CONFIG.AI_CREDIT_PACKAGE,
+        costs: AI_CREDIT_CONFIG.FEATURE_COSTS
+      });
+    } catch (error) {
+      console.error('Error getting credit info:', error);
+      res.status(500).json({ error: 'Kredi bilgisi alınamadı' });
+    }
+  });
 
   // Education Subject Routes
   app.get("/api/education/subjects", async (req, res) => {

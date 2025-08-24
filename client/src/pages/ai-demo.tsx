@@ -17,8 +17,14 @@ import {
   Users,
   TrendingUp,
   BookOpen,
-  Zap
+  Zap,
+  ShoppingCart,
+  Coins,
+  AlertCircle
 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 const demoFeatures = [
   {
@@ -57,6 +63,50 @@ const stats = [
 export default function AIDemo() {
   const [currentDemo, setCurrentDemo] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showCreditDialog, setShowCreditDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Mock user ID - in real app this would come from auth context
+  const userId = "user123";
+
+  // Fetch user's credit balance
+  const { data: creditBalance } = useQuery({
+    queryKey: [`/api/ai-credits/balance/${userId}`],
+    retry: false
+  });
+
+  // Fetch credit info
+  const { data: creditInfo } = useQuery({
+    queryKey: ['/api/ai-credits/info'],
+    retry: false
+  });
+
+  // Purchase credits mutation
+  const purchaseCreditsMutation = useMutation({
+    mutationFn: async ({ userId, creditAmount }: { userId: string, creditAmount: number }) => {
+      const response = await apiRequest('POST', '/api/ai-credits/purchase', {
+        userId,
+        creditAmount
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Kredi Satın Alımı Başarılı!",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/ai-credits/balance/${userId}`] });
+      setShowCreditDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Satın Alım Hatası",
+        description: "Kredi satın alımı sırasında hata oluştu",
+        variant: "destructive"
+      });
+    }
+  });
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -69,7 +119,28 @@ export default function AIDemo() {
   }, [isPlaying]);
 
   const toggleDemo = () => {
+    if (!isPlaying) {
+      // Check if user has credits before starting demo
+      if (!creditBalance || creditBalance.balance < 5) {
+        setShowCreditDialog(true);
+        toast({
+          title: "AI Kredisi Gerekli",
+          description: "AI Demo için en az 5 kredi gerekli",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
     setIsPlaying(!isPlaying);
+  };
+
+  const handlePurchaseCredits = () => {
+    if (!creditInfo?.package?.metadata?.creditAmount) return;
+    
+    purchaseCreditsMutation.mutate({
+      userId,
+      creditAmount: creditInfo.package.metadata.creditAmount
+    });
   };
 
   return (
@@ -91,13 +162,34 @@ export default function AIDemo() {
             </div>
           </div>
           
-          <Button 
-            onClick={toggleDemo}
-            className={`${isPlaying ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {isPlaying ? 'Demo Durdur' : 'Demo Başlat'}
-          </Button>
+          <div className="flex items-center gap-4">
+            {/* Credit Balance Display */}
+            <Card className="px-4 py-2 bg-gradient-to-r from-yellow-50 to-orange-50 border-orange-200">
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-800">
+                  {creditBalance ? `${creditBalance.balance} Kredi` : 'Yükleniyor...'}
+                </span>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setShowCreditDialog(true)}
+                  className="text-orange-700 border-orange-300 hover:bg-orange-100 ml-2"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+                  Satın Al
+                </Button>
+              </div>
+            </Card>
+            
+            <Button 
+              onClick={toggleDemo}
+              className={`${isPlaying ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              {isPlaying ? 'Demo Durdur' : 'Demo Başlat'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
@@ -119,7 +211,10 @@ export default function AIDemo() {
                     animate={{ scale: 1 }}
                     className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm"
                   >
-                    <demoFeatures[currentDemo].icon className="w-10 h-10" />
+                    {(() => {
+                      const IconComponent = demoFeatures[currentDemo].icon;
+                      return <IconComponent className="w-10 h-10" />;
+                    })()}
                   </motion.div>
                   
                   <h3 className="text-2xl font-bold mb-4">{demoFeatures[currentDemo].title}</h3>
@@ -288,6 +383,84 @@ export default function AIDemo() {
           </div>
         </Card>
       </div>
+
+      {/* Credit Purchase Dialog */}
+      {showCreditDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4 bg-white">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Coins className="w-5 h-5 text-orange-600" />
+                  <CardTitle>AI Kredi Satın Al</CardTitle>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowCreditDialog(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                  <span className="font-medium text-orange-800">Kredi Durumu</span>
+                </div>
+                <p className="text-sm text-orange-700">
+                  Mevcut bakiye: {creditBalance?.balance || 0} kredi
+                </p>
+                <p className="text-sm text-orange-700 mt-1">
+                  AI Demo için en az 5 kredi gerekli
+                </p>
+              </div>
+
+              {creditInfo && (
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">{creditInfo.package.name}</h3>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {creditInfo.package.metadata.priceInTL}₺
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {creditInfo.package.description}
+                  </p>
+                  <div className="text-center text-2xl font-bold text-green-600 mb-4">
+                    {creditInfo.package.metadata.creditAmount} Kredi
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span>Soru Üretimi:</span>
+                      <span>{creditInfo.costs.AI_QUESTION_GENERATION} kredi</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>AI Öğretmen:</span>
+                      <span>{creditInfo.costs.AI_TUTOR_RESPONSE} kredi</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Çalışma Planı:</span>
+                      <span>{creditInfo.costs.AI_STUDY_PLAN} kredi</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handlePurchaseCredits}
+                    disabled={purchaseCreditsMutation.isPending}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    {purchaseCreditsMutation.isPending ? 'İşleniyor...' : 'Kredi Satın Al'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
