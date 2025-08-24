@@ -72,6 +72,12 @@ export async function generateExamQuestions(examCategory: string, count: number 
       'meb-ogretmenlik': 'MEB Öğretmenlik sınavı için gerçek sınav tarzında sorular üret. Konular: eğitim bilimleri, öğretim yöntemleri, gelişim psikolojisi.'
     };
 
+    // Generate random difficulty levels for variety
+    const difficulties = ['easy', 'medium', 'hard'];
+    const difficultyPrompt = count > 20 ? 
+      'Zorluk seviyeleri: %30 kolay, %50 orta, %20 zor olacak şekilde rastgele dağıt.' :
+      'Zorluk seviyelerini kolay, orta ve zor arasında rastgele dağıt.';
+
     const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory] || 'Bu kategori için sorular üret.'} 
 
 ÇÖZÜLEN GERÇEK SINAV SORULARI ÜRETECEKSİN:
@@ -80,7 +86,7 @@ export async function generateExamQuestions(examCategory: string, count: number 
 - Türkçe dilbilgisi kurallarına uygun
 - 5 seçenek (A, B, C, D, E), sadece bir doğru cevap
 - Detaylı ve öğretici açıklama
-- Sınav seviyesinde zorluk
+- ${difficultyPrompt}
 
 MUTLAKA JSON FORMATINDA DÖNDÜR:
 {
@@ -90,15 +96,18 @@ MUTLAKA JSON FORMATINDA DÖNDÜR:
       "options": ["Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4", "Seçenek 5"],
       "correctAnswer": 0,
       "explanation": "Detaylı çözüm açıklaması",
-      "difficulty": "medium",
+      "difficulty": "easy/medium/hard",
       "topic": "Ana konu başlığı"
     }
   ]
 }`;
 
+    // Increase timeout and max_tokens for larger question sets
+    const maxTokens = count > 50 ? 8000 : count > 20 ? 6000 : 4000;
+    
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
-      max_tokens: 4000,
+      max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
     });
 

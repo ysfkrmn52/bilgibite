@@ -38,6 +38,18 @@ export const EXAM_CATEGORIES: ExamCategory[] = [
     name: 'DGS',
     description: 'Dikey Geçiş Sınavı',
     dbCategories: ['dgs-matematik', 'dgs-turkce', 'dgs-genel']
+  },
+  {
+    id: 'src',
+    name: 'SRC Sınavı',
+    description: 'Sürücü Belgeleri ve Araç Muayene İstasyonu Sınav',
+    dbCategories: ['src']
+  },
+  {
+    id: 'meb-ogretmenlik',
+    name: 'MEB Öğretmenlik',
+    description: 'Millî Eğitim Bakanlığı Öğretmenlik Sınav',
+    dbCategories: ['meb-ogretmenlik']
   }
 ];
 

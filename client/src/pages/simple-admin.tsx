@@ -154,8 +154,12 @@ export default function SimpleAdmin() {
     },
     onSuccess: (data) => {
       setGeneratedQuestions([]);
+      // Force immediate cache refresh
       queryClient.invalidateQueries({ queryKey: ['/api/questions/counts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.refetchQueries({ queryKey: ['/api/questions/counts'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      
       toast({
         title: "Sorular Kaydedildi!",
         description: `${data.savedCount || generatedQuestions.length} soru veritabanına eklendi.`
@@ -196,20 +200,39 @@ export default function SimpleAdmin() {
     setIsGenerating(true);
     setGenerationProgress('AI sistemini başlatıyor...');
     
-    // Progress simulation
-    setTimeout(() => setGenerationProgress(`${questionCount} soru üretiliyor...`), 1000);
-    setTimeout(() => setGenerationProgress('Sorular kontrol ediliyor...'), 3000);
-    setTimeout(() => setGenerationProgress('Son kontroller yapılıyor...'), 5000);
+    // Progress simulation based on question count
+    const progressSteps = questionCount > 50 ? [
+      { msg: 'Claude AI modeli hazırlanıyor...', delay: 2000 },
+      { msg: `${questionCount} soru üretimi başlatılıyor...`, delay: 5000 },
+      { msg: 'Büyük soru seti üretiliyor, lütfen bekleyin...', delay: 15000 },
+      { msg: 'Sorular kontrol ediliyor...', delay: 30000 },
+      { msg: 'Son düzenlemeler yapılıyor...', delay: 60000 }
+    ] : questionCount > 20 ? [
+      { msg: `${questionCount} soru üretiliyor...`, delay: 2000 },
+      { msg: 'AI soruları hazırlıyor...', delay: 8000 },
+      { msg: 'Sorular kontrol ediliyor...', delay: 20000 },
+      { msg: 'Son kontroller yapılıyor...', delay: 35000 }
+    ] : [
+      { msg: `${questionCount} soru üretiliyor...`, delay: 1000 },
+      { msg: 'Sorular kontrol ediliyor...', delay: 3000 },
+      { msg: 'Son kontroller yapılıyor...', delay: 8000 }
+    ];
+    
+    progressSteps.forEach(step => {
+      setTimeout(() => setGenerationProgress(step.msg), step.delay);
+    });
     
     generateQuestionsMutation.mutate({ 
       category: selectedCategory, 
       count: questionCount 
     });
     
+    // Adjust timeout based on question count  
+    const timeoutDuration = questionCount > 50 ? 120000 : questionCount > 20 ? 60000 : 30000;
     setTimeout(() => {
       setIsGenerating(false);
       setGenerationProgress('');
-    }, 7000);
+    }, timeoutDuration);
   };
 
   const handleSaveQuestions = () => {
