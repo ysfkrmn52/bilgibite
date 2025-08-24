@@ -85,7 +85,7 @@ export async function generateExamQuestions(userId: string, examCategory: string
       'ayt-biyoloji': 'AYT Biyoloji dersi için gerçek sınav tarzında sorular üret. Konular: hücre, metabolizma, genetik, ekoloji, sistemler.',
       'kpss': 'KPSS Genel Kültür-Genel Yetenek için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, tarih, coğrafya, vatandaşlık, anayasa.',
       'ehliyet': 'Ehliyet sınavı için gerçek sınav tarzında sorular üret. Konular: trafik kuralları, işaret ve levhalar, araç tekniği, ilk yardım.',
-      'src': 'SRC Sınavı için gerçek sınav tarzında sorular üret. Konular: telsiz haberleşme kuralları, frekans planları, antenlerin.',
+      'src': 'SRC (Mesleki Yeterlilik Belgesi) sınavı için gerçek sınav tarzında sorular üret. Konular: 4925 sayılı Karayolu Taşıma Kanunu, SRC belge türleri (SRC1-5), ticari araç kullanım kuralları, yolcu ve eşya taşımacılığı mevzuatı, ADR tehlikeli madde taşımacılığı, sürücü yükümlülükleri, trafik güvenliği.',
       'ales': 'ALES sınavı için gerçek sınav tarzında sorular üret. Konular: sayısal yetenek, sözel yetenek, analitik düşünce.',
       'dgs': 'DGS sınavı için gerçek sınav tarzında sorular üret. Konular: Türkçe, matematik, sayısal mantık, sözel mantık.',
       'meb-ogretmenlik': 'MEB Öğretmenlik sınavı için gerçek sınav tarzında sorular üret. Konular: eğitim bilimleri, öğretim yöntemleri, gelişim psikolojisi.'
