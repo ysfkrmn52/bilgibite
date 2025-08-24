@@ -80,30 +80,31 @@ export async function generateExamQuestions(examCategory: string, count: number 
 
     const prompt = `Sen bir Türk sınav uzmanısın. ${categoryPrompts[examCategory] || 'Bu kategori için sorular üret.'} 
 
-ÇÖZÜLEN GERÇEK SINAV SORULARI ÜRETECEKSİN:
-- Gerçek sınav formatında ${count} soru
-- Her soru özgün ve değerli olmalı
+${count} ADET ÇÖZÜLEN GERÇEK SINAV SORUSU ÜRETECEKSİN:
+- Gerçek sınav formatında tam ${count} soru
+- Her soru özgün ve değerli olmalı  
 - Türkçe dilbilgisi kurallarına uygun
 - 5 seçenek (A, B, C, D, E), sadece bir doğru cevap
-- Detaylı ve öğretici açıklama
+- Kısa ama net açıklama
 - ${difficultyPrompt}
 
-MUTLAKA JSON FORMATINDA DÖNDÜR:
+ÖNEMLİ: Tam ${count} soru üret. JSON formatında döndür, başka hiçbir metin ekleme:
+
 {
   "questions": [
     {
-      "question": "Soru metni burada",
-      "options": ["Seçenek 1", "Seçenek 2", "Seçenek 3", "Seçenek 4", "Seçenek 5"],
+      "question": "Soru metni",
+      "options": ["A", "B", "C", "D", "E"], 
       "correctAnswer": 0,
-      "explanation": "Detaylı çözüm açıklaması",
-      "difficulty": "easy/medium/hard",
-      "topic": "Ana konu başlığı"
+      "explanation": "Kısa açıklama",
+      "difficulty": "easy",
+      "topic": "Konu"
     }
   ]
 }`;
 
     // Increase timeout and max_tokens for larger question sets
-    const maxTokens = count > 50 ? 8000 : count > 20 ? 6000 : 4000;
+    const maxTokens = count > 50 ? 12000 : count > 20 ? 8000 : 4000;
     
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL_STR,
@@ -117,17 +118,58 @@ MUTLAKA JSON FORMATINDA DÖNDÜR:
       
       // Clean up AI response - remove markdown formatting
       text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      text = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+      
+      // Find the first complete JSON object
+      let startIndex = text.indexOf('{');
+      let braceCount = 0;
+      let endIndex = -1;
+      
+      if (startIndex !== -1) {
+        for (let i = startIndex; i < text.length; i++) {
+          if (text[i] === '{') braceCount++;
+          if (text[i] === '}') braceCount--;
+          if (braceCount === 0) {
+            endIndex = i;
+            break;
+          }
+        }
+        
+        if (endIndex !== -1) {
+          text = text.substring(startIndex, endIndex + 1);
+        }
+      }
       
       try {
         const parsed = JSON.parse(text);
         if (parsed.questions && Array.isArray(parsed.questions)) {
-          console.log(`AI üretilen soru sayısı: ${parsed.questions.length}`);
-          return parsed;
+          // Validate each question has required fields
+          const validQuestions = parsed.questions.filter(q => 
+            q.question && q.options && Array.isArray(q.options) && 
+            q.options.length === 5 && typeof q.correctAnswer === 'number' &&
+            q.explanation && q.difficulty && q.topic
+          );
+          
+          console.log(`AI üretilen soru sayısı: ${validQuestions.length}/${parsed.questions.length}`);
+          return { questions: validQuestions };
         }
       } catch (error) {
         console.error('AI yanıtı parse hatası:', error);
-        console.log('Hatalı metin:', text.substring(0, 300));
+        console.log('Hatalı metin:', text.substring(0, 500));
+        
+        // Try to extract partial questions if possible
+        try {
+          const partialMatch = text.match(/"questions":\s*\[(.*?)\]/s);
+          if (partialMatch) {
+            console.log('Kısmi soru çıkarımı deneniyor...');
+            const questionsText = '[' + partialMatch[1] + ']';
+            const questions = JSON.parse(questionsText);
+            if (Array.isArray(questions) && questions.length > 0) {
+              return { questions: questions.slice(0, Math.min(questions.length, count)) };
+            }
+          }
+        } catch (partialError) {
+          console.error('Kısmi parse de başarısız:', partialError);
+        }
       }
     }
     
