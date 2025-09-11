@@ -11,10 +11,10 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// DEBUG: Temporarily log masked DATABASE_URL to verify which endpoint we're connecting to
+// TEMP DEBUG: Log masked database URL to verify connection
 const dbUrl = process.env.DATABASE_URL;
 const urlParts = new URL(dbUrl);
-console.log(`🔍 DEBUG: Connecting to database host: ${urlParts.hostname}, database: ${urlParts.pathname}`);
+console.log(`🔍 CONNECTING TO: ${urlParts.hostname}${urlParts.pathname}`);
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });
