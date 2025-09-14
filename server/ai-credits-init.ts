@@ -5,6 +5,12 @@ import { eq, and } from 'drizzle-orm';
 import { AI_CREDIT_CONFIG } from '@shared/ai-credits-schema';
 
 export async function seedAICredits(): Promise<void> {
+  // Geçici: SSL sertifika sorunu nedeniyle seeding atlanıyor
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔄 AI Credits seeding skipped in development (SSL issue)');
+    return;
+  }
+  
   try {
     // Check if AI credit item already exists
     const existingAICredit = await db.select()

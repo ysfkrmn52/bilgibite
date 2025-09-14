@@ -280,6 +280,12 @@ export class EducationService {
 
 // Initialize default education data
 export async function seedEducationData(): Promise<void> {
+  // Geçici: SSL sertifika sorunu nedeniyle seeding atlanıyor
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔄 Education data seeding skipped in development (SSL issue)');
+    return;
+  }
+  
   try {
     // Check if subjects already exist
     const existingSubjects = await db.select().from(educationSubjects).limit(1);
