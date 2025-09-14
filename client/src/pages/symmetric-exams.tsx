@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   GraduationCap,
   Building,
@@ -153,6 +154,8 @@ const cardVariants = {
 };
 
 export default function SymmetricExams() {
+  const { currentUser } = useAuth();
+  
   // Fetch question counts for each category from the database
   const { data: questionCounts } = useQuery({
     queryKey: ['/api/questions/counts'],
@@ -171,6 +174,26 @@ export default function SymmetricExams() {
 
   const hasEnoughQuestions = (categoryId: string) => {
     return getQuestionCount(categoryId) >= 100;
+  };
+
+  // Free user ad component
+  const AdBanner = () => {
+    if ((currentUser as any)?.subscription_type === 'premium') return null;
+    
+    return (
+      <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl">📚</div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Premium'a geç, reklamları kaldır!</p>
+              <p className="text-xs text-gray-600">Sınırsız quiz, AI öğretmen ve daha fazlası</p>
+            </div>
+            <Button size="sm" variant="outline">Yükselt</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -317,6 +340,15 @@ export default function SymmetricExams() {
           })}
         </motion.div>
 
+        {/* Bottom Ad Banner for Free Users */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8"
+        >
+          <AdBanner />
+        </motion.div>
 
       </div>
     </div>
