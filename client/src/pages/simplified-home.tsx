@@ -284,51 +284,6 @@ export default function SimplifiedHome() {
               </CardContent>
             </Card>
 
-            {/* Popular Quiz Categories - Ana İçerik */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Play className="w-5 h-5 text-blue-600" />
-                  Popüler Quiz Kategorileri
-                </CardTitle>
-                <CardDescription>
-                  En çok çözülen quiz kategorileri
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {examCategories.slice(0, 4).map((category) => (
-                    <motion.div
-                      key={category.id}
-                      whileHover={{ scale: 1.02 }}
-                      className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-100 cursor-pointer transition-all hover:shadow-md"
-                      data-testid={`quiz-category-${category.id}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                          {category.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm text-gray-900">{category.name}</h4>
-                          <p className="text-xs text-gray-600 mt-1">{category.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="text-xs">
-                              Quiz Başlat
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                <div className="mt-4 text-center">
-                  <Button variant="outline" size="sm" data-testid="button-view-all-categories">
-                    Tüm Kategorileri Gör
-                    <BookOpen className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
 
           </motion.div>
 
@@ -370,28 +325,6 @@ export default function SimplifiedHome() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Hızlı Eylemler</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button size="sm" className="w-full justify-start" data-testid="button-start-quiz">
-                    <Play className="w-4 h-4 mr-2" />
-                    Quiz Başlat
-                  </Button>
-                  <Button size="sm" variant="outline" className="w-full justify-start" data-testid="button-view-progress">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    İlerlemeni Gör
-                  </Button>
-                  <Button size="sm" variant="outline" className="w-full justify-start" data-testid="button-set-goals">
-                    <Target className="w-4 h-4 mr-2" />
-                    Hedef Belirle
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
 
           </motion.div>
         </div>
