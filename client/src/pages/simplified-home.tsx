@@ -80,6 +80,10 @@ export default function SimplifiedHome() {
     enabled: !!userId
   });
 
+  const { data: examCategories = [] } = useQuery({
+    queryKey: ['/api/exam-categories']
+  });
+
   // Calculate real user statistics or use defaults for new users
   const currentStats = {
     totalXP: (userStats as any)?.totalXP || 0,
@@ -139,13 +143,13 @@ export default function SimplifiedHome() {
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-5 gap-6">
+        <div className="grid lg:grid-cols-4 gap-6">
           
           {/* Left Sidebar - User Stats */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2 space-y-6"
+            className="lg:col-span-1 space-y-6"
           >
             {/* Level Card */}
             <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0">
@@ -219,8 +223,6 @@ export default function SimplifiedHome() {
               </CardContent>
             </Card>
 
-            {/* Ad Banner for Free Users */}
-            <AdBanner />
           </motion.div>
 
           {/* Main Content */}
@@ -277,6 +279,52 @@ export default function SimplifiedHome() {
                       Tüm Haberleri Gör
                       <Globe className="w-4 h-4 ml-2" />
                     </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Popular Quiz Categories - Ana İçerik */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="w-5 h-5 text-blue-600" />
+                  Popüler Quiz Kategorileri
+                </CardTitle>
+                <CardDescription>
+                  En çok çözülen quiz kategorileri
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {examCategories.slice(0, 4).map((category) => (
+                    <motion.div
+                      key={category.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-100 cursor-pointer transition-all hover:shadow-md"
+                      data-testid={`quiz-category-${category.id}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                          {category.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-gray-900">{category.name}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{category.description}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline" className="text-xs">
+                              Quiz Başlat
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-4 text-center">
+                  <Button variant="outline" size="sm" data-testid="button-view-all-categories">
+                    Tüm Kategorileri Gör
+                    <BookOpen className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </CardContent>
@@ -345,10 +393,18 @@ export default function SimplifiedHome() {
               </CardContent>
             </Card>
 
-            {/* Ad Banner */}
-            <AdBanner />
           </motion.div>
         </div>
+
+        {/* Bottom Ad Banner for Free Users */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8"
+        >
+          <AdBanner />
+        </motion.div>
       </div>
     </div>
   );
