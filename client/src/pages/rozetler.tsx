@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,10 +36,10 @@ const badgeCategories = {
     icon: BookOpen,
     color: "from-blue-500 to-indigo-600",
     badges: [
-      { id: "first-quiz", name: "İlk Adım", description: "İlk quizi tamamla", icon: Star, earned: true, xp: 50 },
-      { id: "streak-7", name: "Kararlı Öğrenci", description: "7 gün üst üste çalış", icon: Flame, earned: true, xp: 100 },
+      { id: "first-quiz", name: "İlk Adım", description: "İlk quizi tamamla", icon: Star, earned: false, xp: 50 },
+      { id: "streak-7", name: "Kararlı Öğrenci", description: "7 gün üst üste çalış", icon: Flame, earned: false, xp: 100 },
       { id: "streak-30", name: "Demir Disiplin", description: "30 gün üst üste çalış", icon: Medal, earned: false, xp: 500 },
-      { id: "perfect-score", name: "Mükemmeliyetçi", description: "Quiz'de %100 al", icon: Trophy, earned: true, xp: 200 },
+      { id: "perfect-score", name: "Mükemmeliyetçi", description: "Quiz'de %100 al", icon: Trophy, earned: false, xp: 200 },
       { id: "night-owl", name: "Gece Kartalı", description: "Gece 00:00-06:00 arası çalış", icon: Crown, earned: false, xp: 150 }
     ]
   },
@@ -46,10 +48,10 @@ const badgeCategories = {
     icon: Trophy,
     color: "from-yellow-500 to-orange-600",
     badges: [
-      { id: "level-10", name: "Yükselen Yıldız", description: "Seviye 10'a ulaş", icon: Star, earned: true, xp: 300 },
+      { id: "level-10", name: "Yükselen Yıldız", description: "Seviye 10'a ulaş", icon: Star, earned: false, xp: 300 },
       { id: "level-25", name: "Uzman", description: "Seviye 25'e ulaş", icon: Crown, earned: false, xp: 750 },
       { id: "top-10", name: "Lider", description: "Liderlik tablosunda top 10'a gir", icon: Medal, earned: false, xp: 400 },
-      { id: "exam-master", name: "Sınav Uzmanı", description: "5 farklı sınavda başarılı ol", icon: Trophy, earned: true, xp: 600 },
+      { id: "exam-master", name: "Sınav Uzmanı", description: "5 farklı sınavda başarılı ol", icon: Trophy, earned: false, xp: 600 },
       { id: "speed-demon", name: "Hız Canavarı", description: "Quiz'i 2 dakikada bitir", icon: Zap, earned: false, xp: 250 }
     ]
   },
@@ -58,10 +60,10 @@ const badgeCategories = {
     icon: Users,
     color: "from-green-500 to-teal-600",
     badges: [
-      { id: "first-friend", name: "Sosyal Kelebek", description: "İlk arkadaşını ekle", icon: Users, earned: true, xp: 75 },
+      { id: "first-friend", name: "Sosyal Kelebek", description: "İlk arkadaşını ekle", icon: Users, earned: false, xp: 75 },
       { id: "challenge-winner", name: "Meydan Okuyan", description: "Arkadaş meydan okumasını kazan", icon: Target, earned: false, xp: 200 },
       { id: "group-study", name: "Takım Oyuncusu", description: "Grup çalışmasına katıl", icon: Users, earned: false, xp: 150 },
-      { id: "mentor", name: "Rehber", description: "Bir arkadaşına yardım et", icon: Award, earned: true, xp: 300 },
+      { id: "mentor", name: "Rehber", description: "Bir arkadaşına yardım et", icon: Award, earned: false, xp: 300 },
       { id: "popular", name: "Popüler", description: "10 arkadaşa sahip ol", icon: Star, earned: false, xp: 400 }
     ]
   },
@@ -73,20 +75,13 @@ const badgeCategories = {
       { id: "early-bird", name: "Erken Kuş", description: "06:00'dan önce çalış", icon: Crown, earned: false, xp: 100 },
       { id: "weekend-warrior", name: "Hafta Sonu Savaşçısı", description: "Hafta sonu 5 saat çalış", icon: Medal, earned: false, xp: 300 },
       { id: "month-champion", name: "Aylık Şampiyon", description: "Ayın en çok puanını topla", icon: Trophy, earned: false, xp: 1000 },
-      { id: "ai-explorer", name: "AI Kaşifi", description: "AI özelliklerini keşfet", icon: Sparkles, earned: true, xp: 200 },
+      { id: "ai-explorer", name: "AI Kaşifi", description: "AI özelliklerini keşfet", icon: Sparkles, earned: false, xp: 200 },
       { id: "premium-member", name: "Premium Üye", description: "Premium aboneliğe sahip ol", icon: Crown, earned: false, xp: 500 }
     ]
   }
 };
 
-const userStats = {
-  totalBadges: 6,
-  totalXP: 1325,
-  level: 12,
-  nextLevelXP: 1500,
-  rank: 47,
-  streakDays: 12
-};
+// userStats will be fetched from API
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -110,14 +105,104 @@ const itemVariants = {
 export default function Rozetler() {
   const [selectedCategory, setSelectedCategory] = useState("learning");
   const currentCategory = badgeCategories[selectedCategory as keyof typeof badgeCategories];
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
-  const earnedBadges = Object.values(badgeCategories).reduce((acc, category) => {
-    return acc + category.badges.filter(badge => badge.earned).length;
-  }, 0);
+  // Get current user from localStorage (following app pattern)
+  const getCurrentUser = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        return JSON.parse(currentUser);
+      } catch (error) {
+        console.error('User data parse error:', error);
+      }
+    }
+    return null;
+  };
 
+  const currentUser = getCurrentUser();
+  const userId = currentUser?.uid || currentUser?.id || 'demo-user-123'; // fallback for demo
+
+  // Fetch user stats from API with dynamic userId
+  const { data: userStatsData, isLoading: statsLoading, error: statsError } = useQuery({
+    queryKey: ['/api/users', userId, 'stats'],
+    enabled: !!userId
+  });
+
+  // Use fetched data or defaults for new users
+  const userStats = userStatsData ? {
+    totalBadges: (userStatsData as any).earnedAchievements || 0,
+    totalXP: (userStatsData as any).totalXP || 0,
+    level: (userStatsData as any).currentLevel || 1,
+    nextLevelXP: (userStatsData as any).nextLevelXP || 100,
+    rank: (userStatsData as any).rank || null,
+    streakDays: (userStatsData as any).currentStreak || 0
+  } : {
+    totalBadges: 0,
+    totalXP: 0,
+    level: 1,
+    nextLevelXP: 100,
+    rank: null,
+    streakDays: 0
+  };
+
+  // Create dynamic badge categories with earned status based on API data
+  const totalEarned = userStats.totalBadges;
+  let earnedCount = 0;
+  
+  const dynamicBadgeCategories = Object.fromEntries(
+    Object.entries(badgeCategories).map(([categoryKey, category]) => [
+      categoryKey,
+      {
+        ...category,
+        badges: category.badges.map(badge => {
+          // Mark first badges as earned based on totalEarned from API
+          const shouldBeEarned = earnedCount < totalEarned;
+          if (shouldBeEarned) earnedCount++;
+          return { ...badge, earned: shouldBeEarned };
+        })
+      }
+    ])
+  );
+
+  const earnedBadges = totalEarned;
   const totalBadges = Object.values(badgeCategories).reduce((acc, category) => {
     return acc + category.badges.length;
   }, 0);
+
+  // Show loading state
+  if (statsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <span className="ml-4 text-lg text-gray-600">İstatistikler yükleniyor...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (statsError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Card className="p-8 text-center">
+              <CardContent>
+                <h2 className="text-xl font-semibold text-red-600 mb-2">Veri Yükleme Hatası</h2>
+                <p className="text-gray-600 mb-4">İstatistikler yüklenirken bir sorun oluştu.</p>
+                <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -179,7 +264,7 @@ export default function Rozetler() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-purple-100">Sıralama</span>
-                    <span className="font-bold">#{userStats.rank}</span>
+                    <span className="font-bold">{userStats.rank ? `#${userStats.rank}` : '---'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-purple-100">Seri</span>
@@ -230,7 +315,7 @@ export default function Rozetler() {
           >
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
               <TabsList className="grid w-full grid-cols-4 mb-8">
-                {Object.entries(badgeCategories).map(([key, category]) => {
+                {Object.entries(dynamicBadgeCategories).map(([key, category]) => {
                   const IconComponent = category.icon;
                   return (
                     <TabsTrigger key={key} value={key} className="flex items-center gap-2">
@@ -354,14 +439,38 @@ export default function Rozetler() {
                   <Gift className="w-12 h-12 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold mb-2">Devam Et!</h3>
                   <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
-                    Bir sonraki rozete sadece {userStats.nextLevelXP - userStats.totalXP} XP uzaklıktasın. 
+                    Bir sonraki rozete sadece {Math.max(0, userStats.nextLevelXP - userStats.totalXP)} XP uzaklıktasın. 
                     Çalışmaya devam et ve yeni başarıları keşfet!
                   </p>
                   <div className="flex items-center justify-center gap-4">
-                    <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100">
+                    <Button 
+                      size="lg" 
+                      className="bg-white text-indigo-600 hover:bg-gray-100"
+                      onClick={() => {
+                        toast({
+                          title: "Quiz Zamanı!",
+                          description: "Quiz sayfasına yönlendiriliyorsunuz..."
+                        });
+                        // Navigate to quiz page after a short delay
+                        setTimeout(() => setLocation('/quiz'), 1000);
+                      }}
+                      data-testid="button-quiz-solve"
+                    >
                       Quiz Çöz
                     </Button>
-                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="border-white text-white hover:bg-white/10"
+                      onClick={() => {
+                        toast({
+                          title: "Arkadaş Davet Et",
+                          description: "Sosyal sayfaya yönlendiriliyorsunuz. Orada arkadaşlarınızı bulabilir ve davet edebilirsiniz."
+                        });
+                        setTimeout(() => setLocation('/social'), 1000);
+                      }}
+                      data-testid="button-invite-friend"
+                    >
                       Arkadaş Davet Et
                     </Button>
                   </div>
