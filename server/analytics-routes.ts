@@ -19,106 +19,77 @@ export const getDashboardAnalytics = async (req: Request, res: Response) => {
     const { period } = analyticsQuerySchema.parse(req.query);
     const userId = req.params.userId;
 
-    // Mock comprehensive analytics data
+    // Mock comprehensive analytics data - New user experience (all zeros)
     const analyticsData = {
       period,
       summary: {
-        totalXP: 15420,
-        averageAccuracy: 86,
-        totalStudyTime: 2520, // minutes
-        currentStreak: 11,
+        totalXP: 0,
+        averageAccuracy: 0,
+        totalStudyTime: 0, // minutes
+        currentStreak: 0,
         weeklyGrowth: {
-          xp: 320,
-          accuracy: 4,
-          studyTime: 180
+          xp: 0,
+          accuracy: 0,
+          studyTime: 0
         }
       },
       dailyStats: generateMockDailyStats(period),
       categoryPerformance: [
         { 
           category: 'Matematik', 
-          accuracy: 92, 
-          timeSpent: 180, 
-          questionsAnswered: 145, 
-          strength: 'strong',
-          weeklyTrend: [88, 89, 90, 91, 92],
+          accuracy: 0, 
+          timeSpent: 0, 
+          questionsAnswered: 0, 
+          strength: 'weak',
+          weeklyTrend: [0, 0, 0, 0, 0],
           topicBreakdown: [
-            { topic: 'Cebir', accuracy: 95, questionsCount: 45 },
-            { topic: 'Geometri', accuracy: 88, questionsCount: 35 },
-            { topic: 'Analiz', accuracy: 94, questionsCount: 40 }
+            { topic: 'Cebir', accuracy: 0, questionsCount: 0 },
+            { topic: 'Geometri', accuracy: 0, questionsCount: 0 },
+            { topic: 'Analiz', accuracy: 0, questionsCount: 0 }
           ]
         },
         { 
           category: 'Türkçe', 
-          accuracy: 78, 
-          timeSpent: 120, 
-          questionsAnswered: 98, 
-          strength: 'moderate',
-          weeklyTrend: [75, 76, 77, 77, 78],
+          accuracy: 0, 
+          timeSpent: 0, 
+          questionsAnswered: 0, 
+          strength: 'weak',
+          weeklyTrend: [0, 0, 0, 0, 0],
           topicBreakdown: [
-            { topic: 'Dil Bilgisi', accuracy: 82, questionsCount: 30 },
-            { topic: 'Edebiyat', accuracy: 74, questionsCount: 35 },
-            { topic: 'Anlam Bilgisi', accuracy: 79, questionsCount: 33 }
+            { topic: 'Dil Bilgisi', accuracy: 0, questionsCount: 0 },
+            { topic: 'Edebiyat', accuracy: 0, questionsCount: 0 },
+            { topic: 'Anlam Bilgisi', accuracy: 0, questionsCount: 0 }
           ]
         },
         { 
           category: 'Fen', 
-          accuracy: 65, 
-          timeSpent: 90, 
-          questionsAnswered: 67, 
+          accuracy: 0, 
+          timeSpent: 0, 
+          questionsAnswered: 0, 
           strength: 'weak',
-          weeklyTrend: [60, 62, 63, 64, 65],
+          weeklyTrend: [0, 0, 0, 0, 0],
           topicBreakdown: [
-            { topic: 'Fizik', accuracy: 70, questionsCount: 25 },
-            { topic: 'Kimya', accuracy: 55, questionsCount: 20 },
-            { topic: 'Biyoloji', accuracy: 68, questionsCount: 22 }
+            { topic: 'Fizik', accuracy: 0, questionsCount: 0 },
+            { topic: 'Kimya', accuracy: 0, questionsCount: 0 },
+            { topic: 'Biyoloji', accuracy: 0, questionsCount: 0 }
           ]
         },
         { 
           category: 'Sosyal', 
-          accuracy: 88, 
-          timeSpent: 150, 
-          questionsAnswered: 112, 
-          strength: 'strong',
-          weeklyTrend: [85, 86, 87, 87, 88],
+          accuracy: 0, 
+          timeSpent: 0, 
+          questionsAnswered: 0, 
+          strength: 'weak',
+          weeklyTrend: [0, 0, 0, 0, 0],
           topicBreakdown: [
-            { topic: 'Tarih', accuracy: 90, questionsCount: 40 },
-            { topic: 'Coğrafya', accuracy: 85, questionsCount: 35 },
-            { topic: 'Felsefe', accuracy: 89, questionsCount: 37 }
+            { topic: 'Tarih', accuracy: 0, questionsCount: 0 },
+            { topic: 'Coğrafya', accuracy: 0, questionsCount: 0 },
+            { topic: 'Felsefe', accuracy: 0, questionsCount: 0 }
           ]
         }
       ],
       weaknessAnalysis: [
-        {
-          topic: 'Kimya - Asit Baz Dengesi',
-          category: 'Fen',
-          accuracy: 45,
-          questionsAttempted: 15,
-          recommendedStudyTime: 30,
-          priority: 'high',
-          aiRecommendation: 'Bu konuda temel kavramları tekrar etmeniz önerilir.',
-          relatedTopics: ['pH Hesaplamaları', 'Tampon Çözeltiler']
-        },
-        {
-          topic: 'Geometri - Dörtgenler',
-          category: 'Matematik', 
-          accuracy: 62,
-          questionsAttempted: 25,
-          recommendedStudyTime: 25,
-          priority: 'medium',
-          aiRecommendation: 'Özellik tabloları oluşturarak sistematik çalışın.',
-          relatedTopics: ['Alan Hesapları', 'Çevre Hesapları']
-        },
-        {
-          topic: 'Edebiyat - Divan Edebiyatı',
-          category: 'Türkçe',
-          accuracy: 58,
-          questionsAttempted: 20,
-          recommendedStudyTime: 20,
-          priority: 'medium',
-          aiRecommendation: 'Tarihsel dönemleri kronolojik sırayla tekrar edin.',
-          relatedTopics: ['Nazım Şekilleri', 'Divan Şairleri']
-        }
+        // Yeni kullanıcı - henüz zayıf alan analizi yok
       ],
       studyPatterns: {
         optimalStudyTimes: ['09:00-11:00', '14:00-16:00', '20:00-22:00'],
