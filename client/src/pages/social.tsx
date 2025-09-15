@@ -39,6 +39,11 @@ const mockUserId = "mock-user-123";
 export default function SocialPage() {
   const [activeTab, setActiveTab] = useState('feed');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [chatMessage, setChatMessage] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -106,6 +111,9 @@ export default function SocialPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetUserId })
       });
+      if (!response.ok) {
+        throw new Error('Arkadaşlık talebi gönderilemedi');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -114,6 +122,13 @@ export default function SocialPage() {
         description: "Talebiniz başarıyla iletildi.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'discover'] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Arkadaşlık talebi gönderilemedi. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -130,6 +145,9 @@ export default function SocialPage() {
           duration: 300
         })
       });
+      if (!response.ok) {
+        throw new Error('Meydan okuma gönderilemedi');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -138,30 +156,104 @@ export default function SocialPage() {
         description: "Arkadaşınız bildiri alacak.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'challenges'] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Meydan okuma gönderilemedi. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
     }
   });
 
   const createGroupMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (groupData: { name: string; description: string; participantIds: string[] }) => {
       const response = await fetch(`/api/social/users/${mockUserId}/groups`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: "Yeni Çalışma Grubu",
-          description: "Beraber çalışalım!",
+          name: groupData.name.trim(),
+          description: groupData.description.trim(),
           category: "yks",
           maxMembers: 10,
-          weeklyGoal: 500
+          weeklyGoal: 500,
+          participantIds: groupData.participantIds
         })
       });
+      if (!response.ok) {
+        throw new Error('Grup oluşturulamadı');
+      }
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Grup oluşturuldu!",
-        description: "Arkadaşlarını davet edebilirsin.",
-      });
       queryClient.invalidateQueries({ queryKey: ['/api/social/users', mockUserId, 'groups'] });
+      setShowGroupModal(false);
+      setSelectedFriends([]);
+      setGroupName('');
+      setGroupDescription('');
+      toast({
+        title: "Grup Oluşturuldu!",
+        description: "Yeni çalışma grubu başarıyla oluşturuldu!"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Grup Oluşturma Hatası",
+        description: "Grup oluşturulamadı. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: { content: string; receiverId?: string }) => {
+      const response = await fetch(`/api/social/users/${mockUserId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageData)
+      });
+      if (!response.ok) {
+        throw new Error('Mesaj gönderilemedi');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      setChatMessage('');
+      toast({
+        title: "Mesaj Gönderildi",
+        description: "Mesajınız başarıyla gönderildi!"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Search users mutation  
+  const searchUsersMutation = useMutation({
+    mutationFn: async (query: string) => {
+      if (!query.trim()) return { users: [] };
+      const response = await fetch(`/api/social/users/${mockUserId}/discover?search=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Arama yapılamadı');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Fix cache shape - store just the users array
+      queryClient.setQueryData(['/api/social/users', mockUserId, 'discover'], data.users || []);
+    },
+    onError: () => {
+      toast({
+        title: "Arama Hatası",
+        description: "Kullanıcı arama yapılamadı. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -658,8 +750,8 @@ export default function SocialPage() {
                         </p>
                         <Button 
                           className="mt-4"
-                          onClick={() => createGroupMutation.mutate()}
-                          disabled={createGroupMutation.isPending}
+                          onClick={() => setShowGroupModal(true)}
+                          disabled={false}
                         >
                           <Target className="h-4 w-4 mr-2" />
                           Grup Oluştur
@@ -709,8 +801,22 @@ export default function SocialPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1"
+                    data-testid="input-search-users"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        searchUsersMutation.mutate(searchQuery);
+                      }
+                    }}
                   />
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => searchUsersMutation.mutate(searchQuery)}
+                    disabled={searchUsersMutation.isPending}
+                    data-testid="button-search-users"
+                  >
+                    {searchUsersMutation.isPending ? <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                  <Button variant="outline" data-testid="button-filter-users">
                     <Filter className="h-4 w-4" />
                   </Button>
                 </div>
@@ -847,23 +953,154 @@ export default function SocialPage() {
                       <div className="flex gap-2">
                         <Input 
                           placeholder="Mesajını yaz..." 
-                          disabled
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
                           className="flex-1"
+                          data-testid="input-chat-message"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && chatMessage.trim()) {
+                              sendMessageMutation.mutate({ content: chatMessage });
+                            }
+                          }}
                         />
-                        <Button disabled variant="outline">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            if (chatMessage.trim()) {
+                              sendMessageMutation.mutate({ content: chatMessage, receiverId: 'demo-chat-user' });
+                            }
+                          }}
+                          disabled={!chatMessage.trim() || sendMessageMutation.isPending}
+                          data-testid="button-send-message"
+                        >
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                    <p className="text-center text-sm text-gray-500 mt-4">
-                      🚀 Chat sistemi yakında aktif olacak!
-                    </p>
+                    <div className="text-center text-sm text-gray-600 mt-4">
+                      <p>💬 Chat sistemi aktif! Mesajlaşmaya başlayın.</p>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
             </TabsContent>
           </Tabs>
         </motion.div>
+
+        {/* Group Creation Modal */}
+        {showGroupModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-black">Yeni Grup Oluştur</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setShowGroupModal(false);
+                    setSelectedFriends([]);
+                    setGroupName('');
+                    setGroupDescription('');
+                  }}
+                  data-testid="button-close-modal"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Grup Adı</label>
+                  <Input 
+                    placeholder="Grup adını girin..."
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    data-testid="input-group-name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Açıklama (isteğe bağlı)</label>
+                  <Input 
+                    placeholder="Grup açıklaması..."
+                    value={groupDescription}
+                    onChange={(e) => setGroupDescription(e.target.value)}
+                    data-testid="input-group-description"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Arkadaş Davet Et</label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {friends.map((friend: any, index: number) => (
+                      <div key={index} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
+                        <input
+                          type="checkbox"
+                          checked={selectedFriends.includes(friend.friend.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFriends([...selectedFriends, friend.friend.id]);
+                            } else {
+                              setSelectedFriends(selectedFriends.filter(id => id !== friend.friend.id));
+                            }
+                          }}
+                          className="rounded"
+                          data-testid={`checkbox-friend-${friend.friend.id}`}
+                        />
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friend.id}`} />
+                          <AvatarFallback>
+                            {friend.friend.username?.charAt(0)?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-black">{friend.friend.username}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {friends.length === 0 && (
+                    <p className="text-sm text-gray-500">Henüz arkadaşınız yok. Önce arkadaş ekleyin!</p>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setShowGroupModal(false);
+                      setSelectedFriends([]);
+                      setGroupName('');
+                      setGroupDescription('');
+                    }}
+                    data-testid="button-cancel-group"
+                  >
+                    İptal
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      if (groupName.trim()) {
+                        createGroupMutation.mutate({
+                          name: groupName,
+                          description: groupDescription,
+                          participantIds: selectedFriends
+                        });
+                      }
+                    }}
+                    disabled={!groupName.trim() || selectedFriends.length === 0 || createGroupMutation.isPending}
+                    data-testid="button-create-group-confirm"
+                  >
+                    {createGroupMutation.isPending ? 'Oluşturuluyor...' : 'Grup Oluştur'}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
