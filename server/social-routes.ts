@@ -164,22 +164,8 @@ export const acceptChallenge = async (req: Request, res: Response) => {
 };
 
 export const getUserChallenges = async (req: Request, res: Response) => {
-  // Mock challenges for development
-  const mockChallenges = [
-    {
-      challenge: {
-        id: "challenge-1",
-        challengeType: "Quiz Düellosu",
-        status: "active",
-        challengedScore: 15,
-        challengerScore: 12,
-        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      },
-      challenger: {
-        username: "Elif Kaya"
-      }
-    }
-  ];
+  // Mock challenges for development - New user has no challenges
+  const mockChallenges: any[] = [];
   
   res.json({
     success: true,
@@ -230,21 +216,8 @@ export const joinStudyGroup = async (req: Request, res: Response) => {
 };
 
 export const getUserStudyGroups = async (req: Request, res: Response) => {
-  // Mock study groups for development
-  const mockGroups = [
-    {
-      group: {
-        id: "group-1",
-        name: "YKS Matematik Grubu",
-        description: "Birlikte matematik çalışıyoruz!",
-        currentMembers: 5,
-        weeklyGoal: 500
-      },
-      membership: {
-        role: "admin"
-      }
-    }
-  ];
+  // Mock study groups for development - New user has no groups
+  const mockGroups: any[] = [];
   
   res.json({
     success: true,
@@ -276,17 +249,17 @@ export const discoverStudyGroups = async (req: Request, res: Response) => {
 // LEAGUE SYSTEM ROUTES
 
 export const getCurrentLeague = async (req: Request, res: Response) => {
-  // Mock current league for development
+  // Mock current league for development - New user starts in Bronze with 0 XP
   const mockLeague = {
     league: {
       name: "Bronze",
       description: "Başlangıç seviyesi"
     },
     participation: {
-      weeklyXP: 420,
-      rank: 15
+      weeklyXP: 0,
+      rank: 0
     },
-    rank: 15
+    rank: 0
   };
   
   res.json({
@@ -324,39 +297,8 @@ export const getSocialFeed = async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const limit = parseInt(req.query.limit as string) || 50;
     
-    // Use mock data for development since database isn't fully configured
-    const mockFeed = [
-      {
-        activity: {
-          id: "act-1",
-          title: "YKS Matematik testini tamamladı! 🎯",
-          description: "20 sorudan 18'ini doğru yaptı",
-          activityType: "quiz_complete",
-          likeCount: 3,
-          createdAt: new Date()
-        },
-        user: {
-          id: "friend-1",
-          username: "Elif Kaya",
-          level: 15
-        }
-      },
-      {
-        activity: {
-          id: "act-2", 
-          title: "7 günlük seriyi tamamladı! 🔥",
-          description: "Muhteşem kararlılık!",
-          activityType: "streak_milestone",
-          likeCount: 8,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        },
-        user: {
-          id: "friend-2",
-          username: "Mehmet Can", 
-          level: 8
-        }
-      }
-    ];
+    // New user has no social feed activities yet
+    const mockFeed: any[] = [];
     
     res.json({
       success: true,
@@ -364,24 +306,8 @@ export const getSocialFeed = async (req: Request, res: Response) => {
       totalActivities: mockFeed.length
     });
   } catch (error: any) {
-    // Fallback to mock data if there's any error
-    const mockFeed = [
-      {
-        activity: {
-          id: "act-1",
-          title: "YKS Matematik testini tamamladı! 🎯",
-          description: "20 sorudan 18'ini doğru yaptı",
-          activityType: "quiz_complete",
-          likeCount: 3,
-          createdAt: new Date()
-        },
-        user: {
-          id: "friend-1",
-          username: "Elif Kaya",
-          level: 15
-        }
-      }
-    ];
+    // Fallback to empty data for new users
+    const mockFeed: any[] = [];
     
     res.json({
       success: true,
