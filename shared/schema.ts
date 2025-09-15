@@ -422,6 +422,45 @@ export const directMessages = pgTable("direct_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Group Conversations
+export const groupConversations = pgTable("group_conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdBy: varchar("created_by").notNull(),
+  conversationType: text("conversation_type").default('group'), // 'group', 'study_group', 'challenge_group'
+  isActive: boolean("is_active").default(true),
+  lastMessageAt: timestamp("last_message_at"),
+  participantCount: integer("participant_count").default(0),
+  metadata: jsonb("metadata"), // Additional group data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Group Messages
+export const groupMessages = pgTable("group_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  senderId: varchar("sender_id").notNull(),
+  content: text("content").notNull(),
+  messageType: text("message_type").default('text'), // 'text', 'image', 'file', 'system'
+  metadata: jsonb("metadata"), // For special message types or file info
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Group Conversation Participants
+export const groupParticipants = pgTable("group_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  role: text("role").default('member'), // 'admin', 'member'
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastReadAt: timestamp("last_read_at"),
+  isActive: boolean("is_active").default(true),
+  leftAt: timestamp("left_at"),
+});
+
 // Study Sessions (for groups)
 export const studySessions = pgTable("study_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -476,6 +515,26 @@ export const insertDailyChallengeSchema = createInsertSchema(dailyChallenges).om
 
 export const insertStoreItemSchema = createInsertSchema(storeItems).omit({
   id: true,
+});
+
+export const insertDirectMessageSchema = createInsertSchema(directMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGroupConversationSchema = createInsertSchema(groupConversations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGroupMessageSchema = createInsertSchema(groupMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGroupParticipantSchema = createInsertSchema(groupParticipants).omit({
+  id: true,
+  joinedAt: true,
 });
 
 // Types
@@ -642,7 +701,16 @@ export type SocialActivity = typeof socialActivities.$inferSelect;
 export type ActivityReaction = typeof activityReactions.$inferSelect;
 
 export type DirectMessage = typeof directMessages.$inferSelect;
-export type InsertDirectMessage = typeof directMessages.$inferInsert;
+export type InsertDirectMessage = z.infer<typeof insertDirectMessageSchema>;
+
+export type GroupConversation = typeof groupConversations.$inferSelect;
+export type InsertGroupConversation = z.infer<typeof insertGroupConversationSchema>;
+
+export type GroupMessage = typeof groupMessages.$inferSelect;
+export type InsertGroupMessage = z.infer<typeof insertGroupMessageSchema>;
+
+export type GroupParticipant = typeof groupParticipants.$inferSelect;
+export type InsertGroupParticipant = z.infer<typeof insertGroupParticipantSchema>;
 
 export type StudySession = typeof studySessions.$inferSelect;
 export type StudySessionParticipant = typeof studySessionParticipants.$inferSelect;

@@ -2788,6 +2788,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CHAT API ROUTES - Import from social-routes.ts
+  const { 
+    getDirectMessageConversations,
+    getDirectMessages,
+    sendDirectMessage,
+    getUserGroupConversations,
+    getGroupMessages,
+    sendGroupMessage,
+    createGroupConversation
+  } = await import("./social-routes");
+
+  // Direct message routes
+  app.get("/api/users/:userId/conversations", getDirectMessageConversations);
+  app.get("/api/users/:userId/messages/:otherUserId", getDirectMessages);
+  app.post("/api/users/:userId/messages", sendDirectMessage);
+
+  // Group chat routes
+  app.get("/api/users/:userId/group-conversations", getUserGroupConversations);
+  app.get("/api/conversations/:conversationId/messages", getGroupMessages);
+  app.post("/api/users/:userId/conversations/:conversationId/messages", sendGroupMessage);
+  app.post("/api/users/:userId/conversations", createGroupConversation);
+
   return createServer(app);
 }
 

@@ -21,7 +21,8 @@ import {
   Brain,
   Flame,
   MessageCircle,
-  Share2
+  Share2,
+  Send
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -256,7 +257,7 @@ export default function SocialPage() {
         {/* Social Tabs */}
         <motion.div variants={itemVariants}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 mb-8">
+            <TabsList className="grid w-full grid-cols-7 mb-8">
               <TabsTrigger value="feed" className="flex items-center space-x-2">
                 <MessageSquare className="w-4 h-4" />
                 <span className="hidden sm:inline">Akış</span>
@@ -272,6 +273,10 @@ export default function SocialPage() {
               <TabsTrigger value="challenges" className="flex items-center space-x-2">
                 <Zap className="w-4 h-4" />
                 <span className="hidden sm:inline">Meydan Okuma</span>
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="flex items-center space-x-2">
+                <MessageCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">Sohbet</span>
               </TabsTrigger>
               <TabsTrigger value="groups" className="flex items-center space-x-2">
                 <Target className="w-4 h-4" />
@@ -750,6 +755,111 @@ export default function SocialPage() {
                     </Card>
                   ))}
                 </div>
+              </motion.div>
+            </TabsContent>
+
+            {/* Chat */}
+            <TabsContent value="chat" className="space-y-6">
+              <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Direct Messages */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5 text-blue-600" />
+                      Özel Mesajlar
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-center py-6">
+                        <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-black">Henüz özel mesajın yok</p>
+                        <p className="text-sm text-black mt-2">
+                          Arkadaşlarınla özel mesajlaşabilirsin!
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Group Chat */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-green-600" />
+                      Grup Sohbetleri
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-center py-6">
+                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-black">Henüz grup sohbetin yok</p>
+                        <Button 
+                          className="mt-4"
+                          onClick={() => {
+                            toast({
+                              title: "Grup Sohbeti",
+                              description: "Grup sohbet özelliği yakında aktif olacak!"
+                            });
+                          }}
+                          data-testid="button-create-group-chat"
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Grup Oluştur
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Chat Interface Preview */}
+              <motion.div variants={itemVariants}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-purple-600" />
+                      Sohbet Arayüzü (Önizleme)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="border rounded-lg p-4 bg-gray-50 min-h-[300px] flex flex-col">
+                      <div className="flex-1 space-y-2 mb-4">
+                        <div className="flex justify-start">
+                          <div className="bg-white p-2 rounded-lg max-w-xs shadow-sm">
+                            <div className="text-sm font-medium text-blue-600 mb-1">Ahmet</div>
+                            <div className="text-sm text-black">Merhaba! Quiz çözmeye hazır mısın?</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <div className="bg-blue-600 text-white p-2 rounded-lg max-w-xs">
+                            <div className="text-sm">Tabii ki! Hangi konudan başlayalım?</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-start">
+                          <div className="bg-white p-2 rounded-lg max-w-xs shadow-sm">
+                            <div className="text-sm font-medium text-blue-600 mb-1">Ahmet</div>
+                            <div className="text-sm text-black">Matematik grubu yarışması var, katılır mısın?</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Mesajını yaz..." 
+                          disabled
+                          className="flex-1"
+                        />
+                        <Button disabled variant="outline">
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-center text-sm text-gray-500 mt-4">
+                      🚀 Chat sistemi yakında aktif olacak!
+                    </p>
+                  </CardContent>
+                </Card>
               </motion.div>
             </TabsContent>
           </Tabs>
