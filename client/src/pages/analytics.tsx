@@ -17,6 +17,50 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 
+// Ad Banner Component
+const AdBanner = () => {
+  const getCurrentUser = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        return JSON.parse(currentUser);
+      } catch (error) {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const currentUser = getCurrentUser();
+  const subscriptionType = currentUser?.subscription_type || 'free';
+
+  if (subscriptionType === 'premium') {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="mb-8"
+    >
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg text-center">
+        <h3 className="text-lg font-semibold mb-2">🚀 Premium'a Geçin!</h3>
+        <p className="text-sm text-blue-100 mb-4">
+          Reklamları kaldırın ve tüm premium özelliklerden yararlanın!
+        </p>
+        <Button 
+          className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+          onClick={() => window.location.href = '/subscription'}
+        >
+          Premium'a Yükselt
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
 // Types for analytics data
 interface StudySession {
   id: string;
@@ -107,36 +151,31 @@ const Analytics: React.FC = () => {
     pdf.save('bilgibite-analytics.pdf');
   };
 
-  // Mock data for development
+  // Mock data for development - New user experience (all zeros)
   const mockDailyStats: DailyStats[] = [
-    { date: '2025-08-07', xp: 120, accuracy: 85, timeSpent: 45, streak: 5 },
-    { date: '2025-08-08', xp: 95, accuracy: 78, timeSpent: 35, streak: 6 },
-    { date: '2025-08-09', xp: 150, accuracy: 92, timeSpent: 55, streak: 7 },
-    { date: '2025-08-10', xp: 180, accuracy: 88, timeSpent: 60, streak: 8 },
-    { date: '2025-08-11', xp: 200, accuracy: 94, timeSpent: 65, streak: 9 },
-    { date: '2025-08-12', xp: 165, accuracy: 86, timeSpent: 50, streak: 10 },
-    { date: '2025-08-13', xp: 220, accuracy: 96, timeSpent: 70, streak: 11 }
+    { date: '2025-08-07', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-08', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-09', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-10', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-11', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-12', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 },
+    { date: '2025-08-13', xp: 0, accuracy: 0, timeSpent: 0, streak: 0 }
   ];
 
   const mockPerformanceData: PerformanceData[] = [
-    { category: 'Matematik', accuracy: 92, timeSpent: 180, questionsAnswered: 145, strength: 'strong' },
-    { category: 'Türkçe', accuracy: 78, timeSpent: 120, questionsAnswered: 98, strength: 'moderate' },
-    { category: 'Fen', accuracy: 65, timeSpent: 90, questionsAnswered: 67, strength: 'weak' },
-    { category: 'Sosyal', accuracy: 88, timeSpent: 150, questionsAnswered: 112, strength: 'strong' },
-    { category: 'İngilizce', accuracy: 82, timeSpent: 110, questionsAnswered: 89, strength: 'moderate' }
+    { category: 'Matematik', accuracy: 0, timeSpent: 0, questionsAnswered: 0, strength: 'weak' },
+    { category: 'Türkçe', accuracy: 0, timeSpent: 0, questionsAnswered: 0, strength: 'weak' },
+    { category: 'Fen', accuracy: 0, timeSpent: 0, questionsAnswered: 0, strength: 'weak' },
+    { category: 'Sosyal', accuracy: 0, timeSpent: 0, questionsAnswered: 0, strength: 'weak' },
+    { category: 'İngilizce', accuracy: 0, timeSpent: 0, questionsAnswered: 0, strength: 'weak' }
   ];
 
   const mockWeaknesses: WeaknessArea[] = [
-    { topic: 'Kimya - Asit Baz', category: 'Fen', accuracy: 45, recommendedStudyTime: 30, priority: 'high' },
-    { topic: 'Geometri - Dörtgenler', category: 'Matematik', accuracy: 62, recommendedStudyTime: 25, priority: 'medium' },
-    { topic: 'Edebiyat - Divan', category: 'Türkçe', accuracy: 58, recommendedStudyTime: 20, priority: 'medium' },
-    { topic: 'Coğrafya - İklim', category: 'Sosyal', accuracy: 40, recommendedStudyTime: 35, priority: 'high' }
+    // Yeni kullanıcı - henüz zayıf alan analizi yok
   ];
 
   const mockGoals: LearningGoal[] = [
-    { id: '1', title: 'Matematik 90% Başarı', target: 90, current: 82, deadline: '2025-09-01', category: 'Matematik' },
-    { id: '2', title: 'Günlük 500 XP', target: 500, current: 420, deadline: '2025-08-31', category: 'Genel' },
-    { id: '3', title: 'Fen Bilgisi Güçlendir', target: 80, current: 65, deadline: '2025-08-25', category: 'Fen' }
+    // Yeni kullanıcı - henüz öğrenme hedefleri yok
   ];
 
   const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
@@ -202,12 +241,12 @@ const Analytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-black">Toplam XP</p>
-                    <p className="text-3xl font-bold text-blue-600">15,420</p>
+                    <p className="text-3xl font-bold text-blue-600">0</p>
                   </div>
                   <Zap className="w-8 h-8 text-blue-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-black">+320 bu hafta</p>
+                  <p className="text-sm text-black">+0 bu hafta</p>
                 </div>
               </CardContent>
             </Card>
@@ -225,12 +264,12 @@ const Analytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-black">Ortalama Başarı</p>
-                    <p className="text-3xl font-bold text-green-600">86%</p>
+                    <p className="text-3xl font-bold text-green-600">0%</p>
                   </div>
                   <Target className="w-8 h-8 text-green-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-sm text-black">+4% artış</p>
+                  <p className="text-sm text-black">+0% artış</p>
                 </div>
               </CardContent>
             </Card>
@@ -248,7 +287,7 @@ const Analytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-black">Çalışma Süresi</p>
-                    <p className="text-3xl font-bold text-purple-600">42h</p>
+                    <p className="text-3xl font-bold text-purple-600">0h</p>
                   </div>
                   <Clock className="w-8 h-8 text-purple-500" />
                 </div>
@@ -271,7 +310,7 @@ const Analytics: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-black">Güncel Seri</p>
-                    <p className="text-3xl font-bold text-orange-600">11</p>
+                    <p className="text-3xl font-bold text-orange-600">0</p>
                   </div>
                   <Activity className="w-8 h-8 text-orange-500" />
                 </div>
@@ -561,6 +600,9 @@ const Analytics: React.FC = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Reklam Alanı */}
+        <AdBanner />
       </motion.div>
     </div>
   );
