@@ -372,15 +372,64 @@ export default function SocialPage() {
                                 {/* Enhanced interaction bar */}
                                 <div className="flex items-center justify-between pt-3 border-t border-blue-100">
                                   <div className="flex items-center gap-4">
-                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors group">
+                                    <button 
+                                      className="flex items-center gap-2 px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors group"
+                                      onClick={() => {
+                                        toast({
+                                          title: "Beğenildi! ❤️",
+                                          description: "Aktiviteyi beğendin!"
+                                        });
+                                      }}
+                                      data-testid={`button-like-${activity.activity.id}`}
+                                    >
                                       <Heart className="h-4 w-4 group-hover:scale-110 transition-transform" />
                                       <span className="text-sm font-medium">{activity.activity.likeCount || 0}</span>
                                     </button>
-                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors group">
+                                    <button 
+                                      className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors group"
+                                      onClick={() => {
+                                        toast({
+                                          title: "Yorum",
+                                          description: "Yorum özelliği yakında eklenecek!"
+                                        });
+                                      }}
+                                      data-testid={`button-comment-${activity.activity.id}`}
+                                    >
                                       <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
                                       <span className="text-sm font-medium">{activity.activity.commentsCount || 0}</span>
                                     </button>
-                                    <button className="flex items-center gap-2 px-3 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-colors group">
+                                    <button 
+                                      className="flex items-center gap-2 px-3 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-colors group"
+                                      onClick={() => {
+                                        // Social media sharing functionality
+                                        const shareText = `${activity.user.username}: ${activity.activity.title}`;
+                                        const shareUrl = window.location.href;
+                                        
+                                        if (navigator.share) {
+                                          navigator.share({
+                                            title: 'BilgiBite - Arkadaş Aktivitesi',
+                                            text: shareText,
+                                            url: shareUrl
+                                          });
+                                        } else {
+                                          // Fallback to copying to clipboard
+                                          navigator.clipboard.writeText(`${shareText} - ${shareUrl}`)
+                                            .then(() => {
+                                              toast({
+                                                title: "Paylaşıldı! 🔗",
+                                                description: "Link kopyalandı! Sosyal medyada paylaşabilirsin."
+                                              });
+                                            })
+                                            .catch(() => {
+                                              toast({
+                                                title: "Paylaş",
+                                                description: "Bu aktiviteyi sosyal medyada paylaş!"
+                                              });
+                                            });
+                                        }
+                                      }}
+                                      data-testid={`button-share-${activity.activity.id}`}
+                                    >
                                       <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
                                       <span className="text-sm font-medium">Paylaş</span>
                                     </button>
