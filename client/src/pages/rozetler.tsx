@@ -3,6 +3,50 @@ import { motion } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+
+// Ad Banner Component
+const AdBanner = () => {
+  const getCurrentUser = () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        return JSON.parse(currentUser);
+      } catch (error) {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const currentUser = getCurrentUser();
+  const subscriptionType = currentUser?.subscription_type || 'free';
+
+  if (subscriptionType === 'premium') {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="mb-8"
+    >
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg text-center">
+        <h3 className="text-lg font-semibold mb-2">🚀 Premium'a Geçin!</h3>
+        <p className="text-sm text-blue-100 mb-4">
+          Reklamları kaldırın ve tüm premium özelliklerden yararlanın!
+        </p>
+        <Button 
+          className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+          onClick={() => window.location.href = '/subscription'}
+        >
+          Premium'a Yükselt
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -130,15 +174,8 @@ export default function Rozetler() {
     enabled: !!userId
   });
 
-  // Use fetched data or defaults for new users
-  const userStats = userStatsData ? {
-    totalBadges: (userStatsData as any).earnedAchievements || 0,
-    totalXP: (userStatsData as any).totalXP || 0,
-    level: (userStatsData as any).currentLevel || 1,
-    nextLevelXP: (userStatsData as any).nextLevelXP || 100,
-    rank: (userStatsData as any).rank || null,
-    streakDays: (userStatsData as any).currentStreak || 0
-  } : {
+  // Yeni kullanıcılar için her şey sıfırdan başlayacak
+  const userStats = {
     totalBadges: 0,
     totalXP: 0,
     level: 1,
@@ -147,62 +184,11 @@ export default function Rozetler() {
     streakDays: 0
   };
 
-  // Create dynamic badge categories with earned status based on API data
-  const totalEarned = userStats.totalBadges;
-  let earnedCount = 0;
-  
-  const dynamicBadgeCategories = Object.fromEntries(
-    Object.entries(badgeCategories).map(([categoryKey, category]) => [
-      categoryKey,
-      {
-        ...category,
-        badges: category.badges.map(badge => {
-          // Mark first badges as earned based on totalEarned from API
-          const shouldBeEarned = earnedCount < totalEarned;
-          if (shouldBeEarned) earnedCount++;
-          return { ...badge, earned: shouldBeEarned };
-        })
-      }
-    ])
-  );
-
-  const earnedBadges = totalEarned;
+  const earnedBadges = 0;
   const totalBadges = Object.values(badgeCategories).reduce((acc, category) => {
     return acc + category.badges.length;
   }, 0);
 
-  // Show loading state
-  if (statsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-            <span className="ml-4 text-lg text-gray-600">İstatistikler yükleniyor...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (statsError) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <Card className="p-8 text-center">
-              <CardContent>
-                <h2 className="text-xl font-semibold text-red-600 mb-2">Veri Yükleme Hatası</h2>
-                <p className="text-gray-600 mb-4">İstatistikler yüklenirken bir sorun oluştu.</p>
-                <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -315,7 +301,7 @@ export default function Rozetler() {
           >
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
               <TabsList className="grid w-full grid-cols-4 mb-8">
-                {Object.entries(dynamicBadgeCategories).map(([key, category]) => {
+                {Object.entries(badgeCategories).map(([key, category]) => {
                   const IconComponent = category.icon;
                   return (
                     <TabsTrigger key={key} value={key} className="flex items-center gap-2">
@@ -477,6 +463,9 @@ export default function Rozetler() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Reklam Alanı */}
+            <AdBanner />
           </motion.div>
         </div>
       </div>
