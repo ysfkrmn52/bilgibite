@@ -15,7 +15,7 @@ import {
   Target, Award, Calendar, BarChart3, Activity,
   Settings, Database, Crown, Brain, Sparkles,
   Zap, Clock, Globe, Star, Lightbulb, Cpu,
-  Rocket, ChartBar, FileText
+  Rocket, ChartBar, FileText, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EXAM_CATEGORIES } from "../../../shared/categories";
