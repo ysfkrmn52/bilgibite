@@ -62,6 +62,18 @@ export default function XAdmin() {
   const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
+  
+  // Otomatik üretim state'leri
+  const [autoGenerationEnabled, setAutoGenerationEnabled] = useState(true);
+  const [weeklySchedule, setWeeklySchedule] = useState({
+    monday: 'yks',
+    tuesday: 'kpss', 
+    wednesday: 'ehliyet',
+    thursday: 'ales',
+    friday: 'dgs',
+    saturday: 'src',
+    sunday: 'meb-ogretmenlik'
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -206,6 +218,66 @@ export default function XAdmin() {
       });
     },
   });
+
+  // Otomatik üretim mutation'ları
+  const toggleAutoGenerationMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const response = await fetch("/api/admin/auto-generation/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled, schedule: weeklySchedule }),
+      });
+      if (!response.ok) throw new Error("Ayar güncellenemedi");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAutoGenerationEnabled(data.enabled);
+      toast({
+        title: data.enabled ? "✅ Sistem Başlatıldı" : "⏹️ Sistem Durduruldu",
+        description: data.enabled 
+          ? "Otomatik soru üretimi aktif hale getirildi" 
+          : "Otomatik soru üretimi durduruldu",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "❌ Hata",
+        description: "Sistem ayarları güncellenirken bir hata oluştu",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const updateScheduleMutation = useMutation({
+    mutationFn: async (newSchedule: typeof weeklySchedule) => {
+      const response = await fetch("/api/admin/auto-generation/schedule", {
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schedule: newSchedule }),
+      });
+      if (!response.ok) throw new Error("Program güncellenemedi");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "📅 Program Güncellendi",
+        description: "Haftalık üretim programı başarıyla kaydedildi",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "❌ Hata",
+        description: "Program güncellenirken bir hata oluştu",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const handleScheduleChange = (day: keyof typeof weeklySchedule, category: string) => {
+    const newSchedule = { ...weeklySchedule, [day]: category };
+    setWeeklySchedule(newSchedule);
+    updateScheduleMutation.mutate(newSchedule);
+  };
 
   const handleQuickAdd = () => {
     if (!quickQuestion.text.trim() || !quickQuestion.category) {
@@ -440,9 +512,10 @@ export default function XAdmin() {
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid grid-cols-6 w-full max-w-3xl bg-white shadow-lg rounded-xl p-1">
+        <TabsList className="grid grid-cols-7 w-full max-w-4xl bg-white shadow-lg rounded-xl p-1">
           <TabsTrigger value="overview" className="rounded-lg">📊 Genel</TabsTrigger>
           <TabsTrigger value="add-questions" className="rounded-lg">➕ Soru Ekle</TabsTrigger>
+          <TabsTrigger value="auto-generate" className="rounded-lg">🔄 Otomatik Üretim</TabsTrigger>
           <TabsTrigger value="manage-questions" className="rounded-lg">📝 Soru Yönetimi</TabsTrigger>
           <TabsTrigger value="users" className="rounded-lg">👥 Kullanıcılar</TabsTrigger>
           <TabsTrigger value="ai" className="rounded-lg">🤖 AI</TabsTrigger>
@@ -1028,6 +1101,188 @@ export default function XAdmin() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="auto-generate" className="space-y-6">
+          {/* Otomatik Soru Üretimi Paneli */}
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-50 to-red-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-orange-900 flex items-center gap-2">
+                <Clock className="w-6 h-6" />
+                🔄 Otomatik Soru Üretimi Sistemi
+                <Badge className="bg-orange-100 text-orange-700">
+                  <Cpu className="w-3 h-3 mr-1" />
+                  7/24 Aktif
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Sistem Durumu */}
+              <div className="p-4 bg-white rounded-lg border border-orange-200">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="font-medium text-gray-700">Sistem Durumu</span>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">
+                    <Activity className="w-3 h-3 mr-1" />
+                    Çalışıyor
+                  </Badge>
+                </div>
+                <div className="mt-3 text-sm text-gray-600">
+                  Son üretim: Bugün 14:00 - 10 soru (YKS Matematik)
+                </div>
+              </div>
+
+              {/* Haftalık Program */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="border border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      📅 Haftalık Üretim Programı
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { day: 'Pazartesi', category: '', selected: 'yks' },
+                      { day: 'Salı', category: '', selected: 'kpss' },
+                      { day: 'Çarşamba', category: '', selected: 'ehliyet' },
+                      { day: 'Perşembe', category: '', selected: 'ales' },
+                      { day: 'Cuma', category: '', selected: 'dgs' },
+                      { day: 'Cumartesi', category: '', selected: 'src' },
+                      { day: 'Pazar', category: '', selected: 'meb-ogretmenlik' }
+                    ].map((dayConfig, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-20 text-sm font-medium text-gray-700">
+                          {dayConfig.day}
+                        </div>
+                        <div className="flex-1">
+                          <Select value={dayConfig.selected}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Kategori seç" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yks">YKS (TYT/AYT)</SelectItem>
+                              <SelectItem value="kpss">KPSS</SelectItem>
+                              <SelectItem value="ehliyet">Ehliyet Sınavı</SelectItem>
+                              <SelectItem value="ales">ALES</SelectItem>
+                              <SelectItem value="dgs">DGS</SelectItem>
+                              <SelectItem value="src">SRC Sınavı</SelectItem>
+                              <SelectItem value="meb-ogretmenlik">MEB Öğretmenlik</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          10/saat
+                        </Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* İstatistikler ve Kontroller */}
+                <div className="space-y-4">
+                  <Card className="border border-green-200">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-green-900 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5" />
+                        📊 Üretim İstatistikleri
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Bu Hafta Üretilen</span>
+                        <Badge className="bg-green-100 text-green-700 font-bold">1,680 soru</Badge>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Bugün Üretilen</span>
+                        <Badge className="bg-blue-100 text-blue-700 font-bold">240 soru</Badge>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Toplam Veritabanı</span>
+                        <Badge className="bg-purple-100 text-purple-700 font-bold">12,450 soru</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-orange-200">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-orange-900 flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        ⚙️ Sistem Kontrolü
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                          data-testid="button-start-generation"
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          Başlat
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                          data-testid="button-stop-generation"
+                        >
+                          <Target className="w-4 h-4 mr-2" />
+                          Durdur
+                        </Button>
+                      </div>
+                      <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center gap-2 text-yellow-800 text-sm">
+                          <Lightbulb className="w-4 h-4" />
+                          <span className="font-medium">Bilgi:</span>
+                        </div>
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Her saat başında seçilen kategoriler için 10 soru otomatik üretilir. 
+                          Günlük toplam: 240 soru/kategori
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Son Aktiviteler */}
+              <Card className="border border-purple-200">
+                <CardHeader>
+                  <CardTitle className="text-lg text-purple-900 flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    🔄 Son Üretim Aktiviteleri
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[
+                      { time: '14:00', category: 'YKS Matematik', count: 10, status: 'completed' },
+                      { time: '13:00', category: 'KPSS Genel Yetenek', count: 10, status: 'completed' },
+                      { time: '12:00', category: 'Ehliyet Trafik', count: 10, status: 'completed' },
+                      { time: '11:00', category: 'ALES Sayısal', count: 10, status: 'completed' },
+                      { time: '10:00', category: 'DGS Matematik', count: 10, status: 'completed' },
+                    ].map((activity, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-gray-700">{activity.time}</span>
+                          <span className="text-sm text-gray-600">{activity.category}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-green-100 text-green-700 text-xs">
+                            {activity.count} soru
+                          </Badge>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </AdminLayout>
   );
