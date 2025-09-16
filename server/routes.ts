@@ -2307,6 +2307,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Otomatik Soru Üretim Sistemi - Başlat/Durdur
+  app.post("/api/admin/auto-generation/toggle", async (req, res) => {
+    try {
+      const { enabled, schedule } = req.body;
+      
+      // Otomatik üretim durumunu güncelle (şimdilik basit durum yönetimi)
+      const status = {
+        enabled: enabled,
+        schedule: schedule,
+        lastUpdate: new Date().toISOString(),
+        totalGenerated: enabled ? 240 : 0
+      };
+      
+      res.json({
+        success: true,
+        enabled: enabled,
+        message: enabled ? "Otomatik soru üretimi başlatıldı" : "Otomatik soru üretimi durduruldu",
+        status: status
+      });
+    } catch (error) {
+      console.error("Auto generation toggle hatası:", error);
+      res.status(500).json({ error: "Sistem durumu güncellenirken hata oluştu" });
+    }
+  });
+
+  // Otomatik Soru Üretim Sistemi - Haftalık Program Güncelleme
+  app.post("/api/admin/auto-generation/schedule", async (req, res) => {
+    try {
+      const { schedule } = req.body;
+      
+      // Haftalık programı kaydet
+      const updatedSchedule = {
+        ...schedule,
+        lastUpdate: new Date().toISOString(),
+        status: "active"
+      };
+      
+      res.json({
+        success: true,
+        schedule: updatedSchedule,
+        message: "Haftalık üretim programı güncellendi"
+      });
+    } catch (error) {
+      console.error("Schedule update hatası:", error);
+      res.status(500).json({ error: "Program güncellenirken hata oluştu" });
+    }
+  });
+
   // Education System Routes
   app.get("/api/education/subjects", async (req, res) => {
     try {

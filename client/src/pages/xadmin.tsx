@@ -512,13 +512,11 @@ export default function XAdmin() {
 
       {/* Enhanced Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid grid-cols-7 w-full max-w-4xl bg-white shadow-lg rounded-xl p-1">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl bg-white shadow-lg rounded-xl p-1">
           <TabsTrigger value="overview" className="rounded-lg">📊 Genel</TabsTrigger>
-          <TabsTrigger value="add-questions" className="rounded-lg">➕ Soru Ekle</TabsTrigger>
           <TabsTrigger value="auto-generate" className="rounded-lg">🔄 Otomatik Üretim</TabsTrigger>
           <TabsTrigger value="manage-questions" className="rounded-lg">📝 Soru Yönetimi</TabsTrigger>
           <TabsTrigger value="users" className="rounded-lg">👥 Kullanıcılar</TabsTrigger>
-          <TabsTrigger value="ai" className="rounded-lg">🤖 AI</TabsTrigger>
           <TabsTrigger value="analytics" className="rounded-lg">📈 Analitik</TabsTrigger>
         </TabsList>
 
@@ -1157,7 +1155,10 @@ export default function XAdmin() {
                           {dayConfig.day}
                         </div>
                         <div className="flex-1">
-                          <Select value={dayConfig.selected}>
+                          <Select 
+                            value={weeklySchedule[dayConfig.day.toLowerCase() as keyof typeof weeklySchedule]}
+                            onValueChange={(value) => handleScheduleChange(dayConfig.day.toLowerCase() as keyof typeof weeklySchedule, value)}
+                          >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Kategori seç" />
                             </SelectTrigger>
@@ -1217,17 +1218,21 @@ export default function XAdmin() {
                         <Button 
                           className="flex-1 bg-green-500 hover:bg-green-600 text-white"
                           data-testid="button-start-generation"
+                          onClick={() => toggleAutoGenerationMutation.mutate(true)}
+                          disabled={toggleAutoGenerationMutation.isPending}
                         >
                           <Clock className="w-4 h-4 mr-2" />
-                          Başlat
+                          {toggleAutoGenerationMutation.isPending ? "Başlatılıyor..." : "Başlat"}
                         </Button>
                         <Button 
                           variant="outline" 
                           className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                           data-testid="button-stop-generation"
+                          onClick={() => toggleAutoGenerationMutation.mutate(false)}
+                          disabled={toggleAutoGenerationMutation.isPending}
                         >
                           <Target className="w-4 h-4 mr-2" />
-                          Durdur
+                          {toggleAutoGenerationMutation.isPending ? "Durduruluyor..." : "Durdur"}
                         </Button>
                       </div>
                       <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
