@@ -29,7 +29,8 @@ import {
   Sun,
   Volume2,
   VolumeX,
-  Zap
+  Zap,
+  TrendingUp
 } from "lucide-react";
 
 interface UserSettings {
