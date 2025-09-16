@@ -48,6 +48,7 @@ const AdminAIQuestions = lazy(() => import("@/pages/admin-ai-questions"));
 const AISmartTutor = lazy(() => import("@/pages/ai-smart-tutor"));
 const AIDemo = lazy(() => import("@/pages/ai-demo"));
 const PdfManager = lazy(() => import("@/pages/pdf-manager"));
+const Settings = lazy(() => import("@/pages/settings"));
 
 // Fast loading component
 const PageLoader = () => (
@@ -85,6 +86,9 @@ function Router() {
         <Route path="/admin-simple" component={() => (<><Navbar /><SimpleAdmin /></>)} />
         <Route path="/profile" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
+        )} />
+        <Route path="/settings" component={() => (
+          <><Navbar /><Suspense fallback={<PageLoader />}><Settings /></Suspense></>
         )} />
         <Route path="/ai-education" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><AIEducationNew /></Suspense></>

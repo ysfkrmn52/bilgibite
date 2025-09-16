@@ -1,39 +1,40 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import {
   User,
-  Trophy,
-  Star,
-  Calendar,
-  Clock,
-  BookOpen,
-  Target,
-  Award,
-  Settings,
-  Edit,
   Mail,
   Phone,
+  Calendar,
   MapPin,
+  Trophy,
+  Target,
+  TrendingUp,
+  BookOpen,
+  Clock,
+  Star,
+  Award,
+  Settings,
+  Edit3,
+  Save,
+  X,
+  Crown,
+  Flame,
+  Zap,
   GraduationCap,
   Brain,
-  Zap,
-  TrendingUp,
-  Activity,
-  Flame,
-  Save,
-  X
-} from 'lucide-react';
+  Activity
+} from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -71,11 +72,11 @@ interface Achievement {
   category: string;
 }
 
-const ProfilePage: React.FC = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
+export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
 
   // Fetch user profile
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -149,311 +150,452 @@ const ProfilePage: React.FC = () => {
 
   if (profileLoading || statsLoading || achievementsLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
-  const earnedAchievements = achievements?.filter(a => a.earned) || [];
+  const earnedAchievements = achievements?.filter((a: Achievement) => a.earned) || [];
   const xpToNextLevel = ((profile?.level || 0) + 1) * 1000;
   const currentLevelXp = profile?.xp || 0;
   const progressToNextLevel = (currentLevelXp % 1000) / 10;
 
+  const statCards = [
+    { 
+      label: "Tamamlanan Quiz", 
+      value: stats?.totalQuizzesTaken || 0, 
+      icon: BookOpen, 
+      color: "text-blue-600", 
+      bg: "from-blue-50 to-indigo-50",
+      border: "border-blue-100"
+    },
+    { 
+      label: "Ortalama Başarı", 
+      value: `${stats?.averageScore || 0}%`, 
+      icon: Star, 
+      color: "text-yellow-600", 
+      bg: "from-yellow-50 to-amber-50",
+      border: "border-yellow-100"
+    },
+    { 
+      label: "Günlük Seri", 
+      value: profile?.streak || 0, 
+      icon: Flame, 
+      color: "text-orange-600", 
+      bg: "from-orange-50 to-red-50",
+      border: "border-orange-100"
+    },
+    { 
+      label: "Kazanılan Rozet", 
+      value: earnedAchievements.length, 
+      icon: Award, 
+      color: "text-purple-600", 
+      bg: "from-purple-50 to-pink-50",
+      border: "border-purple-100"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto">
         
-        {/* Profile Header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg rounded-lg p-8"
+          className="mb-8"
         >
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profile?.avatar || "/avatars/user.svg"} />
-                <AvatarFallback className="text-2xl">{profile?.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              
-              <div className="space-y-2">
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="fullName" className="text-black">Ad Soyad</Label>
-                      <Input
-                        id="fullName"
-                        value={editedProfile.fullName || ''}
-                        onChange={(e) => handleInputChange('fullName', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="bio" className="text-black">Hakkımda</Label>
-                      <Textarea
-                        id="bio"
-                        value={editedProfile.bio || ''}
-                        onChange={(e) => handleInputChange('bio', e.target.value)}
-                        className="mt-1"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <h1 className="text-3xl font-bold text-black">{profile?.fullName || profile?.username}</h1>
-                    <p className="text-black text-lg">@{profile?.username}</p>
-                    {profile?.bio && <p className="text-black max-w-md">{profile.bio}</p>}
-                  </>
-                )}
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Profilim
+              </h1>
+              <p className="text-gray-600 mt-2">Kişisel bilgilerinizi ve başarılarınızı görüntüleyin</p>
             </div>
-
-            <div className="flex-1 flex justify-end">
+            <Button
+              onClick={() => setIsEditing(!isEditing)}
+              variant={isEditing ? "outline" : "default"}
+              className={isEditing ? "" : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"}
+              data-testid={isEditing ? "button-cancel-edit" : "button-edit-profile"}
+            >
               {isEditing ? (
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={updateProfileMutation.isPending}
-                    className="gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    Kaydet
-                  </Button>
-                  <Button variant="outline" onClick={handleCancel} className="gap-2">
-                    <X className="w-4 h-4" />
-                    İptal
-                  </Button>
-                </div>
+                <>
+                  <X className="w-4 h-4 mr-2" />
+                  İptal
+                </>
               ) : (
-                <Button onClick={handleEdit} className="gap-2">
-                  <Edit className="w-4 h-4" />
-                  Profili Düzenle
-                </Button>
+                <>
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Düzenle
+                </>
               )}
-            </div>
-          </div>
-
-          {/* Level and XP */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
-              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">Seviye {profile?.level}</div>
-                <div className="text-black text-sm">
-                  {currentLevelXp} / {xpToNextLevel} XP
-                </div>
-                <Progress value={progressToNextLevel} className="mt-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-white via-orange-50 to-yellow-50 border border-orange-100 shadow-lg">
-              <div className="h-1 bg-gradient-to-r from-orange-500 via-yellow-500 to-red-500"></div>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-orange-600">
-                  <Flame className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{profile?.streak || 0}</span>
-                </div>
-                <div className="text-black text-sm">Günlük Seri</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg">
-              <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{earnedAchievements.length}</div>
-                <div className="text-black text-sm">Başarı Rozetleri</div>
-              </CardContent>
-            </Card>
+            </Button>
           </div>
         </motion.div>
 
-        {/* Profile Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Personal Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-2"
-          >
-            <Card className="bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 shadow-lg">
-              <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-              <CardHeader>
-                <CardTitle className="text-black flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Kişisel Bilgiler
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="email" className="text-black">E-posta</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={editedProfile.email || ''}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="location" className="text-black">Konum</Label>
-                      <Input
-                        id="location"
-                        value={editedProfile.location || ''}
-                        onChange={(e) => handleInputChange('location', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="grade" className="text-black">Sınıf</Label>
-                      <Input
-                        id="grade"
-                        value={editedProfile.grade || ''}
-                        onChange={(e) => handleInputChange('grade', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="targetExam" className="text-black">Hedef Sınav</Label>
-                      <Input
-                        id="targetExam"
-                        value={editedProfile.targetExam || ''}
-                        onChange={(e) => handleInputChange('targetExam', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <div className="text-sm text-gray-500">E-posta</div>
-                        <div className="text-black">{profile?.email || 'Belirtilmemiş'}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <div className="text-sm text-gray-500">Konum</div>
-                        <div className="text-black">{profile?.location || 'Belirtilmemiş'}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <div className="text-sm text-gray-500">Sınıf</div>
-                        <div className="text-black">{profile?.grade || 'Belirtilmemiş'}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Target className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <div className="text-sm text-gray-500">Hedef Sınav</div>
-                        <div className="text-black">{profile?.targetExam || 'Belirtilmemiş'}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <div className="text-sm text-gray-500">Katılım Tarihi</div>
-                        <div className="text-black">{profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString('tr-TR') : 'Bilinmiyor'}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Quick Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="bg-gradient-to-br from-white via-green-50 to-blue-50 border border-green-100 shadow-lg">
-              <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
-              <CardHeader>
-                <CardTitle className="text-black flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  İstatistikler
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{stats?.totalQuizzesTaken || 0}</div>
-                  <div className="text-black text-sm">Toplam Quiz</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{stats?.averageScore || 0}%</div>
-                  <div className="text-black text-sm">Ortalama Başarı</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{Math.round((stats?.totalStudyTime || 0) / 60)}h</div>
-                  <div className="text-black text-sm">Toplam Çalışma</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-black text-sm">En İyi Konu:</span>
-                    <Badge variant="secondary" className="text-black">{stats?.strongestSubject || 'Yok'}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-black text-sm">Gelişim Alanı:</span>
-                    <Badge variant="outline" className="text-black">{stats?.weakestSubject || 'Yok'}</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Achievements */}
+        {/* Profil Header Kartı */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
         >
-          <Card className="bg-gradient-to-br from-white via-yellow-50 to-orange-50 border border-yellow-100 shadow-lg">
-            <div className="h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
-            <CardHeader>
-              <CardTitle className="text-black flex items-center gap-2">
-                <Award className="w-5 h-5" />
-                Başarı Rozetleri ({earnedAchievements.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {achievements?.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`p-4 rounded-lg border text-center transition-all ${
-                      achievement.earned
-                        ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                        : 'bg-gray-50 border-gray-200 text-gray-400'
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">{achievement.icon}</div>
-                    <div className="text-xs font-medium">{achievement.title}</div>
-                    {achievement.earned && achievement.earnedDate && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(achievement.earnedDate).toLocaleDateString('tr-TR')}
-                      </div>
-                    )}
+          <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
+            {/* Gradient Header */}
+            <div className="h-32 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+            
+            <CardContent className="relative -mt-16 pb-8">
+              <div className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-6">
+                {/* Avatar */}
+                <div className="relative">
+                  <Avatar className="h-32 w-32 border-4 border-white shadow-2xl">
+                    <AvatarImage src={profile?.avatar || "/avatars/user.png"} alt="Profil" />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-4xl font-bold">
+                      {profile?.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || profile?.username?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-3 border-4 border-white shadow-lg">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
+                </div>
+
+                {/* Profil Bilgileri */}
+                <div className="flex-1 text-center md:text-left">
+                  {isEditing ? (
+                    <div className="space-y-3 max-w-md">
+                      <div>
+                        <Label htmlFor="fullName" className="text-gray-700">Ad Soyad</Label>
+                        <Input
+                          id="fullName"
+                          value={editedProfile.fullName || ''}
+                          onChange={(e) => handleInputChange('fullName', e.target.value)}
+                          className="mt-1"
+                          data-testid="input-fullname"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bio" className="text-gray-700">Hakkımda</Label>
+                        <Textarea
+                          id="bio"
+                          value={editedProfile.bio || ''}
+                          onChange={(e) => handleInputChange('bio', e.target.value)}
+                          className="mt-1"
+                          rows={2}
+                          data-testid="textarea-bio"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                        {profile?.fullName || profile?.username || 'Kullanıcı'}
+                      </h2>
+                      <p className="text-lg text-gray-600 mb-1">@{profile?.username}</p>
+                      {profile?.bio && (
+                        <p className="text-gray-700 max-w-2xl">{profile.bio}</p>
+                      )}
+                      <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
+                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1">
+                          <Crown className="w-3 h-3 mr-1" />
+                          {profile?.targetExam || 'Hedef Belirlenmedi'}
+                        </Badge>
+                        <Badge variant="outline" className="px-3 py-1">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : 'Bilinmiyor'}
+                        </Badge>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3">
+                  {isEditing ? (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleSave} 
+                        disabled={updateProfileMutation.isPending}
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                        data-testid="button-save-profile"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Kaydet
+                      </Button>
+                      <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-profile">
+                        <X className="w-4 h-4 mr-2" />
+                        İptal
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={handleEdit} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" data-testid="button-edit-profile">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Profili Düzenle
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Seviye ve İstatistikler */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Seviye Kartı */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">Seviye {profile?.level || 1}</div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      {currentLevelXp} / {xpToNextLevel} XP
+                    </div>
+                    <Progress value={progressToNextLevel} className="h-2" />
+                  </div>
+                </div>
+
+                {/* İstatistik Kartları */}
+                {statCards.slice(0, 3).map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 + index * 0.1 }}
+                    className={`bg-gradient-to-br ${stat.bg} p-4 rounded-xl border ${stat.border}`}
+                  >
+                    <div className="text-center">
+                      <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
+                      <div className={`text-2xl font-bold ${stat.color} mb-1`}>
+                        {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+                      </div>
+                      <div className="text-xs text-gray-600">{stat.label}</div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </CardContent>
           </Card>
         </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Sol Sütun - Kişisel Bilgiler */}
+          <div className="lg:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <User className="w-5 h-5 text-blue-600" />
+                    Kişisel Bilgiler
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isEditing ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="email" className="text-gray-700">E-posta</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={editedProfile.email || ''}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className="mt-1"
+                          data-testid="input-email"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="location" className="text-gray-700">Konum</Label>
+                        <Input
+                          id="location"
+                          value={editedProfile.location || ''}
+                          onChange={(e) => handleInputChange('location', e.target.value)}
+                          className="mt-1"
+                          data-testid="input-location"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="grade" className="text-gray-700">Sınıf</Label>
+                        <Input
+                          id="grade"
+                          value={editedProfile.grade || ''}
+                          onChange={(e) => handleInputChange('grade', e.target.value)}
+                          className="mt-1"
+                          data-testid="input-grade"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="targetExam" className="text-gray-700">Hedef Sınav</Label>
+                        <Input
+                          id="targetExam"
+                          value={editedProfile.targetExam || ''}
+                          onChange={(e) => handleInputChange('targetExam', e.target.value)}
+                          className="mt-1"
+                          data-testid="input-target-exam"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                        <Mail className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{profile?.email || 'Belirtilmemiş'}</div>
+                          <div className="text-sm text-gray-600">E-posta</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                        <MapPin className="w-5 h-5 text-green-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{profile?.location || 'Belirtilmemiş'}</div>
+                          <div className="text-sm text-gray-600">Konum</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                        <GraduationCap className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{profile?.grade || 'Belirtilmemiş'}</div>
+                          <div className="text-sm text-gray-600">Sınıf</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-100">
+                        <Target className="w-5 h-5 text-orange-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{profile?.targetExam || 'Belirtilmemiş'}</div>
+                          <div className="text-sm text-gray-600">Hedef Sınav</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Sağ Sütun - İstatistikler ve Başarılar */}
+          <div className="space-y-6">
+            {/* Detaylı İstatistikler */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Detaylı İstatistikler
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="text-2xl font-bold text-blue-600">{Math.round((stats?.totalStudyTime || 0) / 60)}h</div>
+                    <div className="text-sm text-gray-600">Toplam Çalışma</div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                      <span className="text-sm text-gray-700">En İyi Konu:</span>
+                      <Badge className="bg-green-500 text-white">{stats?.strongestSubject || 'Yok'}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-100">
+                      <span className="text-sm text-gray-700">Gelişim Alanı:</span>
+                      <Badge variant="outline" className="border-red-300 text-red-600">{stats?.weakestSubject || 'Yok'}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-100">
+                      <span className="text-sm text-gray-700">En Uzun Seri:</span>
+                      <Badge className="bg-orange-500 text-white">{stats?.longestStreak || 0} gün</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Son Başarılar */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    Son Başarılar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {earnedAchievements.length > 0 ? (
+                    <div className="space-y-3">
+                      {earnedAchievements.slice(0, 3).map((achievement: Achievement, index: number) => (
+                        <div key={achievement.id} className="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-100">
+                          <div className="text-2xl">{achievement.icon}</div>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{achievement.title}</h4>
+                            <p className="text-sm text-gray-600">{achievement.description}</p>
+                            {achievement.earnedDate && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(achievement.earnedDate).toLocaleDateString('tr-TR')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      <Award className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>Henüz başarı rozetiniz yok</p>
+                      <p className="text-sm">Quiz çözerek rozet kazanabilirsiniz!</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Tüm Başarılar */}
+        {achievements && achievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8"
+          >
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <Award className="w-5 h-5 text-yellow-500" />
+                  Tüm Başarı Rozetleri ({earnedAchievements.length}/{achievements.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {achievements.map((achievement: Achievement) => (
+                    <motion.div
+                      key={achievement.id}
+                      whileHover={{ scale: 1.05 }}
+                      className={`p-4 rounded-lg border text-center transition-all cursor-pointer ${
+                        achievement.earned
+                          ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200 text-yellow-800 shadow-md'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">{achievement.icon}</div>
+                      <div className="text-xs font-medium">{achievement.title}</div>
+                      {achievement.earned && achievement.earnedDate && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(achievement.earnedDate).toLocaleDateString('tr-TR')}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   );
-};
-
-export default ProfilePage;
+}

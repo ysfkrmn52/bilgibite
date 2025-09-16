@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -28,7 +30,12 @@ import {
   Trash2,
   AlertTriangle,
   LogOut,
-  Save
+  Save,
+  BookOpen,
+  Target,
+  Clock,
+  Zap,
+  Crown
 } from 'lucide-react';
 
 interface UserSettings {
@@ -64,18 +71,18 @@ interface UserSettings {
   };
 }
 
-const SettingsPage: React.FC = () => {
+export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('account');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch user settings
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<UserSettings>({
     queryKey: ['/api/user/settings'],
     queryFn: async () => {
       const response = await fetch('/api/user/settings');
       if (!response.ok) throw new Error('Failed to fetch settings');
-      return response.json() as UserSettings;
+      return response.json();
     }
   });
 
@@ -155,30 +162,29 @@ const SettingsPage: React.FC = () => {
   const handleAccountDelete = () => {
     const confirmation = prompt('Hesabınızı silmek için "SİL" yazın:');
     if (confirmation === 'SİL') {
-      // Account deletion would be implemented here
       toast({ title: 'Uyarı', description: 'Hesap silme özelliği henüz aktif değil', variant: 'destructive' });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   const sections = [
-    { id: 'account', title: 'Hesap', icon: User },
-    { id: 'notifications', title: 'Bildirimler', icon: Bell },
-    { id: 'privacy', title: 'Gizlilik', icon: Lock },
-    { id: 'preferences', title: 'Tercihler', icon: Palette },
-    { id: 'study', title: 'Çalışma', icon: Settings },
+    { id: 'account', title: 'Hesap', description: 'Kişisel bilgiler ve güvenlik', icon: User, color: 'from-blue-500 to-indigo-500' },
+    { id: 'notifications', title: 'Bildirimler', description: 'Bildirim tercihleri', icon: Bell, color: 'from-green-500 to-emerald-500' },
+    { id: 'privacy', title: 'Gizlilik', description: 'Gizlilik ayarları', icon: Lock, color: 'from-purple-500 to-pink-500' },
+    { id: 'preferences', title: 'Tercihler', description: 'Uygulama tercihleri', icon: Palette, color: 'from-orange-500 to-red-500' },
+    { id: 'study', title: 'Çalışma', description: 'Çalışma hedefleri', icon: BookOpen, color: 'from-teal-500 to-cyan-500' },
   ];
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto">
         
         {/* Header */}
         <motion.div
@@ -186,36 +192,94 @@ const SettingsPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-black">Ayarlar</h1>
-          <p className="text-gray-600 mt-2">Hesap ayarlarınızı ve tercihlerinizi yönetin</p>
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Ayarlar
+            </h1>
+            <p className="text-gray-600 text-lg">Hesap ayarlarınızı ve tercihlerinizi yönetin</p>
+          </div>
+
+          {/* Quick Profile Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl mx-auto mb-8"
+          >
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+              <div className="h-16 bg-gradient-to-r from-blue-500 to-purple-600 relative">
+                <div className="absolute inset-0 bg-black/10"></div>
+              </div>
+              <CardContent className="relative -mt-8 pb-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 border-4 border-white shadow-lg">
+                    <AvatarImage src="/avatars/user.png" alt="Profil" />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xl font-bold">
+                      AK
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-gray-900">Ahmet Kaya</h3>
+                    <p className="text-gray-600">Premium Üye</p>
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white mt-1">
+                      <Crown className="w-3 h-3 mr-1" />
+                      YKS 2025
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600">Son Giriş</div>
+                    <div className="font-medium text-gray-900">Bugün 14:30</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Settings Navigation */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             className="lg:col-span-1"
           >
-            <Card className="bg-white border">
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm sticky top-6">
+              <CardHeader>
+                <CardTitle className="text-gray-900 flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-blue-600" />
+                  Ayar Kategorileri
+                </CardTitle>
+              </CardHeader>
               <CardContent className="p-4">
                 <nav className="space-y-2">
                   {sections.map((section) => {
                     const IconComponent = section.icon;
+                    const isActive = activeSection === section.id;
                     return (
-                      <button
+                      <motion.button
                         key={section.id}
                         onClick={() => setActiveSection(section.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                          activeSection === section.id
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'text-black hover:bg-gray-100'
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+                          isActive
+                            ? `bg-gradient-to-r ${section.color} text-white shadow-lg`
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md'
                         }`}
+                        data-testid={`nav-${section.id}`}
                       >
-                        <IconComponent className="w-4 h-4" />
-                        {section.title}
-                      </button>
+                        <div className="flex items-center gap-3">
+                          <IconComponent className="w-5 h-5" />
+                          <div className="flex-1">
+                            <div className="font-medium">{section.title}</div>
+                            <div className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'} mt-1`}>
+                              {section.description}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.button>
                     );
                   })}
                 </nav>
@@ -227,182 +291,252 @@ const SettingsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-3"
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-3 space-y-6"
           >
             
             {/* Account Settings */}
             {activeSection === 'account' && (
               <div className="space-y-6">
-                <Card className="bg-white border">
-                  <CardHeader>
-                    <CardTitle className="text-black flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      Hesap Bilgileri
-                    </CardTitle>
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-gray-900">Hesap Bilgileri</CardTitle>
+                        <CardDescription>Kişisel bilgilerinizi düzenleyin</CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="username" className="text-black">Kullanıcı Adı</Label>
-                        <Input id="username" defaultValue="demo_user" className="mt-1" />
+                      <div className="space-y-2">
+                        <Label htmlFor="username" className="text-gray-700 font-medium">Kullanıcı Adı</Label>
+                        <Input id="username" defaultValue="demo_user" className="bg-white border-gray-200" data-testid="input-username" />
                       </div>
-                      <div>
-                        <Label htmlFor="email" className="text-black">E-posta</Label>
-                        <Input id="email" type="email" defaultValue="user@example.com" className="mt-1" />
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-gray-700 font-medium">E-posta</Label>
+                        <Input id="email" type="email" defaultValue="demo@bilgibite.com" className="bg-white border-gray-200" data-testid="input-email" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-gray-700 font-medium">Telefon</Label>
+                        <Input id="phone" defaultValue="+90 555 123 4567" className="bg-white border-gray-200" data-testid="input-phone" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="fullname" className="text-gray-700 font-medium">Ad Soyad</Label>
+                        <Input id="fullname" defaultValue="Ahmet Kaya" className="bg-white border-gray-200" data-testid="input-fullname" />
                       </div>
                     </div>
-                    <Button className="gap-2">
-                      <Save className="w-4 h-4" />
-                      Değişiklikleri Kaydet
-                    </Button>
+                    <div className="pt-4">
+                      <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600" data-testid="button-save-account">
+                        <Save className="w-4 h-4 mr-2" />
+                        Kaydet
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white border">
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-black flex items-center gap-2">
-                      <Shield className="w-5 h-5" />
-                      Güvenlik
-                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-gray-900">Güvenlik</CardTitle>
+                        <CardDescription>Hesap güvenliği ayarları</CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button variant="outline" className="w-full">Şifre Değiştir</Button>
-                    <Button variant="outline" className="w-full">İki Faktörlü Kimlik Doğrulama</Button>
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-100">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Şifre Değiştir</h4>
+                        <p className="text-sm text-gray-600">Son değişiklik: 2 ay önce</p>
+                      </div>
+                      <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-50" data-testid="button-change-password">
+                        Değiştir
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                      <div>
+                        <h4 className="font-medium text-gray-900">İki Faktörlü Doğrulama</h4>
+                        <p className="text-sm text-gray-600">Ek güvenlik katmanı</p>
+                      </div>
+                      <Switch defaultChecked={false} />
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-red-50 border-red-200">
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-red-600 flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5" />
-                      Tehlikeli Bölge
-                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-gray-500 to-slate-500 rounded-lg flex items-center justify-center">
+                        <Database className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-gray-900">Veri Yönetimi</CardTitle>
+                        <CardDescription>Hesap verilerinizi yönetin</CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button 
-                      onClick={handleLogout} 
-                      variant="outline" 
-                      className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                      disabled={logoutMutation.isPending}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button
+                        onClick={handleDataExport}
+                        variant="outline"
+                        className="h-16 flex-col gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                        data-testid="button-export-data"
+                      >
+                        <Download className="w-5 h-5" />
+                        Verilerimi İndir
+                      </Button>
+                      <Button
+                        onClick={handleAccountDelete}
+                        variant="outline"
+                        className="h-16 flex-col gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                        data-testid="button-delete-account"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Hesabı Sil
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full h-12 border-gray-300 text-gray-600 hover:bg-gray-50"
+                      data-testid="button-logout"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Çıkış Yap
-                    </Button>
-                    <Button onClick={handleDataExport} variant="outline" className="w-full">
-                      <Download className="w-4 h-4 mr-2" />
-                      Verilerimi İndir
-                    </Button>
-                    <Button 
-                      onClick={handleAccountDelete} 
-                      variant="destructive" 
-                      className="w-full"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Hesabı Sil
                     </Button>
                   </CardContent>
                 </Card>
               </div>
             )}
 
-            {/* Notification Settings */}
+            {/* Notifications Settings */}
             {activeSection === 'notifications' && (
-              <Card className="bg-white border">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-black flex items-center gap-2">
-                    <Bell className="w-5 h-5" />
-                    Bildirim Ayarları
-                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-gray-900">Bildirim Ayarları</CardTitle>
+                      <CardDescription>Hangi bildirimleri almak istediğinizi seçin</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
-                    { key: 'push', label: 'Push Bildirimleri', description: 'Telefona gelen bildirimler' },
-                    { key: 'email', label: 'E-posta Bildirimleri', description: 'Önemli güncellemeler' },
-                    { key: 'dailyReminder', label: 'Günlük Hatırlatıcı', description: 'Çalışma zamanı hatırlatıcısı' },
-                    { key: 'achievementAlerts', label: 'Başarı Bildirimleri', description: 'Rozet ve başarı bildirimleri' },
-                    { key: 'weeklyReport', label: 'Haftalık Rapor', description: 'İlerleme özeti' }
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-medium text-black">{item.label}</div>
-                        <div className="text-sm text-gray-600">{item.description}</div>
+                    { key: 'push', label: 'Push Bildirimleri', description: 'Telefona gelen bildirimler', icon: Smartphone },
+                    { key: 'email', label: 'E-posta Bildirimleri', description: 'Önemli güncellemeler', icon: Mail },
+                    { key: 'dailyReminder', label: 'Günlük Hatırlatıcı', description: 'Çalışma zamanı hatırlatıcısı', icon: Clock },
+                    { key: 'achievementAlerts', label: 'Başarı Bildirimleri', description: 'Rozet ve başarı bildirimleri', icon: Target },
+                    { key: 'weeklyReport', label: 'Haftalık Rapor', description: 'İlerleme özeti', icon: BookOpen }
+                  ].map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <div key={item.key} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <IconComponent className="w-5 h-5 text-gray-600" />
+                          <div>
+                            <div className="font-medium text-gray-900">{item.label}</div>
+                            <div className="text-sm text-gray-600">{item.description}</div>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={settings?.notifications?.[item.key as keyof typeof settings.notifications] || false}
+                          onCheckedChange={(checked) => handleSettingChange('notifications', item.key, checked)}
+                          data-testid={`switch-${item.key}`}
+                        />
                       </div>
-                      <Switch
-                        checked={settings?.notifications?.[item.key as keyof typeof settings.notifications] || false}
-                        onCheckedChange={(checked) => handleSettingChange('notifications', item.key, checked)}
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
 
             {/* Privacy Settings */}
             {activeSection === 'privacy' && (
-              <Card className="bg-white border">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-black flex items-center gap-2">
-                    <Lock className="w-5 h-5" />
-                    Gizlilik Ayarları
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-black">Profil Görünürlüğü</Label>
-                    <Select 
-                      value={settings?.privacy?.profileVisibility || 'public'}
-                      onValueChange={(value) => handleSettingChange('privacy', 'profileVisibility', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">Herkese Açık</SelectItem>
-                        <SelectItem value="friends">Sadece Arkadaşlar</SelectItem>
-                        <SelectItem value="private">Özel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {[
-                    { key: 'showProgress', label: 'İlerlemeyi Göster', description: 'Diğerleri ilerlemenizi görebilir' },
-                    { key: 'showAchievements', label: 'Başarıları Göster', description: 'Diğerleri başarılarınızı görebilir' },
-                    { key: 'allowFriendRequests', label: 'Arkadaşlık İstekleri', description: 'Yeni arkadaşlık isteklerini kabul et' },
-                    { key: 'dataCollection', label: 'Veri Toplama', description: 'Ürün geliştirme için anonim veri toplama' }
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-medium text-black">{item.label}</div>
-                        <div className="text-sm text-gray-600">{item.description}</div>
-                      </div>
-                      <Switch
-                        checked={settings?.privacy?.[item.key as keyof typeof settings.privacy] || false}
-                        onCheckedChange={(checked) => handleSettingChange('privacy', item.key, checked)}
-                      />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-white" />
                     </div>
-                  ))}
+                    <div>
+                      <CardTitle className="text-gray-900">Gizlilik Ayarları</CardTitle>
+                      <CardDescription>Profilinizin görünürlüğünü kontrol edin</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-medium">Profil Görünürlüğü</Label>
+                      <Select 
+                        value={settings?.privacy?.profileVisibility || 'public'}
+                        onValueChange={(value) => handleSettingChange('privacy', 'profileVisibility', value)}
+                      >
+                        <SelectTrigger className="bg-white" data-testid="select-profile-visibility">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">Herkese Açık</SelectItem>
+                          <SelectItem value="friends">Sadece Arkadaşlar</SelectItem>
+                          <SelectItem value="private">Özel</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {[
+                      { key: 'showProgress', label: 'İlerleme Göster', description: 'Çalışma ilerlemeni başkalarının görmesine izin ver' },
+                      { key: 'showAchievements', label: 'Başarıları Göster', description: 'Kazandığın rozetleri paylaş' },
+                      { key: 'allowFriendRequests', label: 'Arkadaşlık Talepleri', description: 'Başkalarının sana arkadaşlık talebi göndermesine izin ver' },
+                      { key: 'dataCollection', label: 'Veri Toplama', description: 'Uygulamayı geliştirmek için veri toplamaya izin ver' }
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                        <div>
+                          <div className="font-medium text-gray-900">{item.label}</div>
+                          <div className="text-sm text-gray-600">{item.description}</div>
+                        </div>
+                        <Switch
+                          checked={settings?.privacy?.[item.key as keyof typeof settings.privacy] as boolean || false}
+                          onCheckedChange={(checked) => handleSettingChange('privacy', item.key, checked)}
+                          data-testid={`switch-privacy-${item.key}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Preference Settings */}
+            {/* Preferences Settings */}
             {activeSection === 'preferences' && (
-              <Card className="bg-white border">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-black flex items-center gap-2">
-                    <Palette className="w-5 h-5" />
-                    Uygulama Tercihleri
-                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                      <Palette className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-gray-900">Uygulama Tercihleri</CardTitle>
+                      <CardDescription>Uygulamanızı özelleştirin</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-black">Dil</Label>
-                      <Select 
-                        value={settings?.preferences?.language || 'tr'}
-                        onValueChange={(value) => handleSettingChange('preferences', 'language', value)}
-                      >
-                        <SelectTrigger>
+                      <Label className="text-gray-700 font-medium">Dil</Label>
+                      <Select value={settings?.preferences?.language || 'tr'}>
+                        <SelectTrigger className="bg-white" data-testid="select-language">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -411,99 +545,127 @@ const SettingsPage: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-2">
-                      <Label className="text-black">Zorluk Seviyesi</Label>
-                      <Select 
-                        value={settings?.preferences?.difficulty || 'medium'}
-                        onValueChange={(value) => handleSettingChange('preferences', 'difficulty', value)}
-                      >
-                        <SelectTrigger>
+                      <Label className="text-gray-700 font-medium">Tema</Label>
+                      <Select value={settings?.preferences?.theme || 'light'}>
+                        <SelectTrigger className="bg-white" data-testid="select-theme">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="easy">Kolay</SelectItem>
-                          <SelectItem value="medium">Orta</SelectItem>
-                          <SelectItem value="hard">Zor</SelectItem>
+                          <SelectItem value="light">Açık</SelectItem>
+                          <SelectItem value="dark">Koyu</SelectItem>
+                          <SelectItem value="auto">Otomatik</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
-                  {[
-                    { key: 'soundEffects', label: 'Ses Efektleri', description: 'Doğru/yanlış cevap sesleri' },
-                    { key: 'animations', label: 'Animasyonlar', description: 'Geçiş animasyonları' },
-                    { key: 'autoSave', label: 'Otomatik Kaydet', description: 'İlerlemeyi otomatik kaydet' }
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <div className="font-medium text-black">{item.label}</div>
-                        <div className="text-sm text-gray-600">{item.description}</div>
-                      </div>
-                      <Switch
-                        checked={settings?.preferences?.[item.key as keyof typeof settings.preferences] || false}
-                        onCheckedChange={(checked) => handleSettingChange('preferences', item.key, checked)}
-                      />
-                    </div>
-                  ))}
+                  <div className="space-y-4">
+                    {[
+                      { key: 'soundEffects', label: 'Ses Efektleri', description: 'Quiz sırasında ses efektlerini çal', icon: Volume2 },
+                      { key: 'animations', label: 'Animasyonlar', description: 'Uygulama animasyonlarını göster', icon: Zap },
+                      { key: 'autoSave', label: 'Otomatik Kayıt', description: 'İlerlemeyi otomatik olarak kaydet', icon: Save }
+                    ].map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <div key={item.key} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <IconComponent className="w-5 h-5 text-gray-600" />
+                            <div>
+                              <div className="font-medium text-gray-900">{item.label}</div>
+                              <div className="text-sm text-gray-600">{item.description}</div>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={settings?.preferences?.[item.key as keyof typeof settings.preferences] as boolean || false}
+                            onCheckedChange={(checked) => handleSettingChange('preferences', item.key, checked)}
+                            data-testid={`switch-${item.key}`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
 
             {/* Study Settings */}
             {activeSection === 'study' && (
-              <Card className="bg-white border">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-black flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Çalışma Ayarları
-                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-gray-900">Çalışma Ayarları</CardTitle>
+                      <CardDescription>Çalışma hedeflerinizi ve tercihlerinizi belirleyin</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="dailyGoal" className="text-black">Günlük Hedef (dakika)</Label>
-                      <Input
-                        id="dailyGoal"
-                        type="number"
-                        value={settings?.study?.dailyGoal || 30}
-                        onChange={(e) => handleSettingChange('study', 'dailyGoal', parseInt(e.target.value))}
-                        className="mt-1"
+                      <Label className="text-gray-700 font-medium">Günlük Hedef (dakika)</Label>
+                      <Input 
+                        type="number" 
+                        defaultValue={settings?.study?.dailyGoal || 30}
+                        className="bg-white border-gray-200"
+                        data-testid="input-daily-goal"
                       />
                     </div>
-
                     <div className="space-y-2">
-                      <Label htmlFor="reminderTime" className="text-black">Hatırlatıcı Saati</Label>
-                      <Input
-                        id="reminderTime"
-                        type="time"
-                        value={settings?.study?.reminderTime || '19:00'}
-                        onChange={(e) => handleSettingChange('study', 'reminderTime', e.target.value)}
-                        className="mt-1"
+                      <Label className="text-gray-700 font-medium">Hatırlatıcı Saati</Label>
+                      <Input 
+                        type="time" 
+                        defaultValue={settings?.study?.reminderTime || '19:00'}
+                        className="bg-white border-gray-200"
+                        data-testid="input-reminder-time"
                       />
                     </div>
-
                     <div className="space-y-2">
-                      <Label htmlFor="sessionLength" className="text-black">Çalışma Süresi (dakika)</Label>
-                      <Input
-                        id="sessionLength"
-                        type="number"
-                        value={settings?.study?.sessionLength || 25}
-                        onChange={(e) => handleSettingChange('study', 'sessionLength', parseInt(e.target.value))}
-                        className="mt-1"
+                      <Label className="text-gray-700 font-medium">Mola Süresi (dakika)</Label>
+                      <Input 
+                        type="number" 
+                        defaultValue={settings?.study?.breakDuration || 5}
+                        className="bg-white border-gray-200"
+                        data-testid="input-break-duration"
                       />
                     </div>
-
                     <div className="space-y-2">
-                      <Label htmlFor="breakDuration" className="text-black">Mola Süresi (dakika)</Label>
-                      <Input
-                        id="breakDuration"
-                        type="number"
-                        value={settings?.study?.breakDuration || 5}
-                        onChange={(e) => handleSettingChange('study', 'breakDuration', parseInt(e.target.value))}
-                        className="mt-1"
+                      <Label className="text-gray-700 font-medium">Çalışma Süresi (dakika)</Label>
+                      <Input 
+                        type="number" 
+                        defaultValue={settings?.study?.sessionLength || 25}
+                        className="bg-white border-gray-200"
+                        data-testid="input-session-length"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-medium">Sınav Odağı</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {['YKS', 'KPSS', 'DGS', 'ALES', 'MSÜ', 'Ehliyet'].map((exam) => (
+                        <div key={exam} className="flex items-center space-x-2 p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                          <input 
+                            type="checkbox" 
+                            id={exam} 
+                            defaultChecked={settings?.study?.examFocus?.includes(exam)}
+                            className="rounded border-gray-300"
+                            data-testid={`checkbox-exam-${exam.toLowerCase()}`}
+                          />
+                          <Label htmlFor={exam} className="text-sm font-medium text-gray-700">{exam}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600" data-testid="button-save-study">
+                      <Save className="w-4 h-4 mr-2" />
+                      Çalışma Ayarlarını Kaydet
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -513,6 +675,4 @@ const SettingsPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default SettingsPage;
+}"
