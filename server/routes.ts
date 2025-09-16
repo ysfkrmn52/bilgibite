@@ -52,6 +52,7 @@ import {
   notFoundHandler, 
   asyncHandler 
 } from "./middleware/error-handler";
+import AutoGenerationScheduler from "./auto-generation-scheduler";
 
 // Firebase Admin SDK imports
 import { 
@@ -77,8 +78,15 @@ const upload = multer({
   }
 });
 
+// Global scheduler instance
+let autoGenerationScheduler: AutoGenerationScheduler;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Initialize AutoGeneration Scheduler
+  autoGenerationScheduler = new AutoGenerationScheduler(storage);
+  console.log('🤖 AutoGeneration Scheduler initialized');
+
   // Initialize Firebase Admin SDK if available
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
@@ -2310,25 +2318,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Otomatik Soru Üretim Sistemi - Mevcut Durum Getir
   app.get("/api/admin/auto-generation/status", async (req, res) => {
     try {
-      // Şimdilik basit durum yönetimi - gerçek uygulamada bu bilgiyi veritabanından alırdık
-      const status = {
-        enabled: false,
+      const status = autoGenerationScheduler.getStatus();
+      
+      // Frontend uyumluluğu için schedule bilgisi ekle
+      const responseData = {
+        ...status,
         schedule: {
-          pazartesi: "10:00",
-          sali: "10:00", 
-          carsamba: "10:00",
-          persembe: "10:00",
-          cuma: "10:00",
-          cumartesi: "10:00",
-          pazar: "10:00"
+          pazartesi: "Saatlik",
+          sali: "Saatlik", 
+          carsamba: "Saatlik",
+          persembe: "Saatlik",
+          cuma: "Saatlik",
+          cumartesi: "Saatlik",
+          pazar: "Saatlik"
         },
-        lastRunAt: null,
-        lastErrorAt: null,
-        totalGenerated: 0,
+        totalGenerated: status.stats?.totalQuestionsGenerated || 0,
         lastUpdate: new Date().toISOString()
       };
       
-      res.json(status);
+      res.json(responseData);
     } catch (error) {
       console.error("Auto-generation status error:", error);
       res.status(500).json({ error: "Sistem durumu alınırken hata oluştu" });
@@ -2338,20 +2346,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Otomatik Soru Üretim Sistemi - Başlat/Durdur
   app.post("/api/admin/auto-generation/toggle", async (req, res) => {
     try {
-      const { enabled, schedule } = req.body;
+      const { enabled } = req.body;
       
-      // Otomatik üretim durumunu güncelle (şimdilik basit durum yönetimi)
-      const status = {
-        enabled: enabled,
-        schedule: schedule,
-        lastUpdate: new Date().toISOString(),
-        totalGenerated: enabled ? 240 : 0
-      };
+      if (enabled) {
+        autoGenerationScheduler.start();
+      } else {
+        autoGenerationScheduler.stop();
+      }
+      
+      const status = autoGenerationScheduler.getStatus();
       
       res.json({
         success: true,
-        enabled: enabled,
-        message: enabled ? "Otomatik soru üretimi başlatıldı" : "Otomatik soru üretimi durduruldu",
+        enabled: status.enabled,
+        message: enabled ? "Otomatik saatlik soru üretimi başlatıldı" : "Otomatik soru üretimi durduruldu",
         status: status
       });
     } catch (error) {
@@ -2360,22 +2368,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Otomatik Soru Üretim Sistemi - Haftalık Program Güncelleme
+  // Otomatik Soru Üretim Sistemi - Haftalık Program Güncelleme (Saatlik sistem için placeholder)
   app.post("/api/admin/auto-generation/schedule", async (req, res) => {
     try {
       const { schedule } = req.body;
       
-      // Haftalık programı kaydet
+      // Saatlik sistem için haftalık program artık kullanılmıyor
+      // Frontend uyumluluğu için response döndür
       const updatedSchedule = {
         ...schedule,
         lastUpdate: new Date().toISOString(),
-        status: "active"
+        status: "saatlik_sistem_aktif"
       };
       
       res.json({
         success: true,
         schedule: updatedSchedule,
-        message: "Haftalık üretim programı güncellendi"
+        message: "Sistem artık her saat başında otomatik çalışır - haftalık program gereksiz"
       });
     } catch (error) {
       console.error("Schedule update hatası:", error);

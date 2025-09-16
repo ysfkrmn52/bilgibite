@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import AutoGenerationScheduler from "./auto-generation-scheduler";
 
 const app = express();
 
@@ -41,6 +42,26 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// Global scheduler instance - will be initialized after storage is ready
+let globalScheduler: AutoGenerationScheduler | null = null;
+
+// Process cleanup handlers
+const cleanup = () => {
+  console.log('🧹 Server cleanup started...');
+  if (globalScheduler && 'cleanup' in globalScheduler) {
+    globalScheduler.cleanup();
+  }
+  console.log('✅ Server cleanup completed');
+  process.exit(0);
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error);
+  cleanup();
 });
 
 (async () => {

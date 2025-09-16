@@ -355,66 +355,35 @@ export default function XAdmin() {
 
   const systemStatus = getSystemStatus();
 
-  // Bir sonraki üretim zamanını hesaplayan fonksiyon
+  // Backend'den nextRunAt bilgisini alıp geri sayım hesaplayan fonksiyon
   const getNextGenerationInfo = () => {
-    if (!autoGenerationEnabled) return null;
+    if (!autoGenerationEnabled || !autoGenerationStatus?.nextRunAt) return null;
 
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTime = currentHour * 60 + currentMinute; // Dakika cinsinden
-
-    const weekDays = ['pazar', 'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi'];
-    const currentDay = weekDays[now.getDay()];
-
-    // Bugünün programını kontrol et
-    const todaySchedule = weeklySchedule[currentDay as keyof typeof weeklySchedule];
-    if (todaySchedule) {
-      const [hour, minute] = todaySchedule.split(':').map(Number);
-      const scheduleTime = hour * 60 + minute;
-
-      // Eğer bugünün saati henüz gelmemişse
-      if (currentTime < scheduleTime) {
-        const remainingMinutes = scheduleTime - currentTime;
-        const remainingHours = Math.floor(remainingMinutes / 60);
-        const remainingMins = remainingMinutes % 60;
-        
-        return {
-          timeText: remainingHours > 0 ? `${remainingHours} saat ${remainingMins} dakika` : `${remainingMins} dakika`,
-          category: "YKS (TYT/AYT)", // Bu sabit, gerçekte döngüsel olabilir
-          isToday: true
-        };
-      }
+    const nextRunTime = new Date(autoGenerationStatus.nextRunAt);
+    const diffMs = nextRunTime.getTime() - now.getTime();
+    
+    // Geçmiş zaman ise null döndür
+    if (diffMs <= 0) return null;
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+    
+    // Maksimum 60 dakika içinde göster (saatlik sistem)
+    if (diffMins > 60) {
+      return {
+        timeText: `${diffHours} saat ${remainingMins} dakika`,
+        category: autoGenerationStatus.currentCategory || "YKS (TYT/AYT)",
+        isToday: true
+      };
     }
-
-    // Bugünün saati geçmişse, yarın veya sonraki günleri kontrol et
-    for (let i = 1; i <= 7; i++) {
-      const nextDay = new Date(now);
-      nextDay.setDate(now.getDate() + i);
-      const nextDayName = weekDays[nextDay.getDay()];
-      
-      const nextSchedule = weeklySchedule[nextDayName as keyof typeof weeklySchedule];
-      if (nextSchedule) {
-        const [hour, minute] = nextSchedule.split(':').map(Number);
-        const nextDayStart = new Date(nextDay);
-        nextDayStart.setHours(hour, minute, 0, 0);
-        
-        const diffMs = nextDayStart.getTime() - now.getTime();
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMins / 60);
-        const remainingMins = diffMins % 60;
-        
-        return {
-          timeText: diffHours > 24 ? `${Math.floor(diffHours / 24)} gün ${diffHours % 24} saat` : 
-                   diffHours > 0 ? `${diffHours} saat ${remainingMins} dakika` : `${remainingMins} dakika`,
-          category: "KPSS", // Kategoriler döngüsel olabilir
-          isToday: false,
-          dayName: nextDayName.charAt(0).toUpperCase() + nextDayName.slice(1)
-        };
-      }
-    }
-
-    return null;
+    
+    return {
+      timeText: diffHours > 0 ? `${diffHours} saat ${remainingMins} dakika` : `${remainingMins} dakika`,
+      category: autoGenerationStatus.currentCategory || "YKS (TYT/AYT)",
+      isToday: true
+    };
   };
 
   const nextGeneration = getNextGenerationInfo();
