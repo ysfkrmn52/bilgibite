@@ -64,7 +64,9 @@ export default function XAdmin() {
   const [previewLoading, setPreviewLoading] = useState(false);
   
   // Otomatik üretim state'leri
-  const [autoGenerationEnabled, setAutoGenerationEnabled] = useState(true);
+  const [autoGenerationEnabled, setAutoGenerationEnabled] = useState(false);
+  const [systemErrors, setSystemErrors] = useState(0);
+  const [lastErrorTime, setLastErrorTime] = useState<Date | null>(null);
   const [weeklySchedule, setWeeklySchedule] = useState({
     monday: 'yks',
     tuesday: 'kpss', 
@@ -78,20 +80,31 @@ export default function XAdmin() {
   const queryClient = useQueryClient();
 
   // Data fetching
-  const { data: adminStats } = useQuery<AdminStats>({
+  const { data: adminStats, isError: adminStatsError } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
     queryFn: () => fetch("/api/admin/stats").then((res) => res.json()),
   });
 
-  const { data: subscriptionStats } = useQuery({
+  const { data: subscriptionStats, isError: subscriptionStatsError } = useQuery({
     queryKey: ["/api/admin/subscriptions/stats"],
     queryFn: () => fetch("/api/admin/subscriptions/stats").then((res) => res.json()),
   });
 
-  const { data: questionCounts } = useQuery<QuestionCounts>({
+  const { data: questionCounts, isError: questionCountsError } = useQuery<QuestionCounts>({
     queryKey: ["/api/questions/counts"],
     queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
+
+  // Hata takibi - API hatalarına göre sistem hatalarını güncelle
+  useEffect(() => {
+    const errorCount = [adminStatsError, subscriptionStatsError, questionCountsError]
+      .filter(Boolean).length;
+    
+    if (errorCount > 0) {
+      setSystemErrors(errorCount);
+      setLastErrorTime(new Date());
+    }
+  }, [adminStatsError, subscriptionStatsError, questionCountsError]);
 
   const { data: superadminData } = useQuery<SuperadminData>({
     queryKey: ["/api/admin/superadmin-stats"],
@@ -278,6 +291,43 @@ export default function XAdmin() {
     setWeeklySchedule(newSchedule);
     updateScheduleMutation.mutate(newSchedule);
   };
+
+  // Sistem durumu hesaplama
+  const getSystemStatus = () => {
+    const now = new Date();
+    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    // Log'lardan hata sayısını kontrol et (SSL ve HTTP 500 hataları var)
+    const recentErrors = systemErrors > 0 || (lastErrorTime && lastErrorTime > last24Hours);
+    
+    if (recentErrors && !autoGenerationEnabled) {
+      return { 
+        color: 'orange',
+        bgColor: 'bg-orange-500',
+        textColor: 'text-orange-600',
+        status: 'Hatalı',
+        message: 'Son 24 saatte sistem hataları tespit edildi'
+      };
+    } else if (autoGenerationEnabled) {
+      return { 
+        color: 'green',
+        bgColor: 'bg-green-500',
+        textColor: 'text-green-600',
+        status: 'Çalışıyor',
+        message: 'Otomatik üretim aktif'
+      };
+    } else {
+      return { 
+        color: 'red',
+        bgColor: 'bg-red-500',
+        textColor: 'text-red-600',
+        status: 'Kapalı',
+        message: 'Otomatik üretim durduruldu'
+      };
+    }
+  };
+
+  const systemStatus = getSystemStatus();
 
   const handleQuickAdd = () => {
     if (!quickQuestion.text.trim() || !quickQuestion.category) {
@@ -1115,19 +1165,19 @@ export default function XAdmin() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Sistem Durumu */}
-              <div className="p-4 bg-white rounded-lg border border-orange-200">
+              <div className={`p-4 bg-white rounded-lg border border-${systemStatus.color}-200`}>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className={`w-3 h-3 ${systemStatus.bgColor} rounded-full ${systemStatus.status === 'Çalışıyor' ? 'animate-pulse' : ''}`}></div>
                     <span className="font-medium text-gray-700">Sistem Durumu</span>
                   </div>
-                  <Badge className="bg-green-100 text-green-700">
+                  <Badge className={`bg-${systemStatus.color}-100 ${systemStatus.textColor}`}>
                     <Activity className="w-3 h-3 mr-1" />
-                    Çalışıyor
+                    {systemStatus.status}
                   </Badge>
                 </div>
                 <div className="mt-3 text-sm text-gray-600">
-                  Son üretim: Bugün 14:00 - 10 soru (YKS Matematik)
+                  {systemStatus.message}
                 </div>
               </div>
 
@@ -1191,24 +1241,24 @@ export default function XAdmin() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-600">Bu Hafta Üretilen</span>
-                        <Badge className="bg-green-100 text-green-700 font-bold">1,680 soru</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 font-bold">0 soru</Badge>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-600">Bugün Üretilen</span>
-                        <Badge className="bg-blue-100 text-blue-700 font-bold">240 soru</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 font-bold">0 soru</Badge>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-600">Toplam Veritabanı</span>
-                        <Badge className="bg-purple-100 text-purple-700 font-bold">12,450 soru</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 font-bold">{Object.values(questionCounts || {}).reduce((sum, count) => sum + count, 0)} soru</Badge>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="border border-orange-200">
+                  <Card className={`border border-${systemStatus.color}-200`}>
                     <CardHeader>
-                      <CardTitle className="text-lg text-orange-900 flex items-center gap-2">
+                      <CardTitle className={`text-lg ${systemStatus.textColor} flex items-center gap-2`}>
                         <Settings className="w-5 h-5" />
                         ⚙️ Sistem Kontrolü
                       </CardTitle>
@@ -1259,28 +1309,19 @@ export default function XAdmin() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      { time: '14:00', category: 'YKS Matematik', count: 10, status: 'completed' },
-                      { time: '13:00', category: 'KPSS Genel Yetenek', count: 10, status: 'completed' },
-                      { time: '12:00', category: 'Ehliyet Trafik', count: 10, status: 'completed' },
-                      { time: '11:00', category: 'ALES Sayısal', count: 10, status: 'completed' },
-                      { time: '10:00', category: 'DGS Matematik', count: 10, status: 'completed' },
-                    ].map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-medium text-gray-700">{activity.time}</span>
-                          <span className="text-sm text-gray-600">{activity.category}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-green-100 text-green-700 text-xs">
-                            {activity.count} soru
-                          </Badge>
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <Activity className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz Aktivite Yok</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Otomatik soru üretimi başlatıldığında aktiviteler burada görünecek
+                    </p>
+                    {!autoGenerationEnabled && (
+                      <Badge variant="outline" className="text-xs">
+                        Sistem kapalı
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>

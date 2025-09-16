@@ -2307,6 +2307,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Otomatik Soru Üretim Sistemi - Mevcut Durum Getir
+  app.get("/api/admin/auto-generation/status", async (req, res) => {
+    try {
+      // Şimdilik basit durum yönetimi - gerçek uygulamada bu bilgiyi veritabanından alırdık
+      const status = {
+        enabled: false,
+        schedule: {
+          pazartesi: "10:00",
+          sali: "10:00", 
+          carsamba: "10:00",
+          persembe: "10:00",
+          cuma: "10:00",
+          cumartesi: "10:00",
+          pazar: "10:00"
+        },
+        lastRunAt: null,
+        lastErrorAt: null,
+        totalGenerated: 0,
+        lastUpdate: new Date().toISOString()
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Auto-generation status error:", error);
+      res.status(500).json({ error: "Sistem durumu alınırken hata oluştu" });
+    }
+  });
+
   // Otomatik Soru Üretim Sistemi - Başlat/Durdur
   app.post("/api/admin/auto-generation/toggle", async (req, res) => {
     try {
