@@ -355,6 +355,70 @@ export default function XAdmin() {
 
   const systemStatus = getSystemStatus();
 
+  // Bir sonraki üretim zamanını hesaplayan fonksiyon
+  const getNextGenerationInfo = () => {
+    if (!autoGenerationEnabled) return null;
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour * 60 + currentMinute; // Dakika cinsinden
+
+    const weekDays = ['pazar', 'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi'];
+    const currentDay = weekDays[now.getDay()];
+
+    // Bugünün programını kontrol et
+    const todaySchedule = weeklySchedule[currentDay as keyof typeof weeklySchedule];
+    if (todaySchedule) {
+      const [hour, minute] = todaySchedule.split(':').map(Number);
+      const scheduleTime = hour * 60 + minute;
+
+      // Eğer bugünün saati henüz gelmemişse
+      if (currentTime < scheduleTime) {
+        const remainingMinutes = scheduleTime - currentTime;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+        
+        return {
+          timeText: remainingHours > 0 ? `${remainingHours} saat ${remainingMins} dakika` : `${remainingMins} dakika`,
+          category: "YKS (TYT/AYT)", // Bu sabit, gerçekte döngüsel olabilir
+          isToday: true
+        };
+      }
+    }
+
+    // Bugünün saati geçmişse, yarın veya sonraki günleri kontrol et
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = new Date(now);
+      nextDay.setDate(now.getDate() + i);
+      const nextDayName = weekDays[nextDay.getDay()];
+      
+      const nextSchedule = weeklySchedule[nextDayName as keyof typeof weeklySchedule];
+      if (nextSchedule) {
+        const [hour, minute] = nextSchedule.split(':').map(Number);
+        const nextDayStart = new Date(nextDay);
+        nextDayStart.setHours(hour, minute, 0, 0);
+        
+        const diffMs = nextDayStart.getTime() - now.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        const remainingMins = diffMins % 60;
+        
+        return {
+          timeText: diffHours > 24 ? `${Math.floor(diffHours / 24)} gün ${diffHours % 24} saat` : 
+                   diffHours > 0 ? `${diffHours} saat ${remainingMins} dakika` : `${remainingMins} dakika`,
+          category: "KPSS", // Kategoriler döngüsel olabilir
+          isToday: false,
+          dayName: nextDayName.charAt(0).toUpperCase() + nextDayName.slice(1)
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const nextGeneration = getNextGenerationInfo();
+
   const handleQuickAdd = () => {
     if (!quickQuestion.text.trim() || !quickQuestion.category) {
       toast({
@@ -1080,14 +1144,60 @@ export default function XAdmin() {
                           {toggleAutoGenerationMutation.isPending ? "Durduruluyor..." : "Durdur"}
                         </Button>
                       </div>
+
+                      {/* Gelecek Üretim Bilgisi */}
+                      {autoGenerationEnabled && nextGeneration ? (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-2 text-blue-800 text-sm mb-2">
+                            <Clock className="w-4 h-4" />
+                            <span className="font-medium">Gelecek Üretim:</span>
+                          </div>
+                          <div className="text-xs text-blue-700 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">⏰ Süre:</span>
+                              <span className="text-blue-900 font-semibold">{nextGeneration.timeText} kaldı</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">📚 Kategori:</span>
+                              <span className="text-blue-900 font-semibold">{nextGeneration.category}</span>
+                            </div>
+                            {!nextGeneration.isToday && nextGeneration.dayName && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">📅 Gün:</span>
+                                <span className="text-blue-900">{nextGeneration.dayName}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : !autoGenerationEnabled ? (
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2 text-gray-600 text-sm">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="font-medium">Sistem Kapalı</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Otomatik soru üretimi şu anda devre dışı. Sistemi başlatmak için "Başlat" butonunu kullanın.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <div className="flex items-center gap-2 text-amber-700 text-sm">
+                            <Clock className="w-4 h-4" />
+                            <span className="font-medium">Program Ayarlanmadı</span>
+                          </div>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Haftalık program ayarlanmamış. Lütfen aşağıdan günleri ve saatleri belirleyin.
+                          </p>
+                        </div>
+                      )}
+
                       <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                         <div className="flex items-center gap-2 text-yellow-800 text-sm">
                           <Lightbulb className="w-4 h-4" />
                           <span className="font-medium">Bilgi:</span>
                         </div>
                         <p className="text-xs text-yellow-700 mt-1">
-                          Her saat başında seçilen kategoriler için 10 soru otomatik üretilir. 
-                          Günlük toplam: 240 soru/kategori
+                          Otomatik soru üretimi sistem tarih ve saatini kullanır. Üretilen sorular inceleme sonrası yayınlanır.
                         </p>
                       </div>
                     </CardContent>
