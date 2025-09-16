@@ -95,16 +95,32 @@ export default function XAdmin() {
     queryFn: () => fetch("/api/questions/counts").then((res) => res.json()),
   });
 
+  // Backend'den otomatik üretim durumunu al
+  const { data: autoGenerationStatus, isError: autoGenerationError } = useQuery({
+    queryKey: ["/api/admin/auto-generation/status"],
+    queryFn: () => fetch("/api/admin/auto-generation/status").then((res) => res.json()),
+  });
+
   // Hata takibi - API hatalarına göre sistem hatalarını güncelle
   useEffect(() => {
-    const errorCount = [adminStatsError, subscriptionStatsError, questionCountsError]
+    const errorCount = [adminStatsError, subscriptionStatsError, questionCountsError, autoGenerationError]
       .filter(Boolean).length;
     
     if (errorCount > 0) {
       setSystemErrors(errorCount);
       setLastErrorTime(new Date());
     }
-  }, [adminStatsError, subscriptionStatsError, questionCountsError]);
+  }, [adminStatsError, subscriptionStatsError, questionCountsError, autoGenerationError]);
+
+  // Backend durumu ile senkronize et
+  useEffect(() => {
+    if (autoGenerationStatus) {
+      setAutoGenerationEnabled(autoGenerationStatus.enabled);
+      if (autoGenerationStatus.schedule) {
+        setWeeklySchedule(autoGenerationStatus.schedule);
+      }
+    }
+  }, [autoGenerationStatus]);
 
   const { data: superadminData } = useQuery<SuperadminData>({
     queryKey: ["/api/admin/superadmin-stats"],
@@ -300,29 +316,39 @@ export default function XAdmin() {
     // Log'lardan hata sayısını kontrol et (SSL ve HTTP 500 hataları var)
     const recentErrors = systemErrors > 0 || (lastErrorTime && lastErrorTime > last24Hours);
     
-    if (recentErrors && !autoGenerationEnabled) {
+    // Hata varsa öncelikli olarak turuncu göster
+    if (recentErrors) {
       return { 
         color: 'orange',
-        bgColor: 'bg-orange-500',
-        textColor: 'text-orange-600',
+        bgColor: 'bg-orange-100',
+        textColor: 'text-orange-800',
+        borderColor: 'border-orange-200',
+        dotColor: 'bg-orange-500',
         status: 'Hatalı',
-        message: 'Son 24 saatte sistem hataları tespit edildi'
+        message: 'Sistem Hatası Var',
+        emoji: '🟠'
       };
     } else if (autoGenerationEnabled) {
       return { 
         color: 'green',
-        bgColor: 'bg-green-500',
-        textColor: 'text-green-600',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800',
+        borderColor: 'border-green-200',
+        dotColor: 'bg-green-500',
         status: 'Çalışıyor',
-        message: 'Otomatik üretim aktif'
+        message: 'Sistem Aktif',
+        emoji: '🟢'
       };
     } else {
       return { 
         color: 'red',
-        bgColor: 'bg-red-500',
-        textColor: 'text-red-600',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800',
+        borderColor: 'border-red-200',
+        dotColor: 'bg-red-500',
         status: 'Kapalı',
-        message: 'Otomatik üretim durduruldu'
+        message: 'Sistem Durdurulmuş',
+        emoji: '🔴'
       };
     }
   };
@@ -390,9 +416,9 @@ export default function XAdmin() {
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <Badge className="bg-green-100 text-green-700 px-4 py-2">
+          <Badge className={`${systemStatus.bgColor} ${systemStatus.textColor} px-4 py-2`}>
             <CheckCircle className="w-4 h-4 mr-2" />
-            🟢 Sistem Aktif
+            {systemStatus.emoji} {systemStatus.message}
           </Badge>
           <Badge variant="secondary" className="bg-blue-100 text-blue-700 px-4 py-2">
             <Rocket className="w-4 h-4 mr-2" />
@@ -628,264 +654,25 @@ export default function XAdmin() {
         </TabsContent>
 
         <TabsContent value="add-questions" className="space-y-6">
-          {/* Soru Ekleme Tabları */}
-          <Tabs defaultValue="manual" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-              <TabsTrigger value="manual">⚡ Manuel Soru Ekle</TabsTrigger>
-              <TabsTrigger value="ai">🤖 AI ile Üret</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="manual" className="space-y-0">
-              <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-                <CardHeader>
-                  <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    ⚡ Manuel Soru Ekleme
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Kategori</Label>
-                      <Select
-                        value={quickQuestion.category}
-                        onValueChange={(value) => setQuickQuestion(prev => ({ ...prev, category: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategori seç" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXAM_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Soru Metni</Label>
-                    <Textarea
-                      placeholder="Soru metnini yazın..."
-                      value={quickQuestion.text}
-                      onChange={(e) => setQuickQuestion(prev => ({ ...prev, text: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3">
-                    {quickQuestion.options.map((option, index) => (
-                      <div key={index} className="space-y-2">
-                        <Label>Seçenek {index + 1}</Label>
-                        <Input
-                          placeholder={`${index + 1}. seçenek`}
-                          value={option}
-                          onChange={(e) => {
-                            const newOptions = [...quickQuestion.options];
-                            newOptions[index] = e.target.value;
-                            setQuickQuestion(prev => ({ ...prev, options: newOptions }));
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Doğru Cevap</Label>
-                    <Select
-                      value={quickQuestion.correctAnswer.toString()}
-                      onValueChange={(value) => setQuickQuestion(prev => ({ ...prev, correctAnswer: parseInt(value) }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Doğru cevabı seç" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {quickQuestion.options.map((option, index) => (
-                          option.trim() && (
-                            <SelectItem key={index} value={index.toString()}>
-                              {index + 1}. seçenek: {option.slice(0, 30)}...
-                            </SelectItem>
-                          )
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Açıklama (Opsiyonel)</Label>
-                    <Textarea
-                      placeholder="Cevap açıklaması..."
-                      value={quickQuestion.explanation}
-                      onChange={(e) => setQuickQuestion(prev => ({ ...prev, explanation: e.target.value }))}
-                      rows={2}
-                    />
-                  </div>
-
-                  <Button 
-                    onClick={handleQuickAdd}
-                    disabled={createQuestionMutation.isPending}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    {createQuestionMutation.isPending ? "Ekleniyor..." : "Soruyu Ekle"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="ai" className="space-y-0">
-              <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-                <CardHeader>
-                  <CardTitle className="text-xl text-purple-900 flex items-center gap-2">
-                    <Brain className="w-6 h-6" />
-                    🤖 AI Soru Üretici - Basit Mod
-                    <Badge className="bg-purple-100 text-purple-700">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Premium
-                    </Badge>
-                  </CardTitle>
-                  <p className="text-purple-700 text-sm">
-                    Sadece kategori ve soru sayısı seçin, geri kalan herşey otomatik ayarlanacak
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Target className="w-4 h-4" />
-                        Kategori
-                      </Label>
-                      <Select
-                        value={aiPrompt.category}
-                        onValueChange={(value) => setAiPrompt(prev => ({ ...prev, category: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategori seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXAM_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <ChartBar className="w-4 h-4" />
-                        Soru Sayısı
-                      </Label>
-                      <Select
-                        value={aiPrompt.count.toString()}
-                        onValueChange={(value) => setAiPrompt(prev => ({ ...prev, count: parseInt(value) }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="10">10 Soru</SelectItem>
-                          <SelectItem value="20">20 Soru</SelectItem>
-                          <SelectItem value="30">30 Soru</SelectItem>
-                          <SelectItem value="40">40 Soru</SelectItem>
-                          <SelectItem value="50">50 Soru</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-purple-100 rounded-lg">
-                    <h4 className="font-medium text-purple-900 mb-2">Otomatik Ayarlar:</h4>
-                    <ul className="text-sm text-purple-700 space-y-1">
-                      <li>• Zorluk Seviyesi: Rastgele (Kolay/Orta/Zor)</li>
-                      <li>• Seçenek Sayısı: 5 şık</li>
-                      <li>• Dil: Türkçe</li>
-                      <li>• Müfredat: Gerçek sınav konuları</li>
-                      <li>• AI Model: Claude</li>
-                    </ul>
-                  </div>
-
-                  {previewLoading && (
-                    <div className="space-y-3 p-4 bg-purple-100 rounded-lg">
-                      <div className="flex items-center gap-2 text-purple-700">
-                        <Cpu className="w-5 h-5 animate-spin" />
-                        <span className="font-medium">AI Soru Üretiyor...</span>
-                      </div>
-                      <Progress value={65} className="h-2" />
-                      <p className="text-sm text-purple-600">
-                        Claude AI ile {aiPrompt.count} adet soru oluşturuluyor...
-                      </p>
-                    </div>
-                  )}
-
-                  {showPreview && aiGeneratedQuestions.length > 0 && (
-                    <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-green-900">🎉 {aiGeneratedQuestions.length} Soru Hazır!</h4>
-                        <Badge className="bg-green-100 text-green-700">Önizleme</Badge>
-                      </div>
-                      
-                      <div className="max-h-60 overflow-y-auto space-y-3">
-                        {aiGeneratedQuestions.slice(0, 3).map((q: any, index: number) => (
-                          <div key={index} className="p-3 bg-white rounded-lg shadow-sm">
-                            <p className="font-medium text-gray-900 mb-2">{q.text}</p>
-                            <div className="grid grid-cols-1 gap-1 text-sm">
-                              {q.options?.map((opt: string, i: number) => (
-                                <span key={i} className={`p-1 rounded ${i === q.correctAnswer ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600'}`}>
-                                  {String.fromCharCode(65 + i)}) {opt}
-                                </span>
-                              ))}
-                            </div>
-                            <Badge variant="secondary" className="mt-2">{q.difficulty}</Badge>
-                          </div>
-                        ))}
-                        {aiGeneratedQuestions.length > 3 && (
-                          <p className="text-center text-gray-500 text-sm">
-                            ... ve {aiGeneratedQuestions.length - 3} soru daha
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Button 
-                          onClick={handleSaveAIQuestions}
-                          disabled={saveAIQuestionsMutation.isPending}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                        >
-                          {saveAIQuestionsMutation.isPending ? "Kaydediliyor..." : `✅ Tümünü Kaydet (${aiGeneratedQuestions.length})`}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setShowPreview(false);
-                            setAiGeneratedQuestions([]);
-                          }}
-                        >
-                          ❌ İptal
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button 
-                    onClick={handleAIGenerate}
-                    disabled={previewLoading || showPreview}
-                    className="w-full flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  >
-                    {previewLoading ? (
-                      <Cpu className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Brain className="w-4 h-4" />
-                    )}
-                    {previewLoading ? "AI Çalışıyor..." : showPreview ? "Sorular Hazır ✅" : "🚀 AI ile Üret"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          {/* Soru Ekleme - Basitleştirilmiş */}
+          <Card className="border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
+            <CardHeader>
+              <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                📝 Soru Yönetimi
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">
+                  Soru ekleme ve AI üretim özellikleri geliştirme aşamasındadır.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Bu özellikler yakında kullanıma sunulacaktır.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="manage-questions" className="space-y-6">
@@ -1256,7 +1043,7 @@ export default function XAdmin() {
                     </CardContent>
                   </Card>
 
-                  <Card className={`border border-${systemStatus.color}-200`}>
+                  <Card className={`border ${systemStatus.borderColor}`}>
                     <CardHeader>
                       <CardTitle className={`text-lg ${systemStatus.textColor} flex items-center gap-2`}>
                         <Settings className="w-5 h-5" />
