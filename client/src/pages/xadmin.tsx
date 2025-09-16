@@ -1149,13 +1149,13 @@ export default function XAdmin() {
                           </p>
                         </div>
                       ) : (
-                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <div className="flex items-center gap-2 text-amber-700 text-sm">
+                        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div className="flex items-center gap-2 text-green-700 text-sm">
                             <Clock className="w-4 h-4" />
-                            <span className="font-medium">Program Ayarlanmadı</span>
+                            <span className="font-medium">Saatlik Sistem Aktif</span>
                           </div>
-                          <p className="text-xs text-amber-600 mt-1">
-                            Haftalık program ayarlanmamış. Lütfen aşağıdan günleri ve saatleri belirleyin.
+                          <p className="text-xs text-green-600 mt-1">
+                            Sistem her saat başında otomatik çalışır. Haftalık program artık gerekli değil.
                           </p>
                         </div>
                       )}

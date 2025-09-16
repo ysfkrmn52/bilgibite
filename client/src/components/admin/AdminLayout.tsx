@@ -27,36 +27,6 @@ const sidebarItems = [
     description: 'Ana kontrol paneli',
     icon: LayoutDashboard,
   },
-  {
-    href: '/admin/users',
-    label: 'Kullanıcılar',
-    description: 'Kullanıcı yönetimi',
-    icon: Users,
-  },
-  {
-    href: '/admin/questions',
-    label: 'Sorular',
-    description: 'Soru bankası',
-    icon: BookOpen,
-  },
-  {
-    href: '/admin/ai-generator',
-    label: 'AI Soru Üretici',
-    description: 'Yapay zeka ile soru oluştur',
-    icon: Brain,
-  },
-  {
-    href: '/admin/analytics', 
-    label: 'Analitik',
-    description: 'İstatistik ve raporlar',
-    icon: BarChart3,
-  },
-  {
-    href: '/admin/settings',
-    label: 'Ayarlar', 
-    description: 'Sistem ayarları',
-    icon: Settings,
-  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
