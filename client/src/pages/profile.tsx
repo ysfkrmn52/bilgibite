@@ -470,6 +470,92 @@ export default function Profile() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Çalışma Hedefleri Kartı */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6"
+            >
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <BookOpen className="w-5 h-5 text-purple-600" />
+                    Çalışma Hedefleri ve İlerleme
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Haftalık Hedef */}
+                    <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <Target className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium text-gray-700">Haftalık Soru Hedefi</span>
+                        </div>
+                        <span className="text-sm font-semibold text-blue-600">67 / 100</span>
+                      </div>
+                      <Progress value={67} className="h-2" />
+                      <div className="text-xs text-gray-600 mt-1">33 soru daha!</div>
+                    </div>
+
+                    {/* Günlük Çalışma */}
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-green-600" />
+                          <span className="font-medium text-gray-700">Günlük Çalışma</span>
+                        </div>
+                        <span className="text-sm font-semibold text-green-600">45 / 60 dk</span>
+                      </div>
+                      <Progress value={75} className="h-2" />
+                      <div className="text-xs text-gray-600 mt-1">15 dakika daha!</div>
+                    </div>
+
+                    {/* Favori Konular */}
+                    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Brain className="w-4 h-4 text-purple-600" />
+                        <span className="font-medium text-gray-700">En Çok Çalışılan Konular</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className="bg-purple-500 text-white text-xs">Matematik</Badge>
+                        <Badge className="bg-blue-500 text-white text-xs">Fizik</Badge>
+                        <Badge className="bg-green-500 text-white text-xs">Kimya</Badge>
+                        <Badge variant="outline" className="border-purple-300 text-purple-600 text-xs">Biyoloji</Badge>
+                      </div>
+                    </div>
+
+                    {/* Bu Haftaki Aktivite */}
+                    <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Activity className="w-4 h-4 text-orange-600" />
+                        <span className="font-medium text-gray-700">Bu Haftaki Aktivite</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Pazartesi</span>
+                          <span className="font-medium text-orange-600">3 quiz</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Salı</span>
+                          <span className="font-medium text-orange-600">2 quiz</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Çarşamba</span>
+                          <span className="font-medium text-orange-600">1 quiz</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-400">
+                          <span>Perşembe</span>
+                          <span>-</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
           {/* Sağ Sütun - İstatistikler ve Başarılar */}
