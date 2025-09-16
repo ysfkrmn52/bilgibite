@@ -348,101 +348,6 @@ export default function UpdatedPricing() {
           })}
         </motion.div>
 
-        {/* Package Comparison Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-12"
-        >
-          <Card className="border-0 shadow-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-center py-8">
-              <CardTitle className="text-2xl font-bold">Paket Karşılaştırması</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-6 font-bold text-gray-900">Özellik</th>
-                      <th className="text-center p-6 font-bold text-blue-600">Ücretsiz</th>
-                      <th className="text-center p-6 font-bold text-purple-600">Plus</th>
-                      <th className="text-center p-6 font-bold text-yellow-600">Premium</th>
-                      <th className="text-center p-6 font-bold text-orange-600">AI Kredi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-6 font-semibold text-gray-800">Reklam</td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                          <AlertTriangle className="w-4 h-4" />
-                          Var
-                        </span>
-                      </td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Yok
-                        </span>
-                      </td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Yok
-                        </span>
-                      </td>
-                      <td className="text-center p-6 text-gray-500">-</td>
-                    </tr>
-                    <tr className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-6 font-semibold text-gray-800">Quiz Türü</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">Sadece Hızlı</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">Tam Uygulama</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">Tam Uygulama</td>
-                      <td className="text-center p-6 text-gray-500">-</td>
-                    </tr>
-                    <tr className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-6 font-semibold text-gray-800">Kullanıcı Sayısı</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">1</td>
-                      <td className="text-center p-6 text-gray-700 font-medium">1</td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-yellow-600 font-bold">
-                          <Users className="w-4 h-4" />
-                          4 Kişi
-                        </span>
-                      </td>
-                      <td className="text-center p-6 text-gray-500">-</td>
-                    </tr>
-                    <tr className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-6 font-semibold text-gray-800">AI Özellikler</td>
-                      <td className="text-center p-6">
-                        <span className="text-red-600 font-medium">❌</span>
-                      </td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-purple-600 font-medium">
-                          <Coins className="w-4 h-4" />
-                          AI Kredi ile
-                        </span>
-                      </td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-purple-600 font-medium">
-                          <Coins className="w-4 h-4" />
-                          AI Kredi ile
-                        </span>
-                      </td>
-                      <td className="text-center p-6">
-                        <span className="inline-flex items-center gap-1 text-orange-600 font-bold">
-                          <Brain className="w-4 h-4" />
-                          500 Kredi
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Referral System */}
         <motion.div
@@ -458,7 +363,7 @@ export default function UpdatedPricing() {
               </div>
               <CardTitle className="text-2xl font-bold mb-2">Arkadaşını Davet Et</CardTitle>
               <p className="text-green-100 max-w-2xl mx-auto">
-                Arkadaşın Plus veya Premium paketine abone olduğunda her ikiniz de 1 ay ücretsiz kazanırsınız!
+                Arkadaşın Plus veya Premium paketine abone olduğunda her ikiniz de satın aldığınız paketten 1 ay ücretsiz kazanırsınız!
               </p>
             </CardHeader>
             <CardContent className="p-8">
@@ -472,11 +377,7 @@ export default function UpdatedPricing() {
                     <ul className="space-y-3">
                       <li className="flex items-center gap-3">
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-800 font-medium">1 ay ücretsiz abonelik</span>
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-800 font-medium">50 bonus AI kredi</span>
+                        <span className="text-gray-800 font-medium">Satın aldığınız paketten +1 ay hediye</span>
                       </li>
                     </ul>
                   </div>
@@ -488,11 +389,7 @@ export default function UpdatedPricing() {
                     <ul className="space-y-3">
                       <li className="flex items-center gap-3">
                         <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                        <span className="text-gray-800 font-medium">İlk ay %50 indirim</span>
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                        <span className="text-gray-800 font-medium">25 bonus AI kredi</span>
+                        <span className="text-gray-800 font-medium">Satın aldığı paketten +1 ay hediye</span>
                       </li>
                     </ul>
                   </div>
@@ -531,7 +428,7 @@ export default function UpdatedPricing() {
                     )}
                   </div>
                   <p className="text-center text-sm text-gray-600 mt-4">
-                    * Davet kodu sadece bir kez kullanılabilir ve yeni üyelerde geçerlidir
+                    * Davet kodu sadece bir kez kullanılabilir ve davet edilen kişi ücretli paket aldığında hediyeler aktif olur
                   </p>
                 </div>
               </div>
@@ -613,6 +510,32 @@ export default function UpdatedPricing() {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Advertisement Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-xl p-8 text-center text-white shadow-2xl">
+            <h3 className="text-2xl font-bold mb-4">Reklam Alanı</h3>
+            <p className="text-blue-100 mb-6">
+              Premium kullanıcılar reklamsız deneyimin tadını çıkarırken, bu alan sponsorlar için ayrılmıştır.
+            </p>
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 border border-white/30">
+              <div className="h-32 flex items-center justify-center text-white/60">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-2 border-white/30 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">📢</span>
+                  </div>
+                  <p className="font-medium">Reklam İçeriği</p>
+                  <p className="text-sm opacity-70">925x250 Banner</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>
