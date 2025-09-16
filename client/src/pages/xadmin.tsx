@@ -1043,7 +1043,7 @@ export default function XAdmin() {
                     </CardContent>
                   </Card>
 
-                  <Card className={`border ${systemStatus.borderColor}`}>
+                  <Card className={`border ${systemStatus.borderColor} ${systemStatus.bgColor}`}>
                     <CardHeader>
                       <CardTitle className={`text-lg ${systemStatus.textColor} flex items-center gap-2`}>
                         <Settings className="w-5 h-5" />
@@ -1053,20 +1053,28 @@ export default function XAdmin() {
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
                         <Button 
-                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                          className={`flex-1 ${autoGenerationEnabled 
+                            ? 'bg-gray-500 hover:bg-gray-600 text-white cursor-not-allowed' 
+                            : 'bg-green-500 hover:bg-green-600 text-white'}`}
                           data-testid="button-start-generation"
                           onClick={() => toggleAutoGenerationMutation.mutate(true)}
-                          disabled={toggleAutoGenerationMutation.isPending}
+                          disabled={toggleAutoGenerationMutation.isPending || autoGenerationEnabled}
                         >
                           <Clock className="w-4 h-4 mr-2" />
-                          {toggleAutoGenerationMutation.isPending ? "Başlatılıyor..." : "Başlat"}
+                          {toggleAutoGenerationMutation.isPending 
+                            ? "Başlatılıyor..." 
+                            : autoGenerationEnabled 
+                              ? "Çalışıyor" 
+                              : "Başlat"}
                         </Button>
                         <Button 
-                          variant="outline" 
-                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                          className={`flex-1 ${autoGenerationEnabled 
+                            ? 'bg-red-500 hover:bg-red-600 text-white' 
+                            : 'border-red-300 text-red-600 hover:bg-red-50'}`}
+                          variant={autoGenerationEnabled ? "default" : "outline"}
                           data-testid="button-stop-generation"
                           onClick={() => toggleAutoGenerationMutation.mutate(false)}
-                          disabled={toggleAutoGenerationMutation.isPending}
+                          disabled={toggleAutoGenerationMutation.isPending || !autoGenerationEnabled}
                         >
                           <Target className="w-4 h-4 mr-2" />
                           {toggleAutoGenerationMutation.isPending ? "Durduruluyor..." : "Durdur"}
