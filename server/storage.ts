@@ -28,13 +28,14 @@ import {
   pdfTopics
 } from "@shared/schema";
 import { db } from './db';
-import { eq, count, like, and, sql } from 'drizzle-orm';
+import { eq, count, like, and, sql, desc } from 'drizzle-orm';
 
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
 
@@ -129,6 +130,15 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
+    }
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await db.select().from(users).orderBy(desc(users.createdAt));
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
     }
   }
 

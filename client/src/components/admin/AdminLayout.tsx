@@ -27,6 +27,12 @@ const sidebarItems = [
     description: 'Ana kontrol paneli',
     icon: LayoutDashboard,
   },
+  {
+    href: '/admin/users',
+    label: 'Kullanıcılar',
+    description: 'Kullanıcı yönetimi ve test paketi atama',
+    icon: Users,
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

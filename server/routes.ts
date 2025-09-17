@@ -1210,36 +1210,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/users", async (req, res) => {
+  // Admin User Management Endpoints
+  app.get("/api/admin/users", firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
     try {
-      // Mock users data
-      const users = [
-        {
-          id: "1",
-          username: "ahmet_yilmaz",
-          email: "ahmet@example.com",
-          level: 12,
-          totalXP: 2450,
-          streakCount: 7,
-          lastActive: "2 saat önce",
-          joinDate: "2024-01-15"
-        },
-        {
-          id: "2",
-          username: "zeynep_kaya",
-          email: "zeynep@example.com", 
-          level: 8,
-          totalXP: 1680,
-          streakCount: 3,
-          lastActive: "45 dakika önce",
-          joinDate: "2024-03-20"
-        }
-      ];
-      res.json(users);
+      console.log("Getting all users from database...");
+      const users = await storage.getAllUsers();
+      
+      // Remove password from response for security
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      
+      console.log(`Found ${safeUsers.length} users`);
+      res.json(safeUsers);
     } catch (error) {
-      res.status(500).json({ error: "Kullanıcılar alınamadı" });
+      console.error('Error getting users:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Kullanıcılar alınamadı" 
+      });
     }
-  });
+  }));
+
+  // Give test package to user
+  app.post("/api/admin/users/:userId/test-package", firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const { packageType } = req.body;
+
+      console.log(`Giving ${packageType} package to user ${userId}`);
+
+      if (!packageType || !['premium_trial', 'ai_trial', 'bonus_gems', 'unlimited_lives'].includes(packageType)) {
+        return res.status(400).json({
+          success: false,
+          error: "Geçersiz paket tipi"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "Kullanıcı bulunamadı"
+        });
+      }
+
+      let updates: Partial<typeof user> = {};
+
+      switch (packageType) {
+        case 'premium_trial':
+          updates = { subscriptionType: 'premium' };
+          break;
+        case 'ai_trial':
+          updates = { hasAiPackage: true };
+          break;
+        case 'bonus_gems':
+          updates = { gems: (user.gems || 0) + 100 };
+          break;
+        case 'unlimited_lives':
+          updates = { lives: 999, maxLives: 999 };
+          break;
+      }
+
+      const updatedUser = await storage.updateUser(userId, updates);
+      console.log(`Successfully updated user with ${packageType} package`);
+
+      res.json({
+        success: true,
+        message: `${packageType} paketi başarıyla verildi`,
+        packageType,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error giving test package:', error);
+      res.status(500).json({
+        success: false,
+        error: "Test paketi verilemedi"
+      });
+    }
+  }));
+
+  // Toggle AI package for user
+  app.patch("/api/admin/users/:userId/ai-package", firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const { hasAiPackage } = req.body;
+
+      console.log(`${hasAiPackage ? 'Enabling' : 'Disabling'} AI package for user ${userId}`);
+
+      if (typeof hasAiPackage !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: "hasAiPackage boolean olmalı"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "Kullanıcı bulunamadı"
+        });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { hasAiPackage });
+      console.log(`Successfully ${hasAiPackage ? 'enabled' : 'disabled'} AI package for user`);
+
+      res.json({
+        success: true,
+        message: hasAiPackage ? "AI paketi aktifleştirildi" : "AI paketi devre dışı bırakıldı",
+        hasAiPackage,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error toggling AI package:', error);
+      res.status(500).json({
+        success: false,
+        error: "AI paketi güncelleme hatası"
+      });
+    }
+  }));
+
+  // Update user subscription
+  app.patch("/api/admin/users/:userId/subscription", firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const { subscriptionType } = req.body;
+
+      console.log(`Updating subscription for user ${userId} to ${subscriptionType}`);
+
+      if (!subscriptionType || !['free', 'premium', 'enterprise'].includes(subscriptionType)) {
+        return res.status(400).json({
+          success: false,
+          error: "Geçersiz abonelik tipi"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "Kullanıcı bulunamadı"
+        });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { subscriptionType });
+      console.log(`Successfully updated subscription to ${subscriptionType}`);
+
+      res.json({
+        success: true,
+        message: `Abonelik tipi ${subscriptionType} olarak güncellendi`,
+        subscriptionType,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      res.status(500).json({
+        success: false,
+        error: "Abonelik güncelleme hatası"
+      });
+    }
+  }));
 
   // User Profile Routes
   app.get("/api/user/profile", async (req, res) => {

@@ -1121,21 +1121,20 @@ export default function XAdmin() {
                             <Clock className="w-4 h-4" />
                             <span className="font-medium">Gelecek Üretim:</span>
                           </div>
-                          <div className="text-xs text-blue-700 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">⏰ Süre:</span>
-                              <span className="text-blue-900 font-semibold">{nextGeneration.timeText} kaldı</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">📚 Kategori:</span>
-                              <span className="text-blue-900 font-semibold">{nextGeneration.category}</span>
-                            </div>
-                            {!nextGeneration.isToday && nextGeneration.dayName && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">📅 Gün:</span>
-                                <span className="text-blue-900">{nextGeneration.dayName}</span>
+                          <div className="text-xs text-blue-700 space-y-2">
+                            <div className="bg-blue-100 p-2 rounded border">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium">⏰ Gelecek Üretim:</span>
+                                <span className="text-blue-900 font-bold text-sm">{nextGeneration.timeText} kaldı</span>
                               </div>
-                            )}
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">📚 Üretilecek Konu:</span>
+                                <span className="text-blue-900 font-semibold">{nextGeneration.category}</span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-blue-600">
+                              ✅ Sistem backend'de çalışıyor - sayfa kapansa da devam eder
+                            </div>
                           </div>
                         </div>
                       ) : !autoGenerationEnabled ? (
