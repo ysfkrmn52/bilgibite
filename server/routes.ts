@@ -100,13 +100,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Apply global middleware
+  const getAllowedOrigins = () => {
+    if (process.env.NODE_ENV === 'production') {
+      const origins = [];
+      
+      // Add custom frontend URL if provided
+      if (process.env.FRONTEND_URL) {
+        origins.push(process.env.FRONTEND_URL);
+      }
+      
+      // Add allowed origins from environment variable (comma-separated)
+      if (process.env.ALLOWED_ORIGINS) {
+        const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+        origins.push(...allowedOrigins);
+      }
+      
+      // Add Replit.app domain support for hosted apps
+      if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+        origins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+        origins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
+      }
+      
+      // Add any additional Replit domains
+      const replitDomainPattern = /^https:\/\/[a-zA-Z0-9-]+\.repl\.co$/;
+      const replitAppPattern = /^https:\/\/[a-zA-Z0-9-]+\.replit\.app$/;
+      
+      return origins.length > 0 ? origins : false; // false means no CORS if no origins specified
+    }
+    
+    // Development origins
+    return [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5000'
+    ];
+  };
+
   app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com'] 
-      : ['http://localhost:3000', 'http://localhost:5173'],
+    origin: getAllowedOrigins(),
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Cache-Control',
+      'X-File-Name'
+    ],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400 // 24 hours
   }));
   app.use(securityMiddleware);
   app.use(loggingMiddleware);

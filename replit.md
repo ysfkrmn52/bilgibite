@@ -31,6 +31,28 @@ PostgreSQL is used with Drizzle ORM for type-safe operations. The schema include
 - **Admin Panel**: Advanced admin panel with multi-admin support, role-based access control, CRUD operations for content and users, bulk operations (e.g., PDF import for questions), and detailed statistics.
 - **Security & Production Readiness**: Implemented Firebase Admin SDK for server-side auth, robust security middleware, error reporting, health checks, and SEO optimization.
 
+# Environment Variables for Production
+
+## CORS Configuration
+- **FRONTEND_URL**: The main frontend URL for production (e.g., 'https://your-domain.com')
+- **ALLOWED_ORIGINS**: Comma-separated list of additional allowed origins (e.g., 'https://app.example.com,https://cdn.example.com')
+- **REPL_SLUG**: Automatically set by Replit for hosted apps
+- **REPL_OWNER**: Automatically set by Replit for hosted apps
+
+## Usage in Production
+```bash
+# Example environment variables for production deployment
+FRONTEND_URL=https://bilgibite.com
+ALLOWED_ORIGINS=https://app.bilgibite.com,https://admin.bilgibite.com
+NODE_ENV=production
+```
+
+The CORS configuration automatically:
+- Uses localhost URLs in development
+- Supports Replit.app domains when deployed on Replit
+- Uses environment variables for production domains
+- Provides secure headers and methods for all environments
+
 # External Dependencies
 
 ## Database Services
