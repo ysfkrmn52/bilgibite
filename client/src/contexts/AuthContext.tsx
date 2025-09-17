@@ -10,6 +10,7 @@ import {
   sendEmailVerification
 } from 'firebase/auth';
 import { auth, googleProvider, isFirebaseConfigured, isDemoMode } from '@/lib/firebase';
+import { apiRequest } from '@/lib/queryClient';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -46,7 +47,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     displayName: 'Demo Kullanıcı',
     emailVerified: true,
     photoURL: null,
+    phoneNumber: null,
     isAnonymous: false,
+    providerId: 'firebase',
     metadata: {
       creationTime: new Date().toISOString(),
       lastSignInTime: new Date().toISOString()
@@ -60,6 +63,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     reload: async () => {},
     toJSON: () => ({})
   } as User;
+
+  // Sync Firebase user with database
+  async function syncUserWithDatabase(user: User) {
+    if (!user || isDemoMode) return; // Skip sync in demo mode
+    
+    try {
+      // Extract relevant user data
+      const userData = {
+        firebaseUid: user.uid,
+        email: user.email || '',
+        username: user.displayName || user.email?.split('@')[0] || `user_${user.uid.slice(0, 8)}`,
+        role: 'user',
+        subscriptionType: 'free',
+        hasAiPackage: false
+      };
+
+      // Try to create or update user in database
+      await apiRequest('POST', '/api/users', userData);
+      console.log('✅ User synced with database:', user.uid);
+    } catch (error: any) {
+      // If user already exists (409) or other errors, that's ok
+      if (error.message?.includes('409')) {
+        console.log('ℹ️ User already exists in database:', user.uid);
+      } else {
+        console.warn('Failed to sync user with database:', error);
+      }
+    }
+  }
 
   async function signup(email: string, password: string, displayName: string) {
     if (isDemoMode) {
@@ -120,8 +151,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isDemoMode) {
       // Demo mode: simulate successful logout
       setCurrentUser(null);
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('isAuthenticated');
       return;
     }
     
@@ -142,26 +171,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (isDemoMode) {
-      // Demo mode: Check for stored user data from backend login
-      const storedUser = localStorage.getItem('currentUser');
-      const isAuthenticated = localStorage.getItem('isAuthenticated');
-      
-      if (storedUser && isAuthenticated === 'true') {
-        try {
-          const userData = JSON.parse(storedUser);
-          setCurrentUser({
-            uid: userData.id,
-            email: userData.email,
-            displayName: userData.username,
-            role: userData.role,
-            subscription_type: userData.subscription_type
-          } as any);
-        } catch (error) {
-          console.error('Error parsing stored user data:', error);
-          localStorage.removeItem('currentUser');
-          localStorage.removeItem('isAuthenticated');
-        }
-      }
+      // Demo mode: Use pure demo user, no backend login storage
+      setCurrentUser(demoUser);
       setLoading(false);
       return;
     }
@@ -171,8 +182,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
     
-    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       setCurrentUser(user);
+      
+      // Sync user with database when they sign in
+      if (user) {
+        await syncUserWithDatabase(user);
+      }
+      
       setLoading(false);
     });
 

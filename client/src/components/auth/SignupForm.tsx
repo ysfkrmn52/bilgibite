@@ -57,34 +57,17 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       setSuccess('');
       setIsLoading(true);
       
-      // Use our backend API for registration
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          username: data.displayName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Kayıt işlemi başarısız');
+      // Use Firebase Authentication only
+      await signup(data.email, data.password, data.displayName);
+      
+      setSuccess('Hesabınız başarıyla oluşturuldu! Email doğrulamanızı kontrol edin.');
+      
+      // Success callback will handle redirect after verification
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
       }
-
-      setSuccess('Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.');
-      
-      // Store user data in localStorage
-      localStorage.setItem('currentUser', JSON.stringify(result.user));
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      setTimeout(() => {
-        onSuccess?.();
-      }, 1500);
       
     } catch (err: any) {
       setError(err.message || 'Hesap oluşturulurken hata oluştu');

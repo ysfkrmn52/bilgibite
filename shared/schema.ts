@@ -7,7 +7,6 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
   firebaseUid: text("firebase_uid").unique(),
   role: text("role").notNull().default('user'), // 'user', 'admin', 'super_admin'
   subscriptionType: text("subscription_type").notNull().default('free'), // 'free', 'premium', 'enterprise'

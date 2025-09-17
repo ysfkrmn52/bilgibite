@@ -7,8 +7,10 @@ const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY &&
                           import.meta.env.VITE_FIREBASE_PROJECT_ID && 
                           import.meta.env.VITE_FIREBASE_APP_ID;
 
-// Development/Demo mode configuration - disable Firebase for development
-const isDevelopment = import.meta.env.DEV || !hasFirebaseConfig;
+// Production/Demo mode configuration - use environment variables to control
+const isProduction = import.meta.env.PROD;
+const isDemoModeEnabled = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
+const isDevelopment = !isProduction && (isDemoModeEnabled || !hasFirebaseConfig);
 
 const firebaseConfig = hasFirebaseConfig && !isDevelopment ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

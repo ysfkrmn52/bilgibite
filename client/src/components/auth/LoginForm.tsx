@@ -46,36 +46,13 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
       setError('');
       setIsLoading(true);
       
-      // Use our backend API for login instead of Firebase
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Giriş başarısız');
-      }
-
-      // Store user data in localStorage
-      localStorage.setItem('currentUser', JSON.stringify(result.user));
-      localStorage.setItem('isAuthenticated', 'true');
+      // Use Firebase Authentication only
+      await login(data.email, data.password);
       
-      // Redirect to home or admin panel if super admin
-      if (result.user.role === 'super_admin' || result.user.role === 'admin') {
-        window.location.href = '/admin';
-      } else {
-        window.location.href = '/';
+      // Success callback will handle redirect
+      if (onSuccess) {
+        onSuccess();
       }
-      
-      onSuccess?.();
     } catch (err: any) {
       setError(err.message || 'Giriş sırasında hata oluştu');
     } finally {
@@ -114,6 +91,10 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
       const { signInWithPopup } = await import('firebase/auth');
       const { auth } = await import('@/lib/firebase');
       const { facebookProvider } = await import('@/lib/firebase');
+      
+      if (!auth || !facebookProvider) {
+        throw new Error('Firebase authentication not configured');
+      }
       
       const result = await signInWithPopup(auth, facebookProvider);
       onSuccess?.();

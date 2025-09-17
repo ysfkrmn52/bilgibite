@@ -129,90 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(EXAM_CATEGORIES);
   }));
 
-  // Authentication endpoints (with moderate rate limiting for auth)
-  app.post("/api/auth/login", moderateRateLimiter, validationMiddleware(z.object({
-    email: z.string().email(),
-    password: z.string().min(6)
-  })), asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    
-    try {
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ 
-          error: "Geçersiz email veya şifre",
-          success: false 
-        });
-      }
-
-      // For now, simple password check (in production, use bcrypt)
-      if (user.password !== password) {
-        return res.status(401).json({ 
-          error: "Geçersiz email veya şifre",
-          success: false 
-        });
-      }
-
-      // Return user data without password
-      const { password: _, ...userData } = user;
-      res.json({ 
-        success: true, 
-        user: userData,
-        message: "Giriş başarılı" 
-      });
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ 
-        error: "Giriş sırasında hata oluştu",
-        success: false 
-      });
-    }
-  }));
-
-  app.post("/api/auth/register", moderateRateLimiter, validationMiddleware(z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
-    username: z.string().min(3).max(50)
-  })), asyncHandler(async (req: Request, res: Response) => {
-    const { email, password, username } = req.body;
-    
-    try {
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(409).json({ 
-          error: "Bu email adresi zaten kullanımda",
-          success: false 
-        });
-      }
-
-      // Create new user
-      const newUser = await storage.createUser({
-        username,
-        email,
-        password,
-        role: 'user',
-        subscriptionType: 'free'
-      });
-
-      // Return user data without password
-      const { password: _, ...userData } = newUser;
-      res.status(201).json({ 
-        success: true, 
-        user: userData,
-        message: "Hesap başarıyla oluşturuldu" 
-      });
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ 
-        error: "Hesap oluşturulurken hata oluştu",
-        success: false 
-      });
-    }
-  }));
+  // Authentication is now handled entirely through Firebase Auth
+  // No plaintext password endpoints for security
 
   // Protected user routes (require authentication)
   app.get("/api/users/:userId", authenticationMiddleware, asyncHandler(async (req: Request, res: Response) => {
@@ -1216,11 +1134,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Getting all users from database...");
       const users = await storage.getAllUsers();
       
-      // Remove password from response for security
-      const safeUsers = users.map(user => {
-        const { password, ...safeUser } = user;
-        return safeUser;
-      });
+      // Return users as-is since password is no longer stored (Firebase handles auth)
+      const safeUsers = users;
       
       console.log(`Found ${safeUsers.length} users`);
       res.json(safeUsers);
