@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import AutoGenerationScheduler from "./auto-generation-scheduler";
+import { validateEnvironmentVariables, logEnvironmentSummary } from "./env-validation";
+import { autoMigrate } from "./migrations";
 
 const app = express();
 
@@ -48,11 +50,20 @@ app.use((req, res, next) => {
 let globalScheduler: AutoGenerationScheduler | null = null;
 
 // Process cleanup handlers
-const cleanup = () => {
+const cleanup = async () => {
   console.log('🧹 Server cleanup started...');
-  if (globalScheduler && 'cleanup' in globalScheduler) {
-    globalScheduler.cleanup();
+  
+  // Access the scheduler from global namespace (set in routes.ts)
+  const scheduler = (global as any).autoGenerationScheduler;
+  if (scheduler && typeof scheduler === 'object' && 'cleanup' in scheduler) {
+    try {
+      await scheduler.cleanup();
+      console.log('🤖 Scheduler cleanup completed');
+    } catch (error) {
+      console.error('❌ Scheduler cleanup error:', error);
+    }
   }
+  
   console.log('✅ Server cleanup completed');
   process.exit(0);
 };
@@ -65,6 +76,29 @@ process.on('uncaughtException', (error) => {
 });
 
 (async () => {
+  // Validate environment variables before any initialization
+  // Implements fail-fast principle to catch configuration issues at startup
+  validateEnvironmentVariables();
+  logEnvironmentSummary();
+
+  // Run database migrations automatically before starting the server
+  // This ensures the database schema is up-to-date on startup
+  try {
+    log('🔄 Starting database migration check...');
+    await autoMigrate();
+    log('✅ Database migrations completed successfully');
+  } catch (error: any) {
+    log(`❌ Migration failed: ${error.message}`);
+    if (process.env.NODE_ENV === 'production') {
+      // In production, migration failures should stop the server
+      console.error('💥 Critical migration failure in production. Server startup aborted.');
+      process.exit(1);
+    } else {
+      // In development, log warning but continue
+      log('⚠️  Development mode: Server will continue despite migration failure');
+    }
+  }
+
   const server = await registerRoutes(app);
 
   // importantly only setup vite in development and after

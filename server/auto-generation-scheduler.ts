@@ -1,5 +1,8 @@
 import { EXAM_CATEGORIES } from '../shared/categories';
 import type { IStorage } from './storage';
+import { db } from './db';
+import { schedulerState } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 // Saatlik otomatik soru üretimi scheduler sistemi
 interface SchedulerState {
@@ -38,8 +41,76 @@ class AutoGenerationScheduler {
     console.log('🤖 AutoGenerationScheduler initialized');
   }
 
+  // Database persistence methods
+  private async loadStateFromDB(): Promise<void> {
+    try {
+      const result = await db.select().from(schedulerState).where(eq(schedulerState.id, 'scheduler-singleton')).limit(1);
+      
+      if (result.length > 0) {
+        const dbState = result[0];
+        this.state.enabled = dbState.enabled;
+        this.state.nextRunAt = dbState.nextRunAt;
+        this.state.lastRunAt = dbState.lastRunAt;
+        this.state.currentCategory = dbState.currentCategory;
+        this.state.stats.totalRuns = dbState.totalRuns;
+        this.state.stats.totalQuestionsGenerated = dbState.totalQuestionsGenerated;
+        this.state.stats.lastError = dbState.lastError || undefined;
+        
+        console.log('✅ Scheduler state loaded from database');
+        console.log(`📊 Loaded state: enabled=${this.state.enabled}, totalRuns=${this.state.stats.totalRuns}, nextRun=${this.state.nextRunAt?.toISOString()}`);
+      } else {
+        // Create initial state record
+        await this.saveStateToDB();
+        console.log('🔄 Created initial scheduler state in database');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load scheduler state from database:', error);
+      // Continue with in-memory state on DB error
+    }
+  }
+
+  private async saveStateToDB(): Promise<void> {
+    try {
+      const stateData = {
+        enabled: this.state.enabled,
+        nextRunAt: this.state.nextRunAt,
+        lastRunAt: this.state.lastRunAt,
+        currentCategory: this.state.currentCategory,
+        totalRuns: this.state.stats.totalRuns,
+        totalQuestionsGenerated: this.state.stats.totalQuestionsGenerated,
+        lastError: this.state.stats.lastError || null,
+        lastErrorAt: this.state.stats.lastError ? new Date() : null,
+        updatedAt: new Date()
+      };
+
+      await db.insert(schedulerState)
+        .values({ id: 'scheduler-singleton', ...stateData })
+        .onConflictDoUpdate({
+          target: schedulerState.id,
+          set: stateData
+        });
+      
+      console.log('💾 Scheduler state saved to database');
+    } catch (error) {
+      console.error('❌ Failed to save scheduler state to database:', error);
+      // Don't throw - continue running even if persistence fails
+    }
+  }
+
+  // Initialize scheduler with database state recovery
+  public async initialize(): Promise<void> {
+    await this.loadStateFromDB();
+    
+    // If scheduler was enabled before restart, restore it
+    if (this.state.enabled) {
+      console.log('🔄 Recovering scheduler state after restart');
+      this.state.enabled = false; // Reset to prevent double start
+      this.start();
+    }
+  }
+
   // Sistemi başlat
-  public start(): void {
+  public async start(): Promise<void> {
     if (this.state.enabled) {
       console.log('⚠️ Scheduler already running');
       return;
@@ -49,15 +120,21 @@ class AutoGenerationScheduler {
     this.clearTimers();
     this.scheduleNextHour();
     
+    // Persist state change
+    await this.saveStateToDB();
+    
     console.log('🚀 Auto-generation scheduler started');
   }
 
   // Sistemi durdur
-  public stop(): void {
+  public async stop(): Promise<void> {
     this.state.enabled = false;
     this.clearTimers();
     this.state.nextRunAt = null;
     this.state.currentCategory = null;
+    
+    // Persist state change
+    await this.saveStateToDB();
     
     console.log('⛔ Auto-generation scheduler stopped');
   }
@@ -105,11 +182,15 @@ class AutoGenerationScheduler {
       this.state.stats.totalRuns++;
       this.state.stats.totalQuestionsGenerated += 10;
       this.state.lastRunAt = new Date();
+      this.state.stats.lastError = undefined; // Clear previous errors on success
       
       // Bir sonraki çalışma zamanını ayarla
       const nextRun = new Date();
       nextRun.setHours(nextRun.getHours() + 1, 0, 0, 0);
       this.state.nextRunAt = nextRun;
+      
+      // Persist updated stats
+      await this.saveStateToDB();
       
       console.log(`✅ Successfully generated 10 questions for ${category}`);
       console.log(`📊 Total runs: ${this.state.stats.totalRuns}, Total questions: ${this.state.stats.totalQuestionsGenerated}`);
@@ -117,6 +198,9 @@ class AutoGenerationScheduler {
     } catch (error) {
       this.state.stats.lastError = error instanceof Error ? error.message : 'Unknown error';
       console.error('❌ Error during auto-generation:', error);
+      
+      // Persist error state
+      await this.saveStateToDB();
     }
   }
 
@@ -171,8 +255,8 @@ class AutoGenerationScheduler {
   }
 
   // Process kapanırken cleanup yap
-  public cleanup(): void {
-    this.stop();
+  public async cleanup(): Promise<void> {
+    await this.stop();
     console.log('🧹 AutoGenerationScheduler cleanup completed');
   }
 }

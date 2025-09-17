@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Activity, Users, Database, Server, Cpu, CheckCircle, XCircle, Clock } from "lucide-react";
+import { AlertTriangle, Activity, Users, Database, Server, Cpu, CheckCircle, XCircle, Clock, Bot, Play, Square, RotateCcw } from "lucide-react";
 import MonitoringService from "@/lib/monitoring";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -29,11 +29,29 @@ interface Metrics {
   averageResponseTime: number;
 }
 
+interface SchedulerStatus {
+  enabled: boolean;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  currentCategory: string | null;
+  stats: {
+    totalRuns: number;
+    totalQuestionsGenerated: number;
+    lastError?: string;
+  };
+  minutesUntilNext: number | null;
+  uptime: number;
+  serverTime: string;
+  environment: string;
+}
+
 export default function MonitoringDashboard() {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [errors, setErrors] = useState<any[]>([]);
+  const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [schedulerLoading, setSchedulerLoading] = useState(false);
 
   const monitoring = MonitoringService.getInstance();
 
@@ -41,11 +59,13 @@ export default function MonitoringDashboard() {
     fetchHealthStatus();
     fetchMetrics();
     fetchRecentErrors();
+    fetchSchedulerStatus();
     
     // Set up real-time updates
     const interval = setInterval(() => {
       fetchHealthStatus();
       fetchMetrics();
+      fetchSchedulerStatus();
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
@@ -79,6 +99,37 @@ export default function MonitoringDashboard() {
     const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours ago
     const recentErrors = errorList.filter(error => error.timestamp > cutoff).slice(-50);
     setErrors(recentErrors);
+  };
+
+  const fetchSchedulerStatus = async () => {
+    try {
+      const response = await apiRequest('/api/admin/scheduler/status');
+      if (response.success) {
+        setSchedulerStatus(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch scheduler status:', error);
+    }
+  };
+
+  const handleSchedulerControl = async (action: 'start' | 'stop') => {
+    setSchedulerLoading(true);
+    try {
+      const response = await apiRequest(`/api/admin/scheduler/${action}`, {
+        method: 'POST'
+      });
+      if (response.success) {
+        await fetchSchedulerStatus(); // Refresh status
+        monitoring.logSuccess(`Scheduler ${action}ed successfully`);
+      } else {
+        monitoring.logError(new Error(response.message || `Failed to ${action} scheduler`));
+      }
+    } catch (error) {
+      console.error(`Scheduler ${action} error:`, error);
+      monitoring.logError(error as Error);
+    } finally {
+      setSchedulerLoading(false);
+    }
   };
 
   const formatUptime = (seconds: number) => {

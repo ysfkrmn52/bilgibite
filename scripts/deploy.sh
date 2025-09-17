@@ -101,9 +101,22 @@ deploy_application() {
     log "Waiting for services to start..."
     sleep 30
     
-    # Run database migrations
+    # Run database migrations (production-safe approach)
     log "Running database migrations..."
-    docker-compose -f deployment/docker-compose.prod.yml exec -T app npm run db:push
+    
+    # First, generate any new migrations based on schema changes
+    log "Generating migration files from schema changes..."
+    docker-compose -f deployment/docker-compose.prod.yml exec -T app npx drizzle-kit generate || {
+        log "No new migrations to generate or generation failed"
+    }
+    
+    # Then run any pending migrations
+    log "Applying pending migrations to database..."
+    docker-compose -f deployment/docker-compose.prod.yml exec -T app npx drizzle-kit migrate || {
+        error "Failed to run database migrations. Deployment aborted."
+    }
+    
+    log "Database migrations completed successfully"
     
     log "Deployment completed successfully"
 }

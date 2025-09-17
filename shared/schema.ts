@@ -725,7 +725,28 @@ export type InsertPdfTopic = typeof pdfTopics.$inferInsert;
 export type PdfFolder = typeof pdfFolders.$inferSelect;
 export type InsertPdfFolder = typeof pdfFolders.$inferInsert;
 
+// AI Scheduler State - Production monitoring sistemi için
+export const schedulerState = pgTable("scheduler_state", {
+  id: varchar("id").primaryKey().default("scheduler-singleton"), // Single row table
+  enabled: boolean("enabled").notNull().default(false),
+  nextRunAt: timestamp("next_run_at"),
+  lastRunAt: timestamp("last_run_at"),
+  currentCategory: text("current_category"),
+  totalRuns: integer("total_runs").notNull().default(0),
+  totalQuestionsGenerated: integer("total_questions_generated").notNull().default(0),
+  lastError: text("last_error"),
+  lastErrorAt: timestamp("last_error_at"),
+  generationHistory: jsonb("generation_history").default([]), // Son 10 generation kaydı
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // PDF Schema Exports
 export const insertPdfMaterialSchema = createInsertSchema(pdfMaterials).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPdfTopicSchema = createInsertSchema(pdfTopics).omit({ id: true, createdAt: true });
 export const insertPdfFolderSchema = createInsertSchema(pdfFolders).omit({ id: true, createdAt: true });
+
+// Scheduler State Types
+export type SchedulerState = typeof schedulerState.$inferSelect;
+export type InsertSchedulerState = typeof schedulerState.$inferInsert;
+export const insertSchedulerStateSchema = createInsertSchema(schedulerState).omit({ id: true, createdAt: true, updatedAt: true });

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Book, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, FileQuestion, CheckCircle, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EXAM_CATEGORIES } from '@shared/categories';
 
@@ -25,15 +27,9 @@ interface Question {
   createdAt: string;
 }
 
-interface ExamCategory {
-  id: string;
-  name: string;
-}
-
-
-
-export default function AdminQuestions() {
+export default function AdminQuestionsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,44 +74,70 @@ export default function AdminQuestions() {
 
   const getOptionLetter = (index: number) => String.fromCharCode(65 + index);
 
+  const filteredQuestions = questions.filter((q: Question) => 
+    q.questionText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (q.subject && q.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (q.topic && q.topic.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
+    <AdminLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Soru Yönetimi
-          </h1>
-          <p className="text-gray-600">
-            Veritabanındaki tüm soruları kategori seçerek görüntüleyin
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Soru Yönetimi</h1>
+            <p className="text-gray-600">Veritabanındaki tüm soruları kategori seçerek görüntüleyin</p>
+          </div>
+          {selectedCategory && (
+            <Badge variant="outline" className="text-sm">
+              {filteredQuestions.length} soru
+            </Badge>
+          )}
         </div>
 
-        {/* Category Selection */}
-        <Card className="mb-6 bg-white">
+        {/* Category Selection and Search */}
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Book className="w-5 h-5" />
-              Kategori Seçimi
+              <FileQuestion className="w-5 h-5" />
+              Filtreler
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 items-center">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Sınav kategorisi seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXAM_CATEGORIES.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger data-testid="select-category-filter">
+                    <SelectValue placeholder="Sınav kategorisi seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXAM_CATEGORIES.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
               {selectedCategory && (
-                <Button onClick={() => refetch()} variant="outline">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Sorularda ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-search-questions"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory && (
+                <Button onClick={() => refetch()} variant="outline" data-testid="button-refresh-questions">
                   Yenile
                 </Button>
               )}
@@ -131,11 +153,18 @@ export default function AdminQuestions() {
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                 <span className="ml-2">Sorular yükleniyor...</span>
               </div>
-            ) : questions.length === 0 ? (
-              <Card className="bg-white">
+            ) : filteredQuestions.length === 0 ? (
+              <Card>
                 <CardContent className="text-center py-12">
-                  <p className="text-gray-500 text-lg">
-                    Bu kategoride henüz soru bulunmuyor.
+                  <FileQuestion className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {searchTerm ? "Arama Sonucu Bulunamadı" : "Soru Bulunamadı"}
+                  </h3>
+                  <p className="text-gray-500">
+                    {searchTerm 
+                      ? `"${searchTerm}" için hiçbir soru bulunamadı.`
+                      : 'Bu kategoride henüz soru bulunmuyor.'
+                    }
                   </p>
                 </CardContent>
               </Card>
@@ -143,32 +172,36 @@ export default function AdminQuestions() {
               <>
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <Card className="bg-white">
+                  <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-blue-600">{questions.length}</div>
-                      <div className="text-sm text-gray-600">Toplam Soru</div>
+                      <div className="text-2xl font-bold text-blue-600" data-testid="stat-total-questions">
+                        {filteredQuestions.length}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {searchTerm ? "Filtrelenmiş" : "Toplam"} Soru
+                      </div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-white">
+                  <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-green-600">
-                        {questions.filter((q: Question) => q.difficulty === 'easy').length}
+                      <div className="text-2xl font-bold text-green-600" data-testid="stat-easy-questions">
+                        {filteredQuestions.filter((q: Question) => q.difficulty === 'easy').length}
                       </div>
                       <div className="text-sm text-gray-600">Kolay</div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-white">
+                  <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-yellow-600">
-                        {questions.filter((q: Question) => q.difficulty === 'medium').length}
+                      <div className="text-2xl font-bold text-yellow-600" data-testid="stat-medium-questions">
+                        {filteredQuestions.filter((q: Question) => q.difficulty === 'medium').length}
                       </div>
                       <div className="text-sm text-gray-600">Orta</div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-white">
+                  <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-red-600">
-                        {questions.filter((q: Question) => q.difficulty === 'hard').length}
+                      <div className="text-2xl font-bold text-red-600" data-testid="stat-hard-questions">
+                        {filteredQuestions.filter((q: Question) => q.difficulty === 'hard').length}
                       </div>
                       <div className="text-sm text-gray-600">Zor</div>
                     </CardContent>
@@ -176,8 +209,8 @@ export default function AdminQuestions() {
                 </div>
 
                 {/* Questions List */}
-                {questions.map((question: Question, index: number) => (
-                  <Card key={question.id} className="bg-white">
+                {filteredQuestions.map((question: Question, index: number) => (
+                  <Card key={question.id} data-testid={`card-question-${question.id}`}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
@@ -196,22 +229,23 @@ export default function AdminQuestions() {
                             </Badge>
                           )}
                         </div>
-                        <Button
-                          onClick={() => deleteQuestionMutation.mutate(question.id)}
-                          disabled={deleteQuestionMutation.isPending}
-                          variant="destructive"
-                          size="sm"
-                          className="ml-2"
-                        >
-                          {deleteQuestionMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                          Sil
-                        </Button>
-                        <div className="text-xs text-gray-400">
-                          {new Date(question.createdAt).toLocaleDateString('tr-TR')}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => deleteQuestionMutation.mutate(question.id)}
+                            disabled={deleteQuestionMutation.isPending}
+                            variant="destructive"
+                            size="sm"
+                            data-testid={`button-delete-question-${question.id}`}
+                          >
+                            {deleteQuestionMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <div className="text-xs text-gray-400">
+                            {new Date(question.createdAt).toLocaleDateString('tr-TR')}
+                          </div>
                         </div>
                       </div>
                     </CardHeader>
@@ -237,6 +271,7 @@ export default function AdminQuestions() {
                                   ? 'bg-green-50 border-green-300' 
                                   : 'bg-gray-50 border-gray-200'
                               }`}
+                              data-testid={`option-${optionIndex}-${isCorrect ? 'correct' : 'incorrect'}`}
                             >
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
                                 isCorrect 
@@ -279,6 +314,6 @@ export default function AdminQuestions() {
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

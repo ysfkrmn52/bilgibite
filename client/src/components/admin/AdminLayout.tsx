@@ -13,7 +13,11 @@ import {
   X,
   LogOut,
   Bell,
-  Brain
+  Brain,
+  CreditCard,
+  Target,
+  FileQuestion,
+  Sparkles
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -24,7 +28,7 @@ const sidebarItems = [
   {
     href: '/xadmin',
     label: 'Dashboard',
-    description: 'Ana kontrol paneli',
+    description: 'Ana kontrol paneli ve AI soru üretimi',
     icon: LayoutDashboard,
   },
   {
@@ -32,6 +36,24 @@ const sidebarItems = [
     label: 'Kullanıcılar',
     description: 'Kullanıcı yönetimi ve test paketi atama',
     icon: Users,
+  },
+  {
+    href: '/admin/questions',
+    label: 'Sorular',
+    description: 'Soru görüntüleme ve yönetimi',
+    icon: FileQuestion,
+  },
+  {
+    href: '/admin/subscriptions',
+    label: 'Abonelikler',
+    description: 'Subscription istatistikleri ve yönetim',
+    icon: CreditCard,
+  },
+  {
+    href: '/admin/analytics',
+    label: 'Analitik',
+    description: 'Platform performans raporları',
+    icon: BarChart3,
   },
 ];
 

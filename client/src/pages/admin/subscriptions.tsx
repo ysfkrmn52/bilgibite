@@ -42,7 +42,9 @@ function StatCard({ title, value, change, icon: Icon, color, subtitle }: StatCar
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-600">{title}</p>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-gray-900" data-testid={`stat-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  {value}
+                </p>
                 {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
               </div>
               {change !== undefined && (
@@ -72,7 +74,7 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export default function AdminSubscriptionManagement() {
+export default function AdminSubscriptionsPage() {
   // Gerçek API'den veri çekme
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/admin/subscriptions/stats'],
@@ -87,7 +89,7 @@ export default function AdminSubscriptionManagement() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Abonelik Yönetimi</h1>
               <p className="text-gray-600 mt-1">Veriler yükleniyor...</p>
             </div>
           </div>
@@ -117,10 +119,10 @@ export default function AdminSubscriptionManagement() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Abonelik Yönetimi</h1>
               <p className="text-red-600 mt-1">Veri yüklenirken hata oluştu</p>
             </div>
-            <Button variant="outline" onClick={() => window.location.reload()}>
+            <Button variant="outline" onClick={() => window.location.reload()} data-testid="button-refresh-page">
               Sayfayı Yenile
             </Button>
           </div>
@@ -132,7 +134,7 @@ export default function AdminSubscriptionManagement() {
               <p className="text-gray-600 mb-4">
                 Subscription verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.
               </p>
-              <Button onClick={() => window.location.reload()}>
+              <Button onClick={() => window.location.reload()} data-testid="button-retry-load">
                 Sayfayı Yenile
               </Button>
             </CardContent>
@@ -157,8 +159,8 @@ export default function AdminSubscriptionManagement() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">BilgiBite platform yönetim paneli</p>
+            <h1 className="text-2xl font-bold text-gray-900">Abonelik Yönetimi</h1>
+            <p className="text-gray-600 mt-1">Kullanıcı abonelik istatistikleri ve gelir raporları</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -228,7 +230,7 @@ export default function AdminSubscriptionManagement() {
                           <span className="font-medium text-gray-900">Ücretsiz</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-lg">{freeUsers}</div>
+                          <div className="font-bold text-lg" data-testid="stat-free-users">{freeUsers}</div>
                           <div className="text-xs text-gray-500">
                             %{Math.round((freeUsers / totalUsers) * 100)}
                           </div>
@@ -247,7 +249,7 @@ export default function AdminSubscriptionManagement() {
                           <span className="font-medium text-gray-900">Plus</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-lg">{plusUsers}</div>
+                          <div className="font-bold text-lg" data-testid="stat-plus-users">{plusUsers}</div>
                           <div className="text-xs text-gray-500">
                             %{Math.round((plusUsers / totalUsers) * 100)}
                           </div>
@@ -266,7 +268,7 @@ export default function AdminSubscriptionManagement() {
                           <span className="font-medium text-gray-900">Premium</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-lg">{premiumUsers}</div>
+                          <div className="font-bold text-lg" data-testid="stat-premium-users">{premiumUsers}</div>
                           <div className="text-xs text-gray-500">
                             %{Math.round((premiumUsers / totalUsers) * 100)}
                           </div>
@@ -280,7 +282,7 @@ export default function AdminSubscriptionManagement() {
 
                     <div className="pt-6 border-t">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900">{totalUsers}</div>
+                        <div className="text-3xl font-bold text-gray-900" data-testid="stat-total-users-summary">{totalUsers}</div>
                         <div className="text-sm text-gray-500">Toplam Kullanıcı</div>
                       </div>
                     </div>
@@ -370,7 +372,7 @@ export default function AdminSubscriptionManagement() {
                 Platform Bilgileri
               </div>
               <Badge variant="outline" className="text-sm">
-                v1.0.0 Production
+                v2.0.0 Production
               </Badge>
             </CardTitle>
           </CardHeader>

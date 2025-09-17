@@ -168,9 +168,10 @@ let autoGenerationScheduler: AutoGenerationScheduler;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Initialize AutoGeneration Scheduler
+  // Initialize AutoGeneration Scheduler with persistence
   autoGenerationScheduler = new AutoGenerationScheduler(storage);
-  console.log('🤖 AutoGeneration Scheduler initialized');
+  await autoGenerationScheduler.initialize();
+  console.log('🤖 AutoGeneration Scheduler initialized with persistence');
 
   // Initialize Firebase Admin SDK if available
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
@@ -925,6 +926,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       messageId: result.messageId,
       error: result.error
     });
+  }));
+
+  // AI Scheduler Monitoring Endpoints for Production
+  app.get('/api/admin/scheduler/status', firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const status = autoGenerationScheduler.getStatus();
+      
+      res.json({
+        success: true,
+        data: {
+          ...status,
+          uptime: process.uptime(),
+          serverTime: new Date().toISOString(),
+          environment: process.env.NODE_ENV
+        }
+      });
+    } catch (error) {
+      console.error('Scheduler status error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get scheduler status',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }));
+
+  app.post('/api/admin/scheduler/start', firebaseAuthMiddleware, requireSuperAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await autoGenerationScheduler.start();
+      const status = autoGenerationScheduler.getStatus();
+      
+      res.json({
+        success: true,
+        message: 'Scheduler started successfully',
+        data: status
+      });
+    } catch (error) {
+      console.error('Scheduler start error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to start scheduler',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }));
+
+  app.post('/api/admin/scheduler/stop', firebaseAuthMiddleware, requireSuperAdminRole, asyncHandler(async (req: Request, res: Response) => {
+    try {
+      await autoGenerationScheduler.stop();
+      const status = autoGenerationScheduler.getStatus();
+      
+      res.json({
+        success: true,
+        message: 'Scheduler stopped successfully',
+        data: status
+      });
+    } catch (error) {
+      console.error('Scheduler stop error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to stop scheduler',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   }));
 
   // Admin User Management with Firebase
@@ -3046,6 +3111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/conversations/:conversationId/messages", getGroupMessages);
   app.post("/api/users/:userId/conversations/:conversationId/messages", sendGroupMessage);
   app.post("/api/users/:userId/conversations", createGroupConversation);
+
+  // Export scheduler for global access (for cleanup in index.ts)
+  (global as any).autoGenerationScheduler = autoGenerationScheduler;
 
   return createServer(app);
 }
