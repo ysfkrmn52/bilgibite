@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProtectedAdminRoute } from "@/components/auth/ProtectedAdminRoute";
 
 // Performance and monitoring imports  
 import { useEffect } from "react";
@@ -69,22 +70,40 @@ function Router() {
         
         {/* All other routes with navbar */}
         <Route path="/" component={() => (<><Navbar /><Home /></>)} />
-        <Route path="/admin" component={XAdmin} />
-        <Route path="/xadmin" component={XAdmin} />
-        <Route path="/admin/questions/:categoryId" component={AdminQuestions} />
+        <Route path="/admin" component={() => (
+          <ProtectedAdminRoute><XAdmin /></ProtectedAdminRoute>
+        )} />
+        <Route path="/xadmin" component={() => (
+          <ProtectedAdminRoute><XAdmin /></ProtectedAdminRoute>
+        )} />
+        <Route path="/admin/questions/:categoryId" component={() => (
+          <ProtectedAdminRoute><AdminQuestions /></ProtectedAdminRoute>
+        )} />
         <Route path="/admin/users" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><AdminUsers /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><AdminUsers /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route path="/admin/subscriptions" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route path="/admin/payments" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route path="/admin/analytics" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><SimpleAdmin /></Suspense>
+          </ProtectedAdminRoute>
         )} />
-        <Route path="/admin-simple" component={() => (<><Navbar /><SimpleAdmin /></>)} />
+        <Route path="/admin-simple" component={() => (
+          <ProtectedAdminRoute>
+            <Navbar /><SimpleAdmin />
+          </ProtectedAdminRoute>
+        )} />
         <Route path="/profile" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Profile /></Suspense></>
         )} />
@@ -110,7 +129,9 @@ function Router() {
           <><Navbar /><Suspense fallback={<PageLoader />}><CourseView /></Suspense></>
         )} />
         <Route path="/admin/ai-education" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><AIEducationGenerator /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><AIEducationGenerator /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route path="/subscription" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><Pricing /></Suspense></>
@@ -130,10 +151,20 @@ function Router() {
         <Route path="/teacher" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><TeacherDashboard /></Suspense></>
         )} />
-        <Route path="/simple-admin" component={() => (<><Navbar /><SimpleAdmin /></>)} />
-        <Route path="/admin/questions" component={() => (<><Navbar /><AdminQuestions /></>)} />
+        <Route path="/simple-admin" component={() => (
+          <ProtectedAdminRoute>
+            <Navbar /><SimpleAdmin />
+          </ProtectedAdminRoute>
+        )} />
+        <Route path="/admin/questions" component={() => (
+          <ProtectedAdminRoute>
+            <Navbar /><AdminQuestions />
+          </ProtectedAdminRoute>
+        )} />
         <Route path="/admin/ai-questions" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><AdminAIQuestions /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><AdminAIQuestions /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route path="/ai-smart-tutor" component={() => (
           <><Navbar /><Suspense fallback={<PageLoader />}><AISmartTutor /></Suspense></>
@@ -142,7 +173,9 @@ function Router() {
           <><Navbar /><Suspense fallback={<PageLoader />}><AIDemo /></Suspense></>
         )} />
         <Route path="/admin/pdf-manager" component={() => (
-          <><Navbar /><Suspense fallback={<PageLoader />}><PdfManager /></Suspense></>
+          <ProtectedAdminRoute>
+            <Navbar /><Suspense fallback={<PageLoader />}><PdfManager /></Suspense>
+          </ProtectedAdminRoute>
         )} />
         <Route component={NotFound} />
       </Switch>

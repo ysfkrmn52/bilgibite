@@ -20,6 +20,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
+  isAdmin: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,6 +170,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  async function isAdmin(): Promise<boolean> {
+    if (!currentUser) {
+      return false;
+    }
+
+    // Demo mode: always return true for admin access
+    if (isDemoMode) {
+      return true;
+    }
+
+    try {
+      // Get Firebase custom claims to check admin role
+      const idTokenResult = await currentUser.getIdTokenResult();
+      const claims = idTokenResult.claims;
+      
+      // Check if user has admin or super_admin role
+      return claims.role === 'admin' || claims.role === 'super_admin';
+    } catch (error) {
+      console.error('Failed to check admin role:', error);
+      return false;
+    }
+  }
+
   useEffect(() => {
     if (isDemoMode) {
       // Demo mode: Use pure demo user, no backend login storage
@@ -203,7 +227,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     loginWithGoogle,
     logout,
-    updateUserProfile
+    updateUserProfile,
+    isAdmin
   };
 
   return (
