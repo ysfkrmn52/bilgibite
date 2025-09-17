@@ -3,6 +3,12 @@ import express from "express";
 import { createServer, type Server } from "http";
 import cors from 'cors';
 import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { promisify } from "util";
+
+const unlinkAsync = promisify(fs.unlink);
+const mkdirAsync = promisify(fs.mkdir);
 import { storage } from "./storage";
 import { processTYTPDFContent } from "./ai-content-processor";
 import { generateExamQuestions } from "./ai-service";
@@ -69,12 +75,91 @@ import {
 import { errorMonitoring, errorCaptureMiddleware, errorHandlerMiddleware } from "./error-monitoring";
 import { emailService, notificationHelpers } from "./email-service";
 
-// Configure multer for file uploads - increased limit for educational content
-const upload = multer({ 
-  storage: multer.memoryStorage(),
+// Secure file upload configuration with disk storage
+const uploadDir = '/tmp/uploads';
+
+// Ensure upload directory exists
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (error) {
+  console.error('Failed to create upload directory:', error);
+}
+
+// File type validation function
+const fileFilter = (req: any, file: any, cb: any) => {
+  // Only allow PDF files
+  if (file.mimetype === 'application/pdf' || path.extname(file.originalname).toLowerCase() === '.pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF files are allowed'), false);
+  }
+};
+
+// Secure filename generator
+const generateSecureFilename = (originalname: string): string => {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  const extension = path.extname(originalname).toLowerCase();
+  const safeName = path.basename(originalname, extension)
+    .replace(/[^a-zA-Z0-9-_]/g, '_')
+    .substring(0, 50); // Limit filename length
+  return `${timestamp}_${randomString}_${safeName}${extension}`;
+};
+
+// File cleanup utility
+const cleanupFile = async (filePath: string) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      await unlinkAsync(filePath);
+      console.log(`Cleaned up temporary file: ${filePath}`);
+    }
+  } catch (error) {
+    console.error('Failed to cleanup file:', error);
+  }
+};
+
+// Secure upload handler wrapper with automatic cleanup
+const secureUploadHandler = (handler: (req: any, res: any) => Promise<void>) => {
+  return async (req: any, res: any) => {
+    let filePath: string | undefined;
+    try {
+      filePath = req.file?.path;
+      await handler(req, res);
+    } catch (error) {
+      console.error('Upload handler error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: 'File processing failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    } finally {
+      // Always cleanup temporary file
+      if (filePath) {
+        await cleanupFile(filePath);
+      }
+    }
+  };
+};
+
+// Configure secure multer with disk storage
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const secureFilename = generateSecureFilename(file.originalname);
+      cb(null, secureFilename);
+    }
+  }),
+  fileFilter,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for large educational content
-    fieldSize: 100 * 1024 * 1024 // 100MB for field data
+    fileSize: 20 * 1024 * 1024, // 20MB limit for security
+    files: 1, // Only 1 file at a time
+    fieldSize: 1 * 1024 * 1024 // 1MB for field data
   }
 });
 
@@ -1112,22 +1197,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/upload-questions", upload.single('file'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Dosya gerekli" });
-      }
+  app.post("/api/admin/upload-questions", upload.single('file'), secureUploadHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Dosya gerekli" });
+    }
 
-      const file = req.file;
-      let questions = [];
+    const file = req.file;
+    let questions = [];
 
-      // Parse different file types
-      if (file.mimetype === 'application/json') {
-        const content = file.buffer.toString('utf-8');
-        questions = JSON.parse(content);
-      } else if (file.mimetype === 'text/plain') {
-        // Simple text parsing - extend as needed
-        const content = file.buffer.toString('utf-8');
+    // Read file content from disk instead of buffer
+    const fileContent = fs.readFileSync(file.path);
+
+    // Parse different file types
+    if (file.mimetype === 'application/json') {
+      const content = fileContent.toString('utf-8');
+      questions = JSON.parse(content);
+    } else if (file.mimetype === 'text/plain') {
+      // Simple text parsing - extend as needed
+      const content = fileContent.toString('utf-8');
         const lines = content.split('\n').filter(line => line.trim());
         
         // Simple format: Question|Option1|Option2|Option3|Option4|CorrectIndex|Category
@@ -1169,11 +1256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         count: insertedCount,
         questions: questions.slice(0, 3) // Return first 3 for preview
       });
-    } catch (error) {
-      console.error("File upload error:", error);
-      res.status(500).json({ error: "Dosya işlenirken hata oluştu" });
-    }
-  });
+  }));
 
   // Admin User Management Endpoints
   app.get("/api/admin/users", firebaseAuthMiddleware, requireAdminRole, asyncHandler(async (req: Request, res: Response) => {
@@ -1380,23 +1463,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Avatar dosyası gerekli" });
-      }
-      
-      // Mock avatar upload - in real app, save to cloud storage
-      const avatarUrl = `/uploads/avatars/${Date.now()}-${req.file.originalname}`;
-      
-      res.json({ 
-        message: "Avatar güncellendi",
-        avatarUrl 
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Avatar yüklenemedi" });
+  app.post("/api/user/avatar", upload.single('avatar'), secureUploadHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Avatar dosyası gerekli" });
     }
-  });
+    
+    // Mock avatar upload - in real app, save to cloud storage
+    const avatarUrl = `/uploads/avatars/${Date.now()}-${req.file.originalname}`;
+    
+    res.json({ 
+      message: "Avatar güncellendi",
+      avatarUrl 
+    });
+  }));
 
   app.get("/api/user/stats", async (req, res) => {
     try {
@@ -1934,9 +2013,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PDF işleme endpoint - iki aşamalı (önce analiz, sonra onay)
-  app.post("/api/admin/process-pdf", upload.single('file'), async (req, res) => {
-    try {
-      if (!req.file) {
+  app.post("/api/admin/process-pdf", upload.single('file'), secureUploadHandler(async (req, res) => {
+    if (!req.file) {
         return res.status(400).json({ 
           error: 'PDF dosyası gerekli',
           message: 'Lütfen bir PDF dosyası yükleyin.' 
@@ -1963,12 +2041,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('PDF analizi başlıyor...');
       
-      // Extract text from PDF buffer
+      // Extract text from PDF file on disk
       let pdfText = '';
       try {
         const pdfParse = await import('pdf-parse');
         const pdf = (pdfParse as any).default;
-        const pdfData = await pdf(file.buffer);
+        const fileBuffer = fs.readFileSync(file.path);
+        const pdfData = await pdf(fileBuffer);
         pdfText = pdfData.text;
         
         if (!pdfText || pdfText.trim().length === 0) {
@@ -2005,18 +2084,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tempId: `temp_${Date.now()}` // Geçici ID
       });
 
-    } catch (error) {
-      console.error('PDF processing error:', error);
-      res.status(500).json({ 
-        error: 'Sunucu hatası',
-        message: 'PDF işlenirken beklenmeyen bir hata oluştu.'
-      });
-    }
-  });
+  }));
   // PDF Analiz Endpoint'i - examType parametreli
-  app.post("/api/admin/upload-pdf/analyze/:examType", upload.single('file'), async (req, res) => {
-    try {
-      const examType = req.params.examType || 'tyt';
+  app.post("/api/admin/upload-pdf/analyze/:examType", upload.single('file'), secureUploadHandler(async (req, res) => {
+    const examType = req.params.examType || 'tyt';
       
       if (!req.file) {
         return res.status(400).json({ 
@@ -2045,12 +2116,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`${examType.toUpperCase()} PDF analizi başlıyor...`);
       
-      // Extract text from PDF buffer
+      // Extract text from PDF file on disk
       let pdfText = '';
       try {
         const pdfParse = await import('pdf-parse');
         const pdf = (pdfParse as any).default;
-        const pdfData = await pdf(file.buffer);
+        const fileBuffer = fs.readFileSync(file.path);
+        const pdfData = await pdf(fileBuffer);
         pdfText = pdfData.text;
         
         if (!pdfText || pdfText.trim().length === 0) {
@@ -2090,14 +2162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tempId: `temp_${examType}_${Date.now()}` // Geçici ID
       });
 
-    } catch (error) {
-      console.error(`${req.params.examType || 'PDF'} analyze error:`, error);
-      res.status(500).json({ 
-        error: 'PDF analiz hatası',
-        message: 'PDF dosyası analiz edilirken bir hata oluştu.' 
-      });
-    }
-  });
+  }));
 
   // PDF onay endpoint'i - kullanıcı onayladıktan sonra veritabanına kaydet
   app.post("/api/admin/confirm-pdf-questions", async (req, res) => {
@@ -2166,12 +2231,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`${examType.toUpperCase()} PDF işleniyor...`);
       
-      // Extract text from PDF buffer
+      // Extract text from PDF file on disk
       let pdfText = '';
       try {
         const pdfParse = await import('pdf-parse');
         const pdf = (pdfParse as any).default;
-        const pdfData = await pdf(file.buffer);
+        const fileBuffer = fs.readFileSync(file.path);
+        const pdfData = await pdf(fileBuffer);
         pdfText = pdfData.text;
         
         if (!pdfText || pdfText.trim().length === 0) {
@@ -2291,9 +2357,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Existing admin file upload endpoint (for compatibility)
-  app.post('/api/admin/upload', upload.single('file'), async (req, res) => {
-    try {
-      if (!req.file) {
+  app.post('/api/admin/upload', upload.single('file'), secureUploadHandler(async (req, res) => {
+    if (!req.file) {
         return res.status(400).json({ error: 'Dosya gerekli' });
       }
 
@@ -2308,14 +2373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uploadedAt: new Date().toISOString()
       });
 
-    } catch (error) {
-      console.error('File upload error:', error);
-      res.status(500).json({ 
-        error: 'Dosya yükleme hatası',
-        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      });
-    }
-  });
+  }));
 
   // Duplicate admin stats endpoint removed - using the main one above
 
