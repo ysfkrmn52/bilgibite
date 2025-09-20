@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
+import { 
+  ScrollReveal, 
+  HoverLift, 
+  FloatingElement, 
+  Pressable,
+  containerVariants,
+  itemVariants,
+  hoverLiftVariants,
+  floatVariants
+} from '@/components/AnimationWrappers';
+import { useParallax } from '@/hooks/useParallax';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -61,6 +72,10 @@ export default function SimplifiedHome() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { currentUser } = useAuth();
   const [weeklyGoal, setWeeklyGoal] = useState(300);
+  
+  // Parallax effects for background elements
+  const heroParallax = useParallax({ speed: 0.3, direction: 'up' });
+  const backgroundParallax = useParallax({ speed: 0.1, direction: 'down' });
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -126,22 +141,36 @@ export default function SimplifiedHome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+      {/* Parallax Background Elements */}
+      <motion.div 
+        ref={backgroundParallax.ref}
+        style={backgroundParallax.style}
+        className="absolute inset-0 opacity-20"
+      >
+        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full blur-xl"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-purple-200 rounded-full blur-lg"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-indigo-200 rounded-full blur-2xl"></div>
+      </motion.div>
+
+      <div className="container mx-auto px-4 py-6 max-w-7xl relative z-10">
         
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-            {getTimeGreeting()}!
-          </h1>
-          <p className="text-muted-foreground text-lg">
+        {/* Header with Enhanced Animation */}
+        <ScrollReveal className="text-center mb-8" delay={0.2}>
+          <FloatingElement duration={4} intensity={5}>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              {getTimeGreeting()}!
+            </h1>
+          </FloatingElement>
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground text-lg"
+          >
             BilgiBite ile hedeflerine ulaş ✨
-          </p>
-        </motion.div>
+          </motion.p>
+        </ScrollReveal>
 
         <div className="grid lg:grid-cols-4 gap-6">
           
@@ -149,17 +178,20 @@ export default function SimplifiedHome() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
             className="lg:col-span-1 space-y-6"
           >
             {/* Level Card */}
-            <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Trophy className="w-5 h-5" />
-                  Seviye {currentStats.currentLevel}
-                </CardTitle>
-                <p className="text-blue-100 text-sm">{currentStats.totalXP} XP</p>
-              </CardHeader>
+            <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 transition-all duration-300 hover:scale-105">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <FloatingElement duration={2} intensity={1}>
+                      <Trophy className="w-5 h-5" />
+                    </FloatingElement>
+                    Seviye {currentStats.currentLevel}
+                  </CardTitle>
+                  <p className="text-blue-100 text-sm">{currentStats.totalXP} XP</p>
+                </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div>
@@ -187,7 +219,7 @@ export default function SimplifiedHome() {
             </Card>
 
             {/* Weekly Goal - Editable */}
-            <Card>
+            <Card className="hover:scale-105 transition-all duration-300">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
@@ -221,7 +253,7 @@ export default function SimplifiedHome() {
                   </p>
                 </div>
               </CardContent>
-            </Card>
+              </Card>
 
           </motion.div>
 
@@ -229,50 +261,52 @@ export default function SimplifiedHome() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.2 }}
             className="lg:col-span-2 space-y-6"
           >
 
             {/* MEB News Feed */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Newspaper className="w-5 h-5 text-red-600" />
-                  MEB Güncel Haberler
-                </CardTitle>
-                <CardDescription>
-                  Millî Eğitim Bakanlığı'ndan son haberler ve duyurular
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mebNews.map((news) => (
-                    <motion.div
-                      key={news.id}
-                      whileHover={{ x: 4 }}
-                      className="flex items-start gap-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100 cursor-pointer hover:shadow-md transition-all"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm mb-1 text-gray-900">
-                          {news.title}
-                        </h4>
-                        <p className="text-xs text-gray-600 mb-2">
-                          {news.summary}
-                        </p>
-                        <div className="flex items-center gap-3">
-                          <Badge variant="secondary" className="text-xs">
-                            {news.category}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(news.date).toLocaleDateString('tr-TR')}
-                          </span>
+            <Card className="transition-all duration-300 hover:shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FloatingElement duration={4} intensity={2}>
+                      <Newspaper className="w-5 h-5 text-red-600" />
+                    </FloatingElement>
+                    MEB Güncel Haberler
+                  </CardTitle>
+                  <CardDescription>
+                    Millî Eğitim Bakanlığı'ndan son haberler ve duyurular
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {mebNews.map((news) => (
+                      <motion.div
+                        key={news.id}
+                        whileHover={{ x: 4 }}
+                        className="flex items-start gap-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100 cursor-pointer hover:shadow-md transition-all"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm mb-1 text-gray-900">
+                            {news.title}
+                          </h4>
+                          <p className="text-xs text-gray-600 mb-2">
+                            {news.summary}
+                          </p>
+                          <div className="flex items-center gap-3">
+                            <Badge variant="secondary" className="text-xs">
+                              {news.category}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(news.date).toLocaleDateString('tr-TR')}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    </motion.div>
-                  ))}
-                </div>
+                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      </motion.div>
+                    ))}
+                  </div>
                 <div className="mt-4 text-center">
                   <Button variant="outline" size="sm" asChild>
                     <a href="https://www.meb.gov.tr" target="_blank" rel="noopener noreferrer">
