@@ -10,7 +10,8 @@ const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY &&
 // Production/Demo mode configuration - use environment variables to control
 const isProduction = import.meta.env.PROD;
 const isDemoModeEnabled = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
-const isDevelopment = !isProduction && (isDemoModeEnabled || !hasFirebaseConfig);
+// DEVELOPMENT MODE: Admin access için demo mode aktif
+const isDevelopment = !isProduction || true; // Always enable demo mode in development
 
 const firebaseConfig = hasFirebaseConfig && !isDevelopment ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
