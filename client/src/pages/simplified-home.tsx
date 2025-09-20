@@ -141,237 +141,193 @@ export default function SimplifiedHome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
-      {/* Parallax Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Animated Background */}
       <motion.div 
         ref={backgroundParallax.ref}
         style={backgroundParallax.style}
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0"
       >
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full blur-xl"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-purple-200 rounded-full blur-lg"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-indigo-200 rounded-full blur-2xl"></div>
+        <div className="absolute top-10 left-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </motion.div>
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl relative z-10">
-        
-        {/* Header with Enhanced Animation */}
-        <ScrollReveal className="text-center mb-8" delay={0.2}>
-          <FloatingElement duration={4} intensity={5}>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-              {getTimeGreeting()}!
-            </h1>
-          </FloatingElement>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
+      {/* Hero Section */}
+      <div className="relative z-10">
+        <div className="container mx-auto px-4 py-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg"
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
           >
-            BilgiBite ile hedeflerine ulaş ✨
-          </motion.p>
-        </ScrollReveal>
-
-        <div className="grid lg:grid-cols-4 gap-6">
-          
-          {/* Left Sidebar - User Stats */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-1 space-y-6"
-          >
-            {/* Level Card */}
-            <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 transition-all duration-300 hover:scale-105">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <FloatingElement duration={2} intensity={1}>
-                      <Trophy className="w-5 h-5" />
-                    </FloatingElement>
-                    Seviye {currentStats.currentLevel}
-                  </CardTitle>
-                  <p className="text-blue-100 text-sm">{currentStats.totalXP} XP</p>
-                </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>İlerleme</span>
-                      <span>{currentStats.levelProgress}%</span>
-                    </div>
-                    <Progress value={currentStats.levelProgress} className="bg-blue-400/30" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="text-center">
-                      <Flame className="w-5 h-5 mx-auto mb-1 text-orange-300" />
-                      <div className="text-lg font-bold">{currentStats.streak}</div>
-                      <div className="text-xs text-blue-100">Gün Serisi</div>
-                    </div>
-                    <div className="text-center">
-                      <BookOpen className="w-5 h-5 mx-auto mb-1 text-green-300" />
-                      <div className="text-lg font-bold">{currentStats.completedQuizzes}</div>
-                      <div className="text-xs text-blue-100">Quiz</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Weekly Goal - Editable */}
-            <Card className="hover:scale-105 transition-all duration-300">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    Haftalık Hedef
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => {
-                      const newGoal = prompt('Yeni haftalık hedef (dakika):', weeklyGoal.toString());
-                      if (newGoal && !isNaN(parseInt(newGoal))) {
-                        setWeeklyGoal(parseInt(newGoal));
-                      }
-                    }}
-                    data-testid="button-edit-weekly-goal"
-                  >
-                    ✏️
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>{currentStats.studyTime} dk</span>
-                    <span>{weeklyGoal} dk</span>
-                  </div>
-                  <Progress value={(currentStats.studyTime / weeklyGoal) * 100} />
-                  <p className="text-xs text-muted-foreground">
-                    {Math.max(0, weeklyGoal - currentStats.studyTime)} dakika kaldı
-                  </p>
-                </div>
-              </CardContent>
-              </Card>
-
-          </motion.div>
-
-          {/* Main Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-2 space-y-6"
-          >
-
-            {/* MEB News Feed */}
-            <Card className="transition-all duration-300 hover:shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FloatingElement duration={4} intensity={2}>
-                      <Newspaper className="w-5 h-5 text-red-600" />
-                    </FloatingElement>
-                    MEB Güncel Haberler
-                  </CardTitle>
-                  <CardDescription>
-                    Millî Eğitim Bakanlığı'ndan son haberler ve duyurular
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {mebNews.map((news) => (
-                      <motion.div
-                        key={news.id}
-                        whileHover={{ x: 4 }}
-                        className="flex items-start gap-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100 cursor-pointer hover:shadow-md transition-all"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm mb-1 text-gray-900">
-                            {news.title}
-                          </h4>
-                          <p className="text-xs text-gray-600 mb-2">
-                            {news.summary}
-                          </p>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="secondary" className="text-xs">
-                              {news.category}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(news.date).toLocaleDateString('tr-TR')}
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      </motion.div>
-                    ))}
-                  </div>
-                <div className="mt-4 text-center">
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="https://www.meb.gov.tr" target="_blank" rel="noopener noreferrer">
-                      Tüm Haberleri Gör
-                      <Globe className="w-4 h-4 ml-2" />
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-
-          </motion.div>
-
-          {/* Right Sidebar - Today's Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-1 space-y-6"
-          >
-            {/* Today's Progress Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-4 h-4" />
-                  Bugünün Özeti
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <Clock className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-                    <div className="text-xl font-bold text-blue-600">{currentStats.todayStudyTime}</div>
-                    <div className="text-xs text-muted-foreground">Dakika Çalıştın</div>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <Star className="w-6 h-6 mx-auto mb-2 text-green-600" />
-                    <div className="text-xl font-bold text-green-600">{currentStats.correctAnswers}</div>
-                    <div className="text-xs text-muted-foreground">Doğru Cevap</div>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <Trophy className="w-6 h-6 mx-auto mb-2 text-purple-600" />
-                    <div className="text-xl font-bold text-purple-600">{currentStats.successRate}%</div>
-                    <div className="text-xs text-muted-foreground">Başarı Oranı</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-
+            <FloatingElement duration={6} intensity={8}>
+              <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
+                Bilgi<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Bite</span>
+              </h1>
+            </FloatingElement>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-xl md:text-2xl text-gray-300 mb-8"
+            >
+              Türkiye'nin en gelişmiş sınav hazırlık platformu
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            >
+              <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                Hemen Başla
+                <Sparkles className="w-5 h-5 ml-2" />
+              </Button>
+              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg rounded-xl backdrop-blur-sm">
+                Demo İzle
+                <Play className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
+      </div>
 
-        {/* Bottom Ad Banner for Free Users */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8"
-        >
-          <AdBanner />
-        </motion.div>
+      {/* Exam Categories Grid */}
+      <div className="relative z-10 py-20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Sınav Kategorileri</h2>
+            <p className="text-gray-300 text-lg">Hazırlanmak istediğin sınavı seç ve başla</p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {examCategories.map((category, index) => (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 + index * 0.1, duration: 0.6 }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  rotateY: 5,
+                  z: 50
+                }}
+                className="group cursor-pointer perspective-1000"
+              >
+                <Card className="h-full bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 transition-all duration-500 overflow-hidden">
+                  <CardContent className="p-8">
+                    <div className="text-center">
+                      <motion.div
+                        className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center"
+                        whileHover={{ rotate: 360 }}
+                        transition={{ duration: 0.8 }}
+                      >
+                        <GraduationCap className="w-10 h-10 text-white" />
+                      </motion.div>
+                      
+                      <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+                        {category.name}
+                      </h3>
+                      
+                      <p className="text-gray-300 mb-6 leading-relaxed">
+                        {category.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400">150+</div>
+                          <div className="text-xs text-gray-400">Soru</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">%95</div>
+                          <div className="text-xs text-gray-400">Başarı</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-400">4.8</div>
+                          <div className="text-xs text-gray-400">Puan</div>
+                        </div>
+                      </div>
+                      
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                        Başla
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="relative z-10 py-20 bg-black/20 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.8, duration: 0.8 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+          >
+            <div>
+              <motion.div 
+                className="text-4xl md:text-5xl font-bold text-white mb-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 2.0, type: "spring", stiffness: 200 }}
+              >
+                50K+
+              </motion.div>
+              <p className="text-gray-300">Öğrenci</p>
+            </div>
+            <div>
+              <motion.div 
+                className="text-4xl md:text-5xl font-bold text-white mb-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 2.2, type: "spring", stiffness: 200 }}
+              >
+                10K+
+              </motion.div>
+              <p className="text-gray-300">Soru</p>
+            </div>
+            <div>
+              <motion.div 
+                className="text-4xl md:text-5xl font-bold text-white mb-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 2.4, type: "spring", stiffness: 200 }}
+              >
+                %98
+              </motion.div>
+              <p className="text-gray-300">Başarı Oranı</p>
+            </div>
+            <div>
+              <motion.div 
+                className="text-4xl md:text-5xl font-bold text-white mb-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 2.6, type: "spring", stiffness: 200 }}
+              >
+                24/7
+              </motion.div>
+              <p className="text-gray-300">Destek</p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
