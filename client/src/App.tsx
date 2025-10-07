@@ -15,9 +15,11 @@ import MonitoringService from "./lib/monitoring";
 import { ErrorBoundaryMonitoring } from "@/components/ErrorBoundaryMonitoring";
 import { SEOManager } from "./lib/seo";
 import { pwaManager } from "./lib/pwa";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Core pages loaded immediately for better UX
 import Home from "@/pages/simplified-home";
+import IntroPage from "@/pages/intro";
 import XAdmin from "@/pages/xadmin";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/layout/Navbar";
@@ -61,16 +63,31 @@ const PageLoader = () => (
 );
 
 function Router() {
+  const { currentUser, loading } = useAuth();
+
   return (
     <div className="min-h-screen">
       <Switch>
+        {/* Intro/Landing page for non-authenticated users */}
+        <Route path="/" component={() => {
+          if (loading) {
+            return <PageLoader />;
+          }
+          // If user is logged in, show home page with navbar
+          if (currentUser) {
+            return <><Navbar /><Home /></>;
+          }
+          // If not logged in, show intro page
+          return <IntroPage />;
+        }} />
+        
         {/* Auth route without navbar */}
         <Route path="/auth" component={() => (
           <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>
         )} />
         
-        {/* All other routes with navbar */}
-        <Route path="/" component={() => (<><Navbar /><Home /></>)} />
+        {/* Home route with navbar (for logged in users) */}
+        <Route path="/home" component={() => (<><Navbar /><Home /></>)} />
         <Route path="/admin" component={() => (
           <ProtectedAdminRoute><XAdmin /></ProtectedAdminRoute>
         )} />
