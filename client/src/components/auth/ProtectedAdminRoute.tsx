@@ -24,35 +24,18 @@ export function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
         return;
       }
 
-      // Demo mode: ONLY in development and explicitly enabled
-      if (isDemoMode && !import.meta.env.PROD) {
-        console.warn('🔧 Demo mode: Granting admin access (DEVELOPMENT ONLY)');
-        setIsAdmin(true);
+      // SECURITY: Only allow specific admin email
+      const ADMIN_EMAIL = 'ysfkrmn.5239@gmail.com';
+      const isAuthorizedAdmin = currentUser.email === ADMIN_EMAIL;
+      
+      if (!isAuthorizedAdmin) {
+        setIsAdmin(false);
         setAdminLoading(false);
         return;
       }
 
-      try {
-        // Get Firebase custom claims to check admin role
-        const idTokenResult = await currentUser.getIdTokenResult();
-        const claims = idTokenResult.claims;
-        
-        // Check if user has admin or super_admin role
-        const hasAdminRole = claims.role === 'admin' || claims.role === 'super_admin';
-        
-        console.log('🔐 Checking admin role:', {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          role: claims.role,
-          hasAdminRole
-        });
-        
-        setIsAdmin(hasAdminRole);
-      } catch (error) {
-        console.error('❌ Failed to check admin role:', error);
-        setIsAdmin(false);
-      }
-      
+      // If authorized email, grant admin access
+      setIsAdmin(true);
       setAdminLoading(false);
     }
 
@@ -97,42 +80,10 @@ export function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
     );
   }
 
-  // User logged in but not admin
+  // User logged in but not authorized admin - redirect to home
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="p-8 text-center max-w-md">
-          <Shield className="h-16 w-16 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Erişim Reddedildi
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-2">
-            Bu sayfaya erişim yetkiniz bulunmamaktadır.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Admin paneline erişmek için admin yetkilerine sahip olmanız gerekir.
-          </p>
-          <div className="space-y-2">
-            <Button 
-              onClick={() => setLocation('/')}
-              className="w-full"
-              data-testid="button-go-home"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Ana Sayfa'ya Dön
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setLocation('/profile')}
-              className="w-full"
-              data-testid="button-go-profile"
-            >
-              Profil Sayfası
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
+    setLocation('/');
+    return null;
   }
 
   // User is admin - show the protected content
