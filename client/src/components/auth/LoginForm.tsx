@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
-import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,8 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import FirebaseDebug from './FirebaseDebug';
-import { logFirebaseConfig } from '@/utils/firebase-debug';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir email adresi girin'),
@@ -64,54 +62,10 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
     try {
       setError('');
       setIsLoading(true);
-      
-      // Debug Firebase configuration
-      logFirebaseConfig();
-      
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
-      console.error('Google login error:', err);
-      console.error('Error details:', {
-        code: err.code,
-        message: err.message,
-        customData: err.customData
-      });
       setError(err.message || getErrorMessage(err.code || 'auth/unknown'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const { signInWithPopup } = await import('firebase/auth');
-      const { auth } = await import('@/lib/firebase');
-      const { facebookProvider } = await import('@/lib/firebase');
-      
-      if (!auth || !facebookProvider) {
-        throw new Error('Firebase authentication not configured');
-      }
-      
-      const result = await signInWithPopup(auth, facebookProvider);
-      onSuccess?.();
-    } catch (error: any) {
-      let errorMessage = 'Facebook ile giriş başarısız oldu';
-      
-      if (error.code === 'auth/popup-blocked') {
-        errorMessage = 'Pop-up engellendi. Lütfen pop-up engelleyicinizi devre dışı bırakın.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Giriş işlemi iptal edildi.';
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Giriş penceresi kapatıldı.';
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'Bu email adresi farklı bir yöntemle kayıtlı.';
-      }
-      
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -262,29 +216,16 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleLogin}
-              className="flex items-center justify-center space-x-2"
-              data-testid="button-google-login"
-            >
-              <FaGoogle className="w-4 h-4 text-red-600" />
-              <span>Google</span>
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleFacebookLogin}
-              className="flex items-center justify-center space-x-2"
-              data-testid="button-facebook-login"
-            >
-              <FaFacebook className="w-4 h-4 text-blue-600" />
-              <span>Facebook</span>
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center space-x-2 hover:bg-red-50 border-gray-300"
+            data-testid="button-google-login"
+          >
+            <FaGoogle className="w-5 h-5 text-red-600" />
+            <span>Google ile Giriş Yap</span>
+          </Button>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
@@ -301,8 +242,6 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
           </div>
         </CardContent>
       </Card>
-      
-      <FirebaseDebug />
     </motion.div>
   );
 }

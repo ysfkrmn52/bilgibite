@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
-import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,41 +83,7 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
-      console.error('Google signup error:', err);
       setError(err.message || getErrorMessage(err.code || 'auth/unknown'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFacebookSignup = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const { signInWithPopup } = await import('firebase/auth');
-      const { auth, facebookProvider } = await import('@/lib/firebase');
-      
-      if (!auth || !facebookProvider) {
-        throw new Error('Firebase authentication not configured');
-      }
-      
-      const result = await signInWithPopup(auth, facebookProvider);
-      onSuccess?.();
-    } catch (error: any) {
-      let errorMessage = 'Facebook ile kayıt başarısız oldu';
-      
-      if (error.code === 'auth/popup-blocked') {
-        errorMessage = 'Pop-up engellendi. Lütfen pop-up engelleyicinizi devre dışı bırakın.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = 'Kayıt işlemi iptal edildi.';
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Kayıt penceresi kapatıldı.';
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'Bu email adresi farklı bir yöntemle kayıtlı.';
-      }
-      
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -372,29 +338,16 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleSignup}
-              className="flex items-center justify-center space-x-2"
-              data-testid="button-google-signup"
-            >
-              <FaGoogle className="w-4 h-4 text-red-600" />
-              <span>Google</span>
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              className="flex items-center justify-center space-x-2"
-              onClick={handleFacebookSignup}
-              data-testid="button-facebook-signup"
-            >
-              <FaFacebook className="w-4 h-4 text-blue-600" />
-              <span>Facebook</span>
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignup}
+            className="w-full flex items-center justify-center space-x-2 hover:bg-red-50 border-gray-300"
+            data-testid="button-google-signup"
+          >
+            <FaGoogle className="w-5 h-5 text-red-600" />
+            <span>Google ile Kayıt Ol</span>
+          </Button>
 
           <div className="text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
