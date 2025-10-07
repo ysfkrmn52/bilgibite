@@ -7,14 +7,8 @@ const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY &&
                           import.meta.env.VITE_FIREBASE_PROJECT_ID && 
                           import.meta.env.VITE_FIREBASE_APP_ID;
 
-// Production/Demo mode configuration - use environment variables to control
-const isProduction = import.meta.env.PROD;
-const isDemoModeEnabled = import.meta.env.VITE_ENABLE_DEMO_MODE === 'true';
-
-// Only enable demo mode when explicitly set AND not in production
-const isDevelopment = !isProduction && isDemoModeEnabled;
-
-const firebaseConfig = hasFirebaseConfig && !isDevelopment ? {
+// Firebase configuration - always use real Firebase (no demo mode)
+const firebaseConfig = hasFirebaseConfig ? {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -52,7 +46,7 @@ export const facebookProvider = app ? (() => {
 })() : null;
 
 // Export config status for components to check
-export const isFirebaseConfigured = hasFirebaseConfig && !isDevelopment;
-export const isDemoMode = isDevelopment;
+export const isFirebaseConfigured = hasFirebaseConfig;
+export const isDemoMode = false; // Demo mode permanently disabled
 
 export default app;
