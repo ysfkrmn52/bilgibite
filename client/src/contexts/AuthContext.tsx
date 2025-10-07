@@ -67,7 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Sync Firebase user with database
   async function syncUserWithDatabase(user: User) {
-    if (!user || isDemoMode) return; // Skip sync in demo mode
+    if (!user || (isDemoMode && !import.meta.env.PROD)) return; // Skip sync in demo mode
     
     try {
       // Extract relevant user data
@@ -94,8 +94,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function signup(email: string, password: string, displayName: string) {
-    if (isDemoMode) {
-      // Demo mode: simulate successful signup
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
       setCurrentUser({ ...demoUser, email, displayName });
       return;
     }
@@ -109,8 +109,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function login(email: string, password: string) {
-    if (isDemoMode) {
-      // Demo mode: simulate successful login
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
       setCurrentUser({ ...demoUser, email });
       return;
     }
@@ -122,8 +122,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function loginWithGoogle() {
-    if (isDemoMode) {
-      // Demo mode: simulate successful Google login
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
       setCurrentUser({ ...demoUser, displayName: 'Google Demo User', email: 'google-demo@bilgibite.com' });
       return;
     }
@@ -149,8 +149,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout() {
-    if (isDemoMode) {
-      // Demo mode: simulate successful logout
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
       setCurrentUser(null);
       return;
     }
@@ -175,8 +175,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     }
 
-    // Demo mode: always return true for admin access
-    if (isDemoMode) {
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
+      console.warn('🔧 Demo mode: Granting admin access (DEVELOPMENT ONLY)');
       return true;
     }
 
@@ -194,8 +195,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    if (isDemoMode) {
-      // Demo mode: Use pure demo user, no backend login storage
+    // Demo mode: ONLY in development and explicitly enabled
+    if (isDemoMode && !import.meta.env.PROD) {
+      console.warn('🔧 Demo mode active - Using mock authentication (DEVELOPMENT ONLY)');
       setCurrentUser(demoUser);
       setLoading(false);
       return;

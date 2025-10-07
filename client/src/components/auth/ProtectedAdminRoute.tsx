@@ -24,9 +24,9 @@ export function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
         return;
       }
 
-      // Demo mode: always allow admin access for development
-      if (isDemoMode) {
-        console.log('🔧 Demo mode: Granting admin access');
+      // Demo mode: ONLY in development and explicitly enabled
+      if (isDemoMode && !import.meta.env.PROD) {
+        console.warn('🔧 Demo mode: Granting admin access (DEVELOPMENT ONLY)');
         setIsAdmin(true);
         setAdminLoading(false);
         return;
