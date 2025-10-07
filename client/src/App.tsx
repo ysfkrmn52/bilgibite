@@ -62,7 +62,8 @@ const PageLoader = () => (
   </div>
 );
 
-function Router() {
+// Router component placeholder - will be defined inside App to have access to AuthContext
+const RouterContent = () => {
   const { currentUser, loading } = useAuth();
 
   return (
@@ -243,7 +244,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <Router />
+            <RouterContent />
           </AuthProvider>
           <Toaster />
           <PWAInstallPrompt />
