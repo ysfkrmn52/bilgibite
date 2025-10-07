@@ -151,21 +151,9 @@ export default function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormPro
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-green-600 rounded-full flex items-center justify-center shadow-lg"
+            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg hover:scale-105 transition-transform"
           >
-            <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Mascot Head */}
-              <circle cx="50" cy="40" r="18" fill="white" opacity="0.9"/>
-              {/* Eyes */}
-              <circle cx="44" cy="35" r="3" fill="#1E40AF"/>
-              <circle cx="56" cy="35" r="3" fill="#1E40AF"/>
-              {/* Smile */}
-              <path d="M 42 45 Q 50 50 58 45" stroke="#1E40AF" strokeWidth="2" fill="none"/>
-              {/* Graduation Cap */}
-              <ellipse cx="50" cy="25" rx="16" ry="3" fill="#1E40AF"/>
-              <rect x="46" y="22" width="8" height="6" fill="#1E40AF"/>
-              <circle cx="62" cy="25" r="2" fill="#F59E0B"/>
-            </svg>
+            BB
           </motion.div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
             BilgiBite'a Katıl!
