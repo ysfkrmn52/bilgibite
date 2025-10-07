@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -34,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 export function Navbar() {
   const [location] = useLocation();
   const { toast } = useToast();
+  const { currentUser: firebaseUser } = useAuth();
   
   const [notifications, setNotifications] = useState([
     {
@@ -68,20 +70,17 @@ export function Navbar() {
     }
   ]);
   
-  // Get current user data
-  const getCurrentUser = () => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      try {
-        return JSON.parse(currentUser);
-      } catch (error) {
-        console.error('User data parse error:', error);
-      }
-    }
-    return null;
+  // Get user display info from Firebase Auth
+  const getUserDisplayName = () => {
+    if (!firebaseUser) return 'Kullanıcı';
+    return firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Kullanıcı';
   };
 
-  const currentUser = getCurrentUser();
+  const getUserInitials = () => {
+    if (!firebaseUser) return 'KB';
+    const name = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'KB';
+    return name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  };
   
   const navigationItems = [
     { path: "/", label: "Ana Sayfa", icon: Home },
@@ -246,9 +245,9 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatars/user.png" alt="Profil" />
+                  <AvatarImage src={firebaseUser?.photoURL || "/avatars/user.png"} alt="Profil" />
                   <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                    {currentUser ? currentUser.username.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'KB'}
+                    {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -259,9 +258,9 @@ export function Navbar() {
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-16 rounded-t-xl"></div>
                 <div className="absolute -bottom-6 left-6">
                   <Avatar className="h-12 w-12 border-4 border-white shadow-lg">
-                    <AvatarImage src="/avatars/user.png" alt="Profil" />
+                    <AvatarImage src={firebaseUser?.photoURL || "/avatars/user.png"} alt="Profil" />
                     <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-lg font-bold">
-                      {currentUser ? currentUser.username.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'KB'}
+                      {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -271,17 +270,17 @@ export function Navbar() {
               <div className="pt-8 pb-4 px-6">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-bold text-lg text-gray-900">
-                    {currentUser ? currentUser.username : 'Kullanıcı'}
+                    {getUserDisplayName()}
                   </h3>
-                  {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                  {firebaseUser?.email === 'ysfkrmn.5239@gmail.com' && (
                     <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1">
                       <Crown className="w-3 h-3 mr-1" />
-                      {currentUser.role === 'super_admin' ? 'Süper Admin' : 'Admin'}
+                      Admin
                     </Badge>
                   )}
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
-                  {currentUser ? currentUser.email : 'kullanici@bilgibite.com'}
+                  {firebaseUser?.email || 'kullanici@bilgibite.com'}
                 </p>
                 
                 {/* İstatistik Kartları */}
