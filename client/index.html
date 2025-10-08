@@ -28,19 +28,6 @@
   </head>
   <body>
     <div id="root"></div>
-    
-    <!-- Coming Soon Check -->
-    <script>
-      // Check if coming soon mode is enabled
-      const comingSoonEnabled = localStorage.getItem('comingSoonEnabled');
-      const currentPath = window.location.pathname;
-      
-      // If coming soon is enabled and not already on coming-soon page, redirect
-      if (comingSoonEnabled === 'true' && !currentPath.includes('coming-soon')) {
-        window.location.href = '/coming-soon.html';
-      }
-    </script>
-    
     <script type="module" src="/src/main.tsx"></script>
     <!-- Development banner disabled for better performance -->
     <!-- <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script> -->

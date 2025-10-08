@@ -2,6 +2,17 @@
   RewriteEngine On
   RewriteBase /
   
+  # =====================================
+  # ÇOK YAKINDA SAYFASI (COMING SOON)
+  # =====================================
+  # Aktif etmek için: Aşağıdaki 2 satırın başındaki # işaretini kaldırın
+  # Kapatmak için: Aşağıdaki 2 satırın başına # ekleyin
+  
+  # RewriteCond %{REQUEST_URI} !^/coming-soon\.html$
+  # RewriteRule ^(.*)$ /coming-soon.html [L]
+  
+  # =====================================
+  
   # Don't rewrite files or directories
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
