@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendEmailVerification
 } from 'firebase/auth';
-import { auth, googleProvider, isFirebaseConfigured, isDemoMode } from '@/lib/firebase';
+import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase';
 import { apiRequest } from '@/lib/queryClient';
 
 interface AuthContextType {
@@ -41,33 +41,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Demo mode user for development
-  const demoUser: User = {
-    uid: 'demo-user-123',
-    email: 'demo@bilgibite.com',
-    displayName: 'Demo Kullanıcı',
-    emailVerified: true,
-    photoURL: null,
-    phoneNumber: null,
-    isAnonymous: false,
-    providerId: 'firebase',
-    metadata: {
-      creationTime: new Date().toISOString(),
-      lastSignInTime: new Date().toISOString()
-    },
-    providerData: [],
-    refreshToken: '',
-    tenantId: null,
-    delete: async () => {},
-    getIdToken: async () => 'demo-token',
-    getIdTokenResult: async () => ({} as any),
-    reload: async () => {},
-    toJSON: () => ({})
-  } as User;
-
   // Sync Firebase user with database
   async function syncUserWithDatabase(user: User) {
-    if (!user || (isDemoMode && !import.meta.env.PROD)) return; // Skip sync in demo mode
+    if (!user) return;
     
     try {
       // Extract relevant user data
@@ -94,12 +70,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function signup(email: string, password: string, displayName: string) {
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      setCurrentUser({ ...demoUser, email, displayName });
-      return;
-    }
-    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -109,12 +79,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function login(email: string, password: string) {
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      setCurrentUser({ ...demoUser, email });
-      return;
-    }
-    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -122,12 +86,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function loginWithGoogle() {
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      setCurrentUser({ ...demoUser, displayName: 'Google Demo User', email: 'google-demo@bilgibite.com' });
-      return;
-    }
-    
     if (!auth || !googleProvider || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
@@ -149,16 +107,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout() {
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      setCurrentUser(null);
-      return;
-    }
-    
     if (!auth || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
     await signOut(auth);
+    // Force reload to clear state
+    window.location.href = '/';
   }
 
   async function updateUserProfile(displayName: string, photoURL?: string) {
@@ -175,12 +129,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     }
 
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      console.warn('🔧 Demo mode: Granting admin access (DEVELOPMENT ONLY)');
-      return true;
-    }
-
     try {
       // Get Firebase custom claims to check admin role
       const idTokenResult = await currentUser.getIdTokenResult();
@@ -195,15 +143,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    // Demo mode: ONLY in development and explicitly enabled
-    if (isDemoMode && !import.meta.env.PROD) {
-      console.warn('🔧 Demo mode active - Using mock authentication (DEVELOPMENT ONLY)');
-      setCurrentUser(demoUser);
-      setLoading(false);
-      return;
-    }
-
     if (!auth || !isFirebaseConfigured) {
+      console.warn('Firebase not configured');
       setLoading(false);
       return;
     }

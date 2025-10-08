@@ -47,6 +47,5 @@ export const facebookProvider = app ? (() => {
 
 // Export config status for components to check
 export const isFirebaseConfigured = hasFirebaseConfig;
-export const isDemoMode = false; // Demo mode permanently disabled
 
 export default app;

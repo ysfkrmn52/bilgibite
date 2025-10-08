@@ -16,57 +16,41 @@ declare global {
   }
 }
 
-// Production-safe authentication middleware that switches between demo and Firebase based on environment
+// Firebase authentication middleware - production ready
 export const authenticationMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isDemoMode = process.env.ENABLE_DEMO_MODE === 'true' && !isProduction;
-  
   // Allow health checks without authentication
   if (req.path.includes('/health') || req.path.includes('/api/exam-categories')) {
     return next();
   }
 
-  // In production or when Firebase is configured, use Firebase authentication
-  if (isProduction || (!isDemoMode && process.env.FIREBASE_SERVICE_ACCOUNT_KEY)) {
-    try {
-      const authorization = req.headers.authorization;
-      
-      if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized: No token provided'
-        });
-      }
-
-      const idToken = authorization.split(' ')[1];
-      const decodedToken = await verifyFirebaseToken(idToken);
-      
-      // Map Firebase user to our user interface
-      req.user = {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        role: decodedToken.role || 'user',
-        organizationId: decodedToken.organizationId
-      };
-      
-      next();
-    } catch (error) {
-      console.error('Firebase auth middleware error:', error);
+  try {
+    const authorization = req.headers.authorization;
+    
+    if (!authorization || !authorization.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: Invalid token'
+        message: 'Unauthorized: No token provided'
       });
     }
-  } else {
-    // Demo mode for development
-    console.log('🚨 Demo mode active - using mock authentication');
+
+    const idToken = authorization.split(' ')[1];
+    const decodedToken = await verifyFirebaseToken(idToken);
+    
+    // Map Firebase user to our user interface
     req.user = {
-      uid: 'demo-user-123',
-      email: 'demo@bilgibite.com',
-      role: 'user',
-      organizationId: 'demo-org-123'
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      role: decodedToken.role || 'user',
+      organizationId: decodedToken.organizationId
     };
+    
     next();
+  } catch (error) {
+    console.error('Firebase auth middleware error:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized: Invalid token'
+    });
   }
 };
 

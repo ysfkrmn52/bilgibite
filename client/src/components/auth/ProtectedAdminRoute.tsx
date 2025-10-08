@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { isDemoMode } from '@/lib/firebase';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Shield, ArrowLeft } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 
