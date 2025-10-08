@@ -45,6 +45,12 @@ export class PWAManager {
   }
 
   private async registerServiceWorker() {
+    // Service Worker temporarily disabled due to MIME type issues in production
+    // Will be re-enabled after proper build configuration
+    console.log('PWA service worker disabled');
+    return;
+    
+    /* 
     // Only register in production environment with HTTPS
     if ('serviceWorker' in navigator && 
         window.location.protocol === 'https:' && 
@@ -77,6 +83,7 @@ export class PWAManager {
         console.error('Service Worker registration failed:', error);
       }
     }
+    */
   }
 
   private showInstallPrompt() {
