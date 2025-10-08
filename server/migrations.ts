@@ -30,13 +30,13 @@ export class MigrationService {
   /**
    * Executes a shell command with proper error handling
    */
-  private async executeCommand(command: string, description: string, timeoutMs: number = 120000): Promise<string> {
+  private async executeCommand(command: string, description: string, timeoutMs: number = 15000): Promise<string> {
     this.log(`Starting: ${description}`);
     
     try {
       const { stdout, stderr } = await execAsync(command, {
         cwd: projectRoot,
-        timeout: timeoutMs, // Default 2 minutes, configurable
+        timeout: timeoutMs, // Default 15 seconds, configurable
         env: { ...process.env },
         // Ensure non-interactive mode
         stdio: ['pipe', 'pipe', 'pipe']
