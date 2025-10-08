@@ -107,12 +107,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function logout() {
-    if (!auth || !isFirebaseConfigured) {
-      throw new Error('Firebase authentication not configured');
+    try {
+      if (auth && isFirebaseConfigured) {
+        await signOut(auth);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear any cached state
+      localStorage.clear();
+      sessionStorage.clear();
+      // Force reload to clear state
+      window.location.href = '/';
     }
-    await signOut(auth);
-    // Force reload to clear state
-    window.location.href = '/';
   }
 
   async function updateUserProfile(displayName: string, photoURL?: string) {
