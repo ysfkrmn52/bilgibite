@@ -123,11 +123,17 @@ process.on('uncaughtException', (error) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // Only start the server if not running in serverless environment (Vercel)
+  if (!process.env.VERCEL) {
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();
+
+// Export the Express app for Vercel serverless deployment
+export { app };

@@ -1,11 +1,22 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { auth, isFirebaseConfigured } from "./firebase";
 
+// Get API base URL from environment or use current origin
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
+}
+
+// Helper to construct full API URL
+function getApiUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path; // Already a full URL
+  }
+  return `${API_BASE_URL}${path}`;
 }
 
 // Get Firebase ID token for authenticated requests
@@ -37,7 +48,8 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  const res = await fetch(url, {
+  const fullUrl = getApiUrl(url);
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -55,8 +67,10 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const authHeaders = await getAuthHeaders();
+    const url = queryKey.join("/") as string;
+    const fullUrl = getApiUrl(url);
     
-    const res = await fetch(queryKey.join("/") as string, {
+    const res = await fetch(fullUrl, {
       headers: authHeaders,
       credentials: "include",
     });
