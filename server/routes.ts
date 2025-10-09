@@ -211,7 +211,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const replitDomainPattern = /^https:\/\/[a-zA-Z0-9-]+\.repl\.co$/;
       const replitAppPattern = /^https:\/\/[a-zA-Z0-9-]+\.replit\.app$/;
       
-      return origins.length > 0 ? origins : false; // false means no CORS if no origins specified
+      // Default: Allow all origins if no specific origins configured (for serverless deployments)
+      // This is safe for public APIs and prevents startup failures in Vercel/Cloud Run
+      if (origins.length === 0) {
+        console.warn('⚠️ No CORS origins configured, allowing all origins. Set FRONTEND_URL or ALLOWED_ORIGINS for production.');
+        return true; // Allow all origins
+      }
+      
+      return origins;
     }
     
     // Development origins

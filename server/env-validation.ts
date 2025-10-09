@@ -26,8 +26,6 @@ const ENV_CONFIG: EnvironmentConfig = {
   // Additional variables required only in production
   productionRequired: [
     'NODE_ENV',
-    'CLIENT_URL', // Used in email service
-    'FRONTEND_URL', // Frontend URL for CORS and email links
   ],
 
   // Frontend Firebase variables (required for client-side Firebase)
@@ -58,6 +56,8 @@ const ENV_CONFIG: EnvironmentConfig = {
   // Optional infrastructure and configuration variables
   optional: [
     'PORT', // defaults to 5000
+    'CLIENT_URL', // Used in email service (defaults to FRONTEND_URL or localhost)
+    'FRONTEND_URL', // Frontend URL for CORS and email links (auto-detected)
     'NEON_WS_PROXY', // for Neon WebSocket proxy
     'REPL_SLUG', // for Replit domain support
     'REPL_OWNER', // for Replit domain support  

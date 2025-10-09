@@ -427,7 +427,7 @@ export const notificationHelpers = {
         monthlyPrice: planDetails.price,
         nextPaymentDate: planDetails.nextPaymentDate,
         features: planDetails.features.join(', '),
-        appUrl: process.env.CLIENT_URL || 'https://bilgibite.com'
+        appUrl: process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://bilgibite.com'
       },
       priority: 'high'
     });
@@ -445,7 +445,7 @@ export const notificationHelpers = {
         lastFourDigits: paymentDetails.lastFourDigits,
         errorMessage: paymentDetails.errorMessage,
         retryDate: paymentDetails.retryDate,
-        paymentUrl: `${process.env.CLIENT_URL}/subscription`
+        paymentUrl: `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://bilgibite.com'}/subscription`
       },
       priority: 'high'
     });
@@ -462,7 +462,7 @@ export const notificationHelpers = {
         paidAmount: creditDetails.paidAmount,
         totalBalance: creditDetails.totalBalance,
         expiryDate: creditDetails.expiryDate,
-        aiEducationUrl: `${process.env.CLIENT_URL}/ai-education`
+        aiEducationUrl: `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://bilgibite.com'}/ai-education`
       },
       priority: 'normal'
     });
@@ -480,7 +480,7 @@ export const notificationHelpers = {
         lastPaymentDate: cancellationDetails.lastPaymentDate,
         cancellationReason: cancellationDetails.reason || 'Kullanıcı talebi',
         refundAmount: cancellationDetails.refundAmount || 0,
-        reactivateUrl: `${process.env.CLIENT_URL}/subscription`
+        reactivateUrl: `${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://bilgibite.com'}/subscription`
       },
       priority: 'normal'
     });
