@@ -12,7 +12,7 @@ export const subscriptionPlans = mysqlTable('subscription_plans', {
   description: text('description').notNull(),
   descriptionEn: text('description_en').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-  currency: text('currency').default('TRY').notNull(),
+  currency: varchar('currency', { length: 10 }).default('TRY').notNull(),
   billingPeriod: text('billing_period').notNull(), // monthly, yearly, family
   maxUsers: int('max_users').default(1).notNull(),
   features: json('features').$type<string[]>().notNull(),
@@ -28,7 +28,7 @@ export const subscriptions = mysqlTable('subscriptions', {
   id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: varchar('user_id', { length: 36 }).notNull(),
   planId: varchar('plan_id', { length: 50 }).notNull(),
-  status: text('status').notNull(), // active, canceled, expired, trialing, past_due
+  status: varchar('status', { length: 50 }).notNull(), // active, canceled, expired, trialing, past_due
   iyzicoPlanReferenceCode: text('iyzico_plan_reference_code'),
   iyzicoSubscriptionReferenceCode: text('iyzico_subscription_reference_code'),
   currentPeriodStart: timestamp('current_period_start').notNull(),
@@ -52,8 +52,8 @@ export const payments = mysqlTable('payments', {
   iyzicoPaymentId: text('iyzico_payment_id'),
   iyzicoConversationId: text('iyzico_conversation_id'),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  currency: text('currency').default('TRY').notNull(),
-  status: text('status').notNull(), // success, failed, pending, refunded
+  currency: varchar('currency', { length: 10 }).default('TRY').notNull(),
+  status: varchar('status', { length: 50 }).notNull(), // success, failed, pending, refunded
   paymentMethod: text('payment_method'), // credit_card, debit_card, installment
   installmentCount: int('installment_count').default(1),
   failureReason: text('failure_reason'),
@@ -71,7 +71,7 @@ export const subscriptionUsage = mysqlTable('subscription_usage', {
   id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: varchar('user_id', { length: 36 }).notNull(),
   subscriptionId: varchar('subscription_id', { length: 36 }),
-  feature: text('feature').notNull(), // quizzes, ai_tutoring, analytics, etc.
+  feature: varchar('feature', { length: 100 }).notNull(), // quizzes, ai_tutoring, analytics, etc.
   usageCount: int('usage_count').default(0).notNull(),
   limitCount: int('limit_count'), // null for unlimited
   resetDate: timestamp('reset_date').notNull(), // daily, monthly reset
@@ -89,7 +89,7 @@ export const studentVerifications = mysqlTable('student_verifications', {
   studentId: text('student_id').notNull(),
   schoolName: text('school_name').notNull(),
   documentUrl: text('document_url'), // uploaded verification document
-  status: text('status').notNull(), // pending, approved, rejected
+  status: varchar('status', { length: 50 }).notNull(), // pending, approved, rejected
   verifiedAt: timestamp('verified_at'),
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -104,9 +104,9 @@ export const familyMembers = mysqlTable('family_members', {
   id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   subscriptionId: varchar('subscription_id', { length: 36 }).notNull(),
   userId: varchar('user_id', { length: 36 }).notNull(),
-  role: text('role').notNull(), // owner, member
+  role: varchar('role', { length: 50 }).notNull(), // owner, member
   inviteEmail: text('invite_email'),
-  status: text('status').notNull(), // active, invited, removed
+  status: varchar('status', { length: 50 }).notNull(), // active, invited, removed
   invitedAt: timestamp('invited_at'),
   joinedAt: timestamp('joined_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -122,7 +122,7 @@ export const referrals = mysqlTable('referrals', {
   referrerId: varchar('referrer_id', { length: 36 }).notNull(),
   refereeId: varchar('referee_id', { length: 36 }).notNull(),
   referralCode: text('referral_code').notNull(),
-  status: text('status').notNull(), // pending, completed, expired
+  status: varchar('status', { length: 50 }).notNull(), // pending, completed, expired
   reward: text('reward').notNull(), // +1_month, discount_20, etc
   expiresAt: timestamp('expires_at'),
   completedAt: timestamp('completed_at'),

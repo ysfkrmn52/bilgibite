@@ -235,10 +235,14 @@ function validateSpecificFormats(): void {
     }
   }
   
-  // Validate DATABASE_URL format
+  // Validate DATABASE_URL format - MySQL support
   const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl && !databaseUrl.startsWith('postgres://') && !databaseUrl.startsWith('postgresql://')) {
-    console.warn('⚠️  DATABASE_URL should start with postgres:// or postgresql://');
+  if (databaseUrl) {
+    const validProtocols = ['mysql://', 'postgres://', 'postgresql://'];
+    const hasValidProtocol = validProtocols.some(protocol => databaseUrl.startsWith(protocol));
+    if (!hasValidProtocol) {
+      console.warn('⚠️  DATABASE_URL should start with mysql://, postgres://, or postgresql://');
+    }
   }
   
   // Validate PORT if provided

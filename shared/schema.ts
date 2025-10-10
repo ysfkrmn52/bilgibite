@@ -5,11 +5,11 @@ import { z } from "zod";
 
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  firebaseUid: text("firebase_uid").unique(),
-  role: text("role").notNull().default('user'), // 'user', 'admin', 'super_admin'
-  subscriptionType: text("subscription_type").notNull().default('free'), // 'free', 'premium', 'enterprise'
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  firebaseUid: varchar("firebase_uid", { length: 255 }).unique(),
+  role: varchar("role", { length: 50 }).notNull().default('user'), // 'user', 'admin', 'super_admin'
+  subscriptionType: varchar("subscription_type", { length: 50 }).notNull().default('free'), // 'free', 'premium', 'enterprise'
   hasAiPackage: boolean("has_ai_package").notNull().default(false),
   level: int("level").notNull().default(1),
   totalPoints: int("total_points").notNull().default(0),
@@ -25,8 +25,8 @@ export const users = mysqlTable("users", {
 
 export const examCategories = mysqlTable("exam_categories", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
   description: text("description"),
   icon: text("icon").notNull(),
   color: text("color").notNull(),
@@ -36,9 +36,9 @@ export const examCategories = mysqlTable("exam_categories", {
 export const questions = mysqlTable("questions", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   examCategoryId: varchar("exam_category_id", { length: 36 }).notNull(),
-  subject: text("subject").notNull(),
-  difficulty: text("difficulty").notNull(), // easy, medium, hard
-  questionType: text("question_type").notNull().default('multiple_choice'), // multiple_choice, fill_blank, visual, true_false
+  subject: varchar("subject", { length: 255 }).notNull(),
+  difficulty: varchar("difficulty", { length: 50 }).notNull(), // easy, medium, hard
+  questionType: varchar("question_type", { length: 50 }).notNull().default('multiple_choice'), // multiple_choice, fill_blank, visual, true_false
   questionText: text("question_text").notNull(),
   options: json("options").notNull(), // Array of option objects
   correctAnswer: int("correct_answer").notNull(), // Index of correct option
@@ -86,7 +86,7 @@ export const aiGeneratedQuestions = mysqlTable("ai_generated_questions", {
   options: json("options").notNull(), // AI ürettiği seçenekler
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation"),
-  difficulty: text("difficulty").notNull().default('intermediate'),
+  difficulty: varchar("difficulty", { length: 50 }).notNull().default('intermediate'),
   topic: text("topic"),
   isApproved: boolean("is_approved").notNull().default(false), // Manuel onay için
   isAddedToMainPool: boolean("is_added_to_main_pool").notNull().default(false),
@@ -142,7 +142,7 @@ export const pdfMaterials = mysqlTable("pdf_materials", {
   description: text("description"),
   category: text("category").notNull(), // TYT, AYT, KPSS, vs.
   subject: text("subject").notNull(), // Matematik, Türkçe, vs.
-  difficulty: text("difficulty").notNull().default('medium'), // easy, medium, hard
+  difficulty: varchar("difficulty", { length: 50 }).notNull().default('medium'), // easy, medium, hard
   fileName: text("file_name").notNull(),
   filePath: text("file_path").notNull(),
   fileSize: int("file_size").notNull(), // bytes
@@ -176,8 +176,8 @@ export const pdfFolders = mysqlTable("pdf_folders", {
   parentId: varchar("parent_id", { length: 36 }), // Self-referencing for nested folders
   category: text("category").notNull(), // TYT, AYT, KPSS
   subject: text("subject"), // Matematik, Türkçe, vs.
-  icon: text("icon").default('folder'),
-  color: text("color").default('#3B82F6'),
+  icon: varchar("icon", { length: 100 }).default('folder'),
+  color: varchar("color", { length: 50 }).default('#3B82F6'),
   createdBy: varchar("created_by", { length: 36 }).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
@@ -188,7 +188,7 @@ export const dailyChallenges = mysqlTable("daily_challenges", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  type: text("type").notNull(), // "quiz_questions", "streak_maintain", "category_master", etc.
+  type: varchar("type", { length: 100 }).notNull(), // "quiz_questions", "streak_maintain", "category_master", etc.
   requirement: json("requirement").notNull(), // Requirements to complete
   rewards: json("rewards").notNull(), // XP, gems, lives rewards
   validDate: timestamp("valid_date").notNull(),
@@ -211,7 +211,7 @@ export const storeItems = mysqlTable("store_items", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  type: text("type").notNull(), // "life_refill", "streak_freeze", "xp_boost", "theme", "ai_credits"
+  type: varchar("type", { length: 100 }).notNull(), // "life_refill", "streak_freeze", "xp_boost", "theme", "ai_credits"
   cost: int("cost").notNull(),
   icon: text("icon").notNull(),
   isActive: boolean("is_active").notNull().default(true),
@@ -241,7 +241,7 @@ export const userInventory = mysqlTable("user_inventory", {
 export const leaderboard = mysqlTable("leaderboard", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: varchar("user_id", { length: 36 }).notNull(),
-  type: text("type").notNull(), // "weekly", "monthly", "all_time"
+  type: varchar("type", { length: 50 }).notNull(), // "weekly", "monthly", "all_time"
   period: text("period").notNull(), // "2025-W05", "2025-01", "all_time"
   xp: int("xp").notNull().default(0),
   rank: int("rank").notNull().default(0),
@@ -255,7 +255,7 @@ export const friendships = mysqlTable("friendships", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   requesterId: varchar("requester_id", { length: 36 }).notNull(), // Who sent the friend request
   addresseeId: varchar("addressee_id", { length: 36 }).notNull(), // Who received the request
-  status: text("status").notNull().default('pending'), // 'pending', 'accepted', 'blocked'
+  status: varchar("status", { length: 50 }).notNull().default('pending'), // 'pending', 'accepted', 'blocked'
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   acceptedAt: timestamp("accepted_at"),
 });
@@ -265,11 +265,11 @@ export const socialChallenges = mysqlTable("social_challenges", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   challengerId: varchar("challenger_id", { length: 36 }).notNull(),
   challengedId: varchar("challenged_id", { length: 36 }).notNull(),
-  challengeType: text("challenge_type").notNull(), // 'quiz_duel', 'streak_battle', 'category_race'
+  challengeType: varchar("challenge_type", { length: 100 }).notNull(), // 'quiz_duel', 'streak_battle', 'category_race'
   categoryId: varchar("category_id", { length: 36 }),
   targetScore: int("target_score"),
   duration: int("duration").notNull().default(24), // hours
-  status: text("status").notNull().default('pending'), // 'pending', 'active', 'completed', 'cancelled'
+  status: varchar("status", { length: 50 }).notNull().default('pending'), // 'pending', 'active', 'completed', 'cancelled'
   challengerScore: int("challenger_score").default(0),
   challengedScore: int("challenged_score").default(0),
   winnerId: varchar("winner_id", { length: 36 }),
@@ -286,7 +286,7 @@ export const studyGroups = mysqlTable("study_groups", {
   description: text("description"),
   ownerId: varchar("owner_id", { length: 36 }).notNull(),
   categoryId: varchar("category_id", { length: 36 }), // Main focus category
-  type: text("type").notNull().default('public'), // 'public', 'private', 'school'
+  type: varchar("type", { length: 50 }).notNull().default('public'), // 'public', 'private', 'school'
   maxMembers: int("max_members").default(50),
   currentMembers: int("current_members").default(1),
   weeklyGoal: int("weekly_goal").default(500), // XP goal
@@ -305,7 +305,7 @@ export const studyGroupMembers = mysqlTable("study_group_members", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   groupId: varchar("group_id", { length: 36 }).notNull(),
   userId: varchar("user_id", { length: 36 }).notNull(),
-  role: text("role").notNull().default('member'), // 'owner', 'admin', 'member'
+  role: varchar("role", { length: 50 }).notNull().default('member'), // 'owner', 'admin', 'member'
   weeklyXP: int("weekly_xp").default(0),
   totalXP: int("total_xp").default(0),
   joinedAt: timestamp("joined_at").default(sql`CURRENT_TIMESTAMP`),
@@ -334,7 +334,7 @@ export const leagueParticipants = mysqlTable("league_participants", {
   weeklyXP: int("weekly_xp").default(0),
   currentRank: int("current_rank").default(30),
   finalRank: int("final_rank"), // Final position when week ends
-  status: text("status").default('active'), // 'active', 'promoted', 'relegated', 'maintained'
+  status: varchar("status", { length: 50 }).default('active'), // 'active', 'promoted', 'relegated', 'maintained'
   joinedAt: timestamp("joined_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -359,7 +359,7 @@ export const forumTopics = mysqlTable("forum_topics", {
   authorId: varchar("author_id", { length: 36 }).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  type: text("type").default('discussion'), // 'discussion', 'question', 'announcement', 'study_group'
+  type: varchar("type", { length: 50 }).default('discussion'), // 'discussion', 'question', 'announcement', 'study_group'
   isPinned: boolean("is_pinned").default(false),
   isLocked: boolean("is_locked").default(false),
   viewCount: int("view_count").default(0),
@@ -393,7 +393,7 @@ export const socialActivities = mysqlTable("social_activities", {
   title: text("title").notNull(),
   description: text("description"),
   metadata: json("metadata"), // Additional activity data (scores, achievements, etc.)
-  visibility: text("visibility").default('friends'), // 'public', 'friends', 'private'
+  visibility: varchar("visibility", { length: 50 }).default('friends'), // 'public', 'friends', 'private'
   likeCount: int("like_count").default(0),
   commentCount: int("comment_count").default(0),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
@@ -414,7 +414,7 @@ export const directMessages = mysqlTable("direct_messages", {
   senderId: varchar("sender_id", { length: 36 }).notNull(),
   receiverId: varchar("receiver_id", { length: 36 }).notNull(),
   content: text("content").notNull(),
-  messageType: text("message_type").default('text'), // 'text', 'image', 'challenge_invite', 'study_invite'
+  messageType: varchar("message_type", { length: 100 }).default('text'), // 'text', 'image', 'challenge_invite', 'study_invite'
   isRead: boolean("is_read").default(false),
   readAt: timestamp("read_at"),
   metadata: json("metadata"), // For special message types
@@ -427,7 +427,7 @@ export const groupConversations = mysqlTable("group_conversations", {
   name: text("name").notNull(),
   description: text("description"),
   createdBy: varchar("created_by", { length: 36 }).notNull(),
-  conversationType: text("conversation_type").default('group'), // 'group', 'study_group', 'challenge_group'
+  conversationType: varchar("conversation_type", { length: 100 }).default('group'), // 'group', 'study_group', 'challenge_group'
   isActive: boolean("is_active").default(true),
   lastMessageAt: timestamp("last_message_at"),
   participantCount: int("participant_count").default(0),
@@ -441,7 +441,7 @@ export const groupMessages = mysqlTable("group_messages", {
   conversationId: varchar("conversation_id", { length: 36 }).notNull(),
   senderId: varchar("sender_id", { length: 36 }).notNull(),
   content: text("content").notNull(),
-  messageType: text("message_type").default('text'), // 'text', 'image', 'file', 'system'
+  messageType: varchar("message_type", { length: 100 }).default('text'), // 'text', 'image', 'file', 'system'
   metadata: json("metadata"), // For special message types or file info
   isEdited: boolean("is_edited").default(false),
   editedAt: timestamp("edited_at"),
@@ -453,7 +453,7 @@ export const groupParticipants = mysqlTable("group_participants", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   conversationId: varchar("conversation_id", { length: 36 }).notNull(),
   userId: varchar("user_id", { length: 36 }).notNull(),
-  role: text("role").default('member'), // 'admin', 'member'
+  role: varchar("role", { length: 50 }).default('member'), // 'admin', 'member'
   joinedAt: timestamp("joined_at").default(sql`CURRENT_TIMESTAMP`),
   lastReadAt: timestamp("last_read_at"),
   isActive: boolean("is_active").default(true),
@@ -468,12 +468,12 @@ export const studySessions = mysqlTable("study_sessions", {
   title: text("title").notNull(),
   description: text("description"),
   categoryId: varchar("category_id", { length: 36 }).notNull(),
-  sessionType: text("session_type").default('study'), // 'study', 'quiz_battle', 'discussion'
+  sessionType: varchar("session_type", { length: 100 }).default('study'), // 'study', 'quiz_battle', 'discussion'
   maxParticipants: int("max_participants").default(10),
   currentParticipants: int("current_participants").default(0),
   scheduledAt: timestamp("scheduled_at").notNull(),
   duration: int("duration").default(60), // minutes
-  status: text("status").default('scheduled'), // 'scheduled', 'active', 'completed', 'cancelled'
+  status: varchar("status", { length: 50 }).default('scheduled'), // 'scheduled', 'active', 'completed', 'cancelled'
   meetingLink: text("meeting_link"), // For video calls
   metadata: json("metadata"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
@@ -626,7 +626,7 @@ export const userCourseEnrollments = mysqlTable("user_course_enrollments", {
   courseId: varchar("course_id", { length: 36 }).notNull(),
   enrolledAt: timestamp("enrolled_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   progress: int("progress").default(0),
-  status: text("status").notNull().default('active'),
+  status: varchar("status", { length: 50 }).notNull().default('active'),
   lastAccessedAt: timestamp("last_accessed_at"),
   completedAt: timestamp("completed_at"),
   rating: int("rating"),
@@ -643,7 +643,7 @@ export const educationProgress = mysqlTable("education_progress", {
   totalStudyTime: int("total_study_time").default(0),
   currentStreak: int("current_streak").default(0),
   longestStreak: int("longest_streak").default(0),
-  masteryLevel: text("mastery_level").default('beginner'),
+  masteryLevel: varchar("mastery_level", { length: 50 }).default('beginner'),
   lastStudyDate: timestamp("last_study_date"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow().notNull()
