@@ -1,12 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { createPool } from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/mysql2';
 import * as schema from "../shared/schema";
-
-// Neon WebSocket SSL konfigürasyonu
-neonConfig.webSocketConstructor = ws;
-neonConfig.wsProxy = process.env.NEON_WS_PROXY; // Proxy desteği
-neonConfig.useSecureWebSocket = true; // Güvenli WebSocket
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -14,18 +8,36 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// TEMP DEBUG: Log masked database URL to verify connection
+// Parse MySQL connection URL
 const dbUrl = process.env.DATABASE_URL;
 const urlParts = new URL(dbUrl);
-console.log(`🔍 CONNECTING TO: ${urlParts.hostname}${urlParts.pathname}`);
+console.log(`🔍 CONNECTING TO MySQL: ${urlParts.hostname}${urlParts.pathname}`);
 
-// Neon SSL bağlantısı için connection string'e sslmode ekle
-const sslEnabledUrl = dbUrl.includes('?') 
-  ? `${dbUrl}&sslmode=require` 
-  : `${dbUrl}?sslmode=require`;
-
-// Güvenli Neon SSL konfigürasyonu - sadece sslmode=require yeterli
-export const pool = new Pool({ 
-  connectionString: sslEnabledUrl
+// Create MySQL connection pool
+export const pool = createPool({
+  uri: dbUrl,
+  // Connection pool settings
+  connectionLimit: 10,
+  waitForConnections: true,
+  queueLimit: 0,
+  // SSL settings for production (Hostinger VPS)
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false // For self-signed certificates, adjust as needed
+  } : undefined,
+  // Additional settings
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
-export const db = drizzle({ client: pool, schema });
+
+// Initialize Drizzle ORM with MySQL
+export const db = drizzle(pool, { schema, mode: 'default' });
+
+// Test connection
+pool.getConnection()
+  .then(connection => {
+    console.log('✅ MySQL connection successful!');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('❌ MySQL connection failed:', err.message);
+  });
