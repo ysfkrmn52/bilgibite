@@ -1,267 +1,268 @@
-import { pgTable, text, integer, timestamp, boolean, jsonb, uuid, real, varchar } from "drizzle-orm/pg-core";
+import { mysqlTable, varchar, text, int, timestamp, boolean, json, float } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Organizations for multi-tenant architecture
-export const organizations = pgTable("organizations", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const organizations = mysqlTable("organizations", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
-  type: text("type").notNull(), // school, university, corporate, government
-  plan: text("plan").notNull(), // basic, professional, enterprise
-  maxUsers: integer("max_users").notNull().default(100),
+  type: varchar("type", { length: 50 }).notNull(), // school, university, corporate, government
+  plan: varchar("plan", { length: 50 }).notNull(), // basic, professional, enterprise
+  maxUsers: int("max_users").notNull().default(100),
   isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
 });
 
-export const organizationMembers = pgTable("organization_members", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
-  userId: text("user_id").notNull(),
-  role: text("role").notNull(), // admin, teacher, student, observer
-  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+export const organizationMembers = mysqlTable("organization_members", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
+  userId: varchar("user_id", { length: 36 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull(), // admin, teacher, student, observer
+  joinedAt: timestamp("joined_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const organizationSettings = pgTable("organization_settings", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+export const organizationSettings = mysqlTable("organization_settings", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
   allowSelfRegistration: boolean("allow_self_registration").notNull().default(false),
   requireApproval: boolean("require_approval").notNull().default(true),
-  customBranding: jsonb("custom_branding"),
-  ssoConfig: jsonb("sso_config"),
-  lmsIntegration: jsonb("lms_integration"),
-  features: jsonb("features"),
-  securitySettings: jsonb("security_settings"),
+  customBranding: json("custom_branding"),
+  ssoConfig: json("sso_config"),
+  lmsIntegration: json("lms_integration"),
+  features: json("features"),
+  securitySettings: json("security_settings"),
 });
 
-export const organizationBilling = pgTable("organization_billing", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
-  plan: text("plan").notNull(),
-  billingCycle: text("billing_cycle").notNull(), // monthly, yearly
-  amount: real("amount").notNull(),
-  currency: text("currency").notNull().default("TRY"),
+export const organizationBilling = mysqlTable("organization_billing", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
+  plan: varchar("plan", { length: 50 }).notNull(),
+  billingCycle: varchar("billing_cycle", { length: 50 }).notNull(), // monthly, yearly
+  amount: float("amount").notNull(),
+  currency: varchar("currency", { length: 10 }).notNull().default("TRY"),
   nextBillingDate: timestamp("next_billing_date").notNull(),
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const organizationUsage = pgTable("organization_usage", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+export const organizationUsage = mysqlTable("organization_usage", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
   date: timestamp("date").notNull(),
-  metric: text("metric").notNull(), // users, quizzes, video_minutes, api_calls
-  value: integer("value").notNull(),
+  metric: varchar("metric", { length: 100 }).notNull(), // users, quizzes, video_minutes, api_calls
+  value: int("value").notNull(),
 });
 
 // Adaptive Learning Metrics
-export const adaptiveLearningMetrics = pgTable("adaptive_learning_metrics", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").notNull(),
-  learningVelocity: real("learning_velocity").notNull(),
-  optimalDifficulty: real("optimal_difficulty").notNull(),
-  retentionRate: real("retention_rate").notNull(),
-  strengths: jsonb("strengths"),
-  weaknesses: jsonb("weaknesses"),
-  preferredQuestionTypes: jsonb("preferred_question_types"),
-  motivationalFactors: jsonb("motivational_factors"),
-  lastAnalysisAt: timestamp("last_analysis_at").notNull().defaultNow(),
+export const adaptiveLearningMetrics = mysqlTable("adaptive_learning_metrics", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 36 }).notNull(),
+  learningVelocity: float("learning_velocity").notNull(),
+  optimalDifficulty: float("optimal_difficulty").notNull(),
+  retentionRate: float("retention_rate").notNull(),
+  strengths: json("strengths"),
+  weaknesses: json("weaknesses"),
+  preferredQuestionTypes: json("preferred_question_types"),
+  motivationalFactors: json("motivational_factors"),
+  lastAnalysisAt: timestamp("last_analysis_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Video Content System
-export const videoLessons = pgTable("video_lessons", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const videoLessons = mysqlTable("video_lessons", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   title: text("title").notNull(),
   description: text("description"),
   videoUrl: text("video_url").notNull(),
-  categoryId: text("category_id").notNull(),
-  organizationId: uuid("organization_id").references(() => organizations.id),
+  categoryId: varchar("category_id", { length: 36 }).notNull(),
+  organizationId: varchar("organization_id", { length: 36 }),
   transcript: text("transcript"),
-  topics: jsonb("topics"),
-  keyPoints: jsonb("key_points"),
-  difficulty: integer("difficulty").notNull().default(5),
-  duration: integer("duration").notNull().default(0), // seconds
-  interactiveElements: jsonb("interactive_elements"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  topics: json("topics"),
+  keyPoints: json("key_points"),
+  difficulty: int("difficulty").notNull().default(5),
+  duration: int("duration").notNull().default(0), // seconds
+  interactiveElements: json("interactive_elements"),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const videoProgress = pgTable("video_progress", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").notNull(),
-  videoLessonId: uuid("video_lesson_id").notNull().references(() => videoLessons.id),
-  watchPercentage: real("watch_percentage").notNull().default(0),
-  totalWatchTime: integer("total_watch_time").notNull().default(0), // seconds
-  engagementScore: real("engagement_score").notNull().default(0),
-  interactionsCompleted: integer("interactions_completed").notNull().default(0),
-  quizScore: real("quiz_score"),
-  lastWatchedAt: timestamp("last_watched_at").notNull().defaultNow(),
+export const videoProgress = mysqlTable("video_progress", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 36 }).notNull(),
+  videoLessonId: varchar("video_lesson_id", { length: 36 }).notNull(),
+  watchPercentage: float("watch_percentage").notNull().default(0),
+  totalWatchTime: int("total_watch_time").notNull().default(0), // seconds
+  engagementScore: float("engagement_score").notNull().default(0),
+  interactionsCompleted: int("interactions_completed").notNull().default(0),
+  quizScore: float("quiz_score"),
+  lastWatchedAt: timestamp("last_watched_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isCompleted: boolean("is_completed").notNull().default(false),
 });
 
-export const videoQuizzes = pgTable("video_quizzes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  videoLessonId: uuid("video_lesson_id").notNull().references(() => videoLessons.id),
+export const videoQuizzes = mysqlTable("video_quizzes", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  videoLessonId: varchar("video_lesson_id", { length: 36 }).notNull(),
   questionText: text("question_text").notNull(),
-  questionType: text("question_type").notNull(),
-  options: jsonb("options"),
+  questionType: varchar("question_type", { length: 50 }).notNull(),
+  options: json("options"),
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation"),
-  timestamp: integer("timestamp").notNull().default(0), // video timestamp in seconds
-  points: integer("points").notNull().default(10),
+  timestamp: int("timestamp").notNull().default(0), // video timestamp in seconds
+  points: int("points").notNull().default(10),
 });
 
 // Teacher Dashboard System
-export const teacherClasses = pgTable("teacher_classes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  teacherId: text("teacher_id").notNull(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+export const teacherClasses = mysqlTable("teacher_classes", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  teacherId: varchar("teacher_id", { length: 36 }).notNull(),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   subject: text("subject").notNull(),
   gradeLevel: text("grade_level").notNull(),
-  maxStudents: integer("max_students").notNull().default(30),
-  currentStudents: integer("current_students").notNull().default(0),
-  classCode: text("class_code").unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  maxStudents: int("max_students").notNull().default(30),
+  currentStudents: int("current_students").notNull().default(0),
+  classCode: varchar("class_code", { length: 50 }).unique(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const assignments = pgTable("assignments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  teacherId: text("teacher_id").notNull(),
-  classId: uuid("class_id").notNull().references(() => teacherClasses.id),
+export const assignments = mysqlTable("assignments", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  teacherId: varchar("teacher_id", { length: 36 }).notNull(),
+  classId: varchar("class_id", { length: 36 }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").notNull(), // quiz, video, practice, exam
-  content: jsonb("content").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // quiz, video, practice, exam
+  content: json("content").notNull(),
   dueDate: timestamp("due_date").notNull(),
-  maxAttempts: integer("max_attempts").notNull().default(1),
-  passingScore: real("passing_score").notNull().default(70),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  maxAttempts: int("max_attempts").notNull().default(1),
+  passingScore: float("passing_score").notNull().default(70),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const studentAssignments = pgTable("student_assignments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  assignmentId: uuid("assignment_id").notNull().references(() => assignments.id),
-  studentId: text("student_id").notNull(),
-  attempts: integer("attempts").notNull().default(0),
-  bestScore: real("best_score"),
+export const studentAssignments = mysqlTable("student_assignments", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  assignmentId: varchar("assignment_id", { length: 36 }).notNull(),
+  studentId: varchar("student_id", { length: 36 }).notNull(),
+  attempts: int("attempts").notNull().default(0),
+  bestScore: float("best_score"),
   lastAttemptAt: timestamp("last_attempt_at"),
   submittedAt: timestamp("submitted_at"),
-  score: real("score"),
-  feedback: jsonb("feedback"),
+  score: float("score"),
+  feedback: json("feedback"),
   gradedAt: timestamp("graded_at"),
   isGraded: boolean("is_graded").notNull().default(false),
   isCompleted: boolean("is_completed").notNull().default(false),
 });
 
 // Advanced Analytics
-export const analyticsEvents = pgTable("analytics_events", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id"),
-  organizationId: uuid("organization_id").references(() => organizations.id),
-  eventType: text("event_type").notNull(),
-  eventCategory: text("event_category").notNull(),
-  eventData: jsonb("event_data"),
-  sessionId: text("session_id"),
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
+export const analyticsEvents = mysqlTable("analytics_events", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 36 }),
+  organizationId: varchar("organization_id", { length: 36 }),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  eventCategory: varchar("event_category", { length: 100 }).notNull(),
+  eventData: json("event_data"),
+  sessionId: varchar("session_id", { length: 100 }),
+  timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
   userAgent: text("user_agent"),
-  ipAddress: text("ip_address"),
+  ipAddress: varchar("ip_address", { length: 50 }),
 });
 
-export const performanceMetrics = pgTable("performance_metrics", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id"),
-  organizationId: uuid("organization_id").references(() => organizations.id),
-  metricType: text("metric_type").notNull(), // learning_velocity, retention_rate, engagement_score
-  value: real("value").notNull(),
-  context: jsonb("context"),
-  measuredAt: timestamp("measured_at").notNull().defaultNow(),
+export const performanceMetrics = mysqlTable("performance_metrics", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 36 }),
+  organizationId: varchar("organization_id", { length: 36 }),
+  metricType: varchar("metric_type", { length: 100 }).notNull(), // learning_velocity, retention_rate, engagement_score
+  value: float("value").notNull(),
+  context: json("context"),
+  measuredAt: timestamp("measured_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // International Expansion
-export const localizations = pgTable("localizations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  language: text("language").notNull(),
-  region: text("region"),
-  contentType: text("content_type").notNull(), // question, explanation, ui_text
-  originalId: text("original_id").notNull(),
-  translatedContent: jsonb("translated_content").notNull(),
-  translatorId: text("translator_id"),
-  reviewerId: text("reviewer_id"),
-  status: text("status").notNull().default("pending"), // pending, approved, rejected
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const localizations = mysqlTable("localizations", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  language: varchar("language", { length: 10 }).notNull(),
+  region: varchar("region", { length: 50 }),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // question, explanation, ui_text
+  originalId: varchar("original_id", { length: 100 }).notNull(),
+  translatedContent: json("translated_content").notNull(),
+  translatorId: varchar("translator_id", { length: 36 }),
+  reviewerId: varchar("reviewer_id", { length: 36 }),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const regionalExamSystems = pgTable("regional_exam_systems", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  country: text("country").notNull(),
-  region: text("region"),
-  examType: text("exam_type").notNull(),
+export const regionalExamSystems = mysqlTable("regional_exam_systems", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  country: varchar("country", { length: 50 }).notNull(),
+  region: varchar("region", { length: 100 }),
+  examType: varchar("exam_type", { length: 100 }).notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  structure: jsonb("structure"),
-  scoringSystem: jsonb("scoring_system"),
-  subjects: jsonb("subjects"),
+  structure: json("structure"),
+  scoringSystem: json("scoring_system"),
+  subjects: json("subjects"),
   isActive: boolean("is_active").notNull().default(true),
 });
 
 // Content Creation Tools
-export const contentTemplates = pgTable("content_templates", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const contentTemplates = mysqlTable("content_templates", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
-  type: text("type").notNull(), // quiz, lesson, assignment
-  category: text("category").notNull(),
-  template: jsonb("template").notNull(),
-  organizationId: uuid("organization_id").references(() => organizations.id),
-  creatorId: text("creator_id").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // quiz, lesson, assignment
+  category: varchar("category", { length: 100 }).notNull(),
+  template: json("template").notNull(),
+  organizationId: varchar("organization_id", { length: 36 }),
+  creatorId: varchar("creator_id", { length: 36 }).notNull(),
   isPublic: boolean("is_public").notNull().default(false),
-  usageCount: integer("usage_count").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  usageCount: int("usage_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const contentAssets = pgTable("content_assets", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const contentAssets = mysqlTable("content_assets", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   fileName: text("file_name").notNull(),
   originalName: text("original_name").notNull(),
-  mimeType: text("mime_type").notNull(),
-  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: int("file_size").notNull(),
   storageUrl: text("storage_url").notNull(),
-  organizationId: uuid("organization_id").references(() => organizations.id),
-  uploadedBy: text("uploaded_by").notNull(),
-  tags: jsonb("tags"),
-  metadata: jsonb("metadata"),
-  uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
+  organizationId: varchar("organization_id", { length: 36 }),
+  uploadedBy: varchar("uploaded_by", { length: 36 }).notNull(),
+  tags: json("tags"),
+  metadata: json("metadata"),
+  uploadedAt: timestamp("uploaded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isActive: boolean("is_active").notNull().default(true),
 });
 
 // Security and Compliance
-export const auditLogs = pgTable("audit_logs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").references(() => organizations.id),
-  userId: text("user_id"),
-  action: text("action").notNull(),
-  resource: text("resource").notNull(),
-  resourceId: text("resource_id"),
-  details: jsonb("details"),
-  ipAddress: text("ip_address"),
+export const auditLogs = mysqlTable("audit_logs", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }),
+  userId: varchar("user_id", { length: 36 }),
+  action: varchar("action", { length: 100 }).notNull(),
+  resource: varchar("resource", { length: 100 }).notNull(),
+  resourceId: varchar("resource_id", { length: 100 }),
+  details: json("details"),
+  ipAddress: varchar("ip_address", { length: 50 }),
   userAgent: text("user_agent"),
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
-  severity: text("severity").notNull().default("info"), // info, warning, error, critical
+  timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
+  severity: varchar("severity", { length: 50 }).notNull().default("info"), // info, warning, error, critical
 });
 
-export const complianceRecords = pgTable("compliance_records", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id),
-  complianceType: text("compliance_type").notNull(), // gdpr, ccpa, ferpa
-  dataSubject: text("data_subject"),
-  requestType: text("request_type"), // access, deletion, portability
-  status: text("status").notNull().default("pending"), // pending, processing, completed, denied
-  requestedAt: timestamp("requested_at").notNull().defaultNow(),
+export const complianceRecords = mysqlTable("compliance_records", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: varchar("organization_id", { length: 36 }).notNull(),
+  complianceType: varchar("compliance_type", { length: 50 }).notNull(), // gdpr, ccpa, ferpa
+  dataSubject: varchar("data_subject", { length: 255 }),
+  requestType: varchar("request_type", { length: 50 }), // access, deletion, portability
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, completed, denied
+  requestedAt: timestamp("requested_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   completedAt: timestamp("completed_at"),
-  details: jsonb("details"),
+  details: json("details"),
 });
 
 // Create Zod schemas for validation
