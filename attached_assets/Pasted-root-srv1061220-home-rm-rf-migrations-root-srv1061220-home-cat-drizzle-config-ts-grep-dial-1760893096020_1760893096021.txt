@@ -1,0 +1,63 @@
+root@srv1061220:/home# rm -rf migrations/*
+root@srv1061220:/home# cat drizzle.config.ts | grep dialect
+  dialect: "mysql",
+root@srv1061220:/home# rm -rf .drizzle
+root@srv1061220:/home# find . -name ".drizzle" -type d -exec rm -rf {} + 2>/dev/null || true
+root@srv1061220:/home# rm -rf node_modules/.cache
+root@srv1061220:/home# mysql -u bilgibite_user -p -D bilgibite -e "DROP TABLE IF EXISTS __drizzle_migrations;"
+Enter password: 
+root@srv1061220:/home# pm2 restart bilgibite
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [bilgibite](ids: [ 0 ])
+[PM2] [bilgibite](0) ✓
+┌────┬──────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name         │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ bilgibite    │ default     │ 1.0.0   │ fork    │ 54347    │ 0s     │ 151  │ online    │ 0%       │ 18.4mb   │ root     │ disabled │
+└────┴──────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@srv1061220:/home# pm2 logs bilgibite --lines 20
+[TAILING] Tailing last 20 lines for [bilgibite] process (change the value with --lines option)
+/home/logs/err.log last 20 lines:
+0|bilgibit | 2025-10-19 16:54:20 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:22 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:23 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:24 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:26 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:27 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:28 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:29 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:31 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:32 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:33 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:35 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:36 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:38 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:39 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:40 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:41 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:43 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:44 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibit | 2025-10-19 16:54:45 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+
+/home/logs/out.log last 20 lines:
+0|bilgibit | 2025-10-19 16:57:00 +00:00:    Analytics: ❌ Not configured
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 4:57:00 PM [express] 🔄 Starting database migration check...
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.588Z] Migration: Starting automatic migration in production mode
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.589Z] Migration: Production mode: Running existing migrations only
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.589Z] Migration: No migration journal found
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.589Z] Migration: No pending migrations to run
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.589Z] Migration: No migration journal found
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🔄 [2025-10-19T16:57:00.589Z] Migration: Migration complete. Total migrations: 0
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 4:57:00 PM [express] ✅ Database migrations completed successfully
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🤖 AutoGenerationScheduler initialized
+0|bilgibit | 2025-10-19 16:57:00 +00:00: ✅ MySQL connection successful!
+0|bilgibit | 2025-10-19 16:57:00 +00:00: ✅ Scheduler state loaded from database
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 📊 Loaded state: enabled=false, totalRuns=0, nextRun=undefined
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 🤖 AutoGeneration Scheduler initialized with persistence
+0|bilgibit | 2025-10-19 16:57:00 +00:00: ✅ Firebase Admin SDK successfully initialized
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 📊 Project ID: bilgibite
+0|bilgibit | 2025-10-19 16:57:00 +00:00: ✅ Firebase Admin SDK initialized successfully
+0|bilgibit | 2025-10-19 16:57:00 +00:00: Education data already exists, skipping seed...
+0|bilgibit | 2025-10-19 16:57:00 +00:00: AI Credits already exist, skipping seed...
+0|bilgibit | 2025-10-19 16:57:00 +00:00: 4:57:00 PM [express] serving on port 3000
+
