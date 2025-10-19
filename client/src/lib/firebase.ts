@@ -3,9 +3,9 @@ import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 
 // Check if Firebase environment variables are available
-const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && 
+const hasFirebaseConfig = !!(import.meta.env.VITE_FIREBASE_API_KEY && 
                           import.meta.env.VITE_FIREBASE_PROJECT_ID && 
-                          import.meta.env.VITE_FIREBASE_APP_ID;
+                          import.meta.env.VITE_FIREBASE_APP_ID);
 
 // Firebase configuration - always use real Firebase (no demo mode)
 const firebaseConfig = hasFirebaseConfig ? {

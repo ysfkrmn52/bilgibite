@@ -86,12 +86,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function loginWithGoogle() {
+    console.log('🔍 loginWithGoogle çağrıldı');
+    console.log('🔍 auth:', auth ? 'initialized' : 'null');
+    console.log('🔍 googleProvider:', googleProvider ? 'initialized' : 'null');
+    console.log('🔍 isFirebaseConfigured:', isFirebaseConfigured);
+    
     if (!auth || !googleProvider || !isFirebaseConfigured) {
       throw new Error('Firebase authentication not configured');
     }
     try {
-      await signInWithPopup(auth, googleProvider);
+      console.log('🔍 signInWithPopup başlatılıyor...');
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log('✅ Google login başarılı:', result.user.email);
     } catch (error: any) {
+      console.error('❌ signInWithPopup hatası:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        customData: error.customData
+      });
+      
       // Handle specific Firebase Auth errors
       if (error.code === 'auth/popup-closed-by-user') {
         throw new Error('Google giriş penceresi kapatıldı');
@@ -101,6 +115,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Domain yetkilendirilmemiş. Firebase ayarlarını kontrol edin');
       } else if (error.code === 'auth/configuration-not-found') {
         throw new Error('Firebase ayarları eksik. Lütfen Firebase Console\'da Google Authentication\'ı etkinleştirin');
+      } else if (error.code === 'auth/internal-error') {
+        throw new Error('Firebase internal error. Lütfen Firebase Console ayarlarınızı kontrol edin veya sayfayı yenileyin');
       }
       throw error;
     }
