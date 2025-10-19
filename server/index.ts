@@ -107,6 +107,11 @@ process.on('uncaughtException', (error) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
+    // API-first guard: Catch unmatched /api/* requests before serveStatic's catch-all
+    // This prevents the static catch-all from serving index.html for API routes
+    app.use("/api", (req, res) => {
+      res.status(404).json({ error: "API endpoint not found" });
+    });
     serveStatic(app);
   }
 
