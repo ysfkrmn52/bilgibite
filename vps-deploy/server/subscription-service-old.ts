@@ -133,10 +133,9 @@ export class SubscriptionService {
         usageCount: 1,
         resetDate: today
       })
-      .onConflictDoUpdate({
-        target: [subscriptionUsage.userId, subscriptionUsage.feature, subscriptionUsage.resetDate],
+      .onDuplicateKeyUpdate({
         set: {
-          usageCount: subscriptionUsage.usageCount + 1,
+          usageCount: sql`${subscriptionUsage.usageCount} + 1`,
           updatedAt: new Date()
         }
       });

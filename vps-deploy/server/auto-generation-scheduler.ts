@@ -85,8 +85,7 @@ class AutoGenerationScheduler {
 
       await db.insert(schedulerState)
         .values({ id: 'scheduler-singleton', ...stateData })
-        .onConflictDoUpdate({
-          target: schedulerState.id,
+        .onDuplicateKeyUpdate({
           set: stateData
         });
       
