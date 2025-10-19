@@ -12,3 +12,6 @@ coverage/
 .idea/
 *.tmp
 *.temp
+*.tar.gz
+*.zip
+*.tar
