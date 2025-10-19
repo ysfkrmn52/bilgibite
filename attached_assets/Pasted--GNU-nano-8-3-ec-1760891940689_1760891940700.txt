@@ -1,0 +1,49 @@
+  GNU nano 8.3                                                                                    ecosystem.config.cjs                                                                                             
+module.exports = {
+  apps: [{
+    name: 'bilgibite',
+    script: './dist/index.js',
+    instances: 1,
+    exec_mode: 'fork',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      DATABASE_URL: "mysql://bilgibite_user:Bilgibite_2024_App@localhost:3306/bilgibite",
+      ANTHROPIC_API_KEY: "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",
+
+      // Firebase Client-side (Frontend)
+      VITE_FIREBASE_PROJECT_ID: "bilgibite",
+      VITE_FIREBASE_API_KEY: "AIzaSyBPilgiv-scGUwgHy8_Iq8ETN6fGh-tPMM",
+      VITE_FIREBASE_APP_ID: "1:140527188205:web:81c361b6388008496b74e4",
+
+      // Firebase Admin (Server-side) - GÜNCELLENDİ
+      FIREBASE_SERVICE_ACCOUNT_KEY: JSON.stringify({
+        "type": "service_account",
+        "project_id": "bilgibite",
+        "private_key_id": "14caf50a10311d086726aa606e5c57978da178b8",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCxXJhb15oouabN\nIa+jhBEpTCSiZURsn88/RhqIanlQR57zKdfHoteKapt/W2dUjDK29cbdnBSA/eSc\n2kP8QBUrQ8F/v6BPGVwGq1W9g>
+        "client_email": "firebase-adminsdk-fbsvc@bilgibite.iam.gserviceaccount.com",
+        "client_id": "109853287227303889299",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40bilgibite.iam.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
+      }),
+
+      SESSION_SECRET: "fwgo4DltFidm9neks/SsZ1prz40mylmt6W+tuKaNh6XXqFJ4VgR+dTKxf9T9hWSUx86J91gmxNpGWdjmFh9J5A==",
+      JWT_SECRET: "bilgibite_jwt_super_secret_2024_very_long_key_secure",
+      FRONTEND_URL: "https://bilgibite.com",
+      CLIENT_URL: "https://bilgibite.com",
+      ALLOWED_ORIGINS: "https://bilgibite.com",
+      DISABLE_FIREBASE_AUTH: "false" // Firebase auth'u aktif et!
+    },
+    error_file: './logs/err.log',
+    out_file: './logs/out.log',
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    merge_logs: true,
+    autorestart: true,
+    max_memory_restart: '1G',
+    watch: false
+  }]
+}
