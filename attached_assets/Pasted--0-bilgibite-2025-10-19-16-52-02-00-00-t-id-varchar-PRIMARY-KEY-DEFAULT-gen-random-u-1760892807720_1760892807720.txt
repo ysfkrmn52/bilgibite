@@ -1,0 +1,65 @@
+` +
+0|bilgibite  | 2025-10-19 16:52:02 +00:00:     '\t"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:02 +00:00:     "\t' at line 1"
+0|bilgibite  | 2025-10-19 16:52:02 +00:00: }
+0|bilgibite  | 2025-10-19 16:52:02 +00:00: 
+0|bilgibite  | 2025-10-19 16:52:02 +00:00: 💥 Critical migration failure in production. Server startup aborted.
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔍 CONNECTING TO MySQL: localhost/bilgibite
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔍 Validating environment variables...
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: ✅ Available environment variables:
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    DATABASE_URL=mysq**********************************************************bite (masked)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    ANTHROPIC_API_KEY=sk-a****************************************************************************************************8wAA (masked)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    FIREBASE_SERVICE_ACCOUNT_KEY={"ty*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************om"} (masked)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    VITE_FIREBASE_PROJECT_ID=bilgibite
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    NODE_ENV=production
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    VITE_FIREBASE_API_KEY=AIza*******************************tPMM (masked)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    VITE_FIREBASE_APP_ID=1:140527188205:web:81c361b6388008496b74e4
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    PORT=3000
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    CLIENT_URL=https://bilgibite.com
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    FRONTEND_URL=https://bilgibite.com
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    ALLOWED_ORIGINS=https://bilgibite.com
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: ✅ Environment validation passed (11 variables configured)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🌍 Environment: PRODUCTION
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 📊 Environment Summary:
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Node Environment: production
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Server Port: 3000
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Database: ✅ Configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    AI Service (Anthropic): ✅ Configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    AI Service (OpenAI): ❌ Not configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Firebase Backend: ✅ Configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Firebase Frontend: ✅ Configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Payment (İyzico): ❌ Not configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Payment (Stripe): ❌ Not configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:    Analytics: ❌ Not configured
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 4:52:03 PM [express] 🔄 Starting database migration check...
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔄 [2025-10-19T16:52:03.128Z] Migration: Starting automatic migration in production mode
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔄 [2025-10-19T16:52:03.128Z] Migration: Production mode: Running existing migrations only
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔄 [2025-10-19T16:52:03.128Z] Migration: Found 1 migrations in journal
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: 🔄 [2025-10-19T16:52:03.129Z] Migration: Starting: running pending migrations
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: ✅ MySQL connection successful!
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: ❌ [2025-10-19T16:52:03.725Z] Migration: Failed during running pending migrations: Command failed: npx drizzle-kit migrate
+0|bilgibite  | 2025-10-19 16:52:03 +00:00: Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"achievements" (
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:      "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:      ' at line 1
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at PromiseConnection.query (/home/node_modules/mysql2/lib/promise/connection.js:29:22)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at MySql2PreparedQuery.execute (/home/node_modules/src/mysql2/session.ts:92:29)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at MySql2Session.execute (/home/node_modules/src/mysql-core/session.ts:84:5)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at MySql2Transaction.execute (/home/node_modules/src/mysql-core/db.ts:473:23)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at <anonymous> (/home/node_modules/src/mysql-core/dialect.ts:82:16)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at MySql2Session.transaction (/home/node_modules/src/mysql2/session.ts:286:25)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at async MySqlDialect.migrate (/home/node_modules/src/mysql-core/dialect.ts:75:3)
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     at async migrate (/home/node_modules/src/mysql2/migrator.ts:10:2) {
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:   code: 'ER_PARSE_ERROR',
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:   errno: 1064,
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:   sql: 'CREATE TABLE "achievements" (\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"name" text NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"description" text NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"icon" text NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"color" text NOT NULL,\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     '\t"requirement" jsonb NOT NULL\n' +
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:     ');\n',
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:   sqlState: '42000',
+0|bilgibite  | 2025-10-19 16:52:03 +00:00:   sqlMessage: `You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"achievements" (\n` +
