@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { isFirebaseConfigured } from '@/lib/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir email adresi girin'),
@@ -62,9 +63,14 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
     try {
       setError('');
       setIsLoading(true);
+      console.log('🔍 Google login başlatılıyor...');
+      console.log('🔍 Firebase configured:', isFirebaseConfigured);
       await loginWithGoogle();
       onSuccess?.();
     } catch (err: any) {
+      console.error('❌ Google login hatası:', err);
+      console.error('❌ Error code:', err.code);
+      console.error('❌ Error message:', err.message);
       setError(err.message || getErrorMessage(err.code || 'auth/unknown'));
     } finally {
       setIsLoading(false);
