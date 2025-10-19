@@ -159,6 +159,66 @@ export const srcProgress = mysqlTable('src_progress', {
   updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).onUpdateNow()
 });
 
+// Turkish Exam Types
+export const TurkishExamTypes = {
+  YKS: 'yks',
+  KPSS: 'kpss',
+  EHLIYET: 'ehliyet',
+  SRC: 'src',
+  ALES: 'ales',
+  DGS: 'dgs',
+  MSU: 'msu'
+} as const;
+
+// Exam Subjects by Category
+export const ExamSubjects = {
+  YKS: {
+    TYT: ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler'],
+    AYT: ['Türk Dili ve Edebiyatı', 'Tarih', 'Coğrafya', 'Matematik', 'Fizik', 'Kimya', 'Biyoloji']
+  },
+  KPSS: {
+    GENEL_YETENEK: ['Türkçe', 'Matematik', 'Geometri', 'Mantık'],
+    GENEL_KULTUR: ['Tarih', 'Coğrafya', 'Vatandaşlık', 'Güncel Bilgiler'],
+    EGITIM_BILIMLERI: ['Eğitim Bilimleri', 'Gelişim ve Öğrenme', 'Ölçme ve Değerlendirme']
+  },
+  EHLIYET: {
+    TEORIK: ['Trafik Kuralları', 'Motor ve Araç Tekniği', 'İlk Yardım']
+  },
+  SRC: {
+    BELGESI: ['Mevzuat ve Kurallar', 'Yük Güvenliği', 'Tehlikeli Madde Taşımacılığı']
+  },
+  ALES: {
+    GENEL: ['Sözel Yetenek', 'Sayısal Yetenek']
+  },
+  DGS: {
+    TEMEL: ['Türkçe', 'Matematik']
+  },
+  MSU: {
+    TEMEL: ['Türkçe', 'Matematik', 'Sosyal Bilimler', 'Fen Bilimleri']
+  }
+} as const;
+
+// Exam Registration (for advanced features)
+export type ExamRegistration = {
+  id: string;
+  userId: string;
+  examType: string;
+  examDate: string;
+  registrationDate: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+};
+
+// Success Prediction (AI-based)
+export type SuccessPrediction = {
+  userId: string;
+  examType: string;
+  predictedScore: number;
+  confidence: number;
+  weakAreas: string[];
+  recommendations: string[];
+  calculatedAt: Date;
+};
+
 // Zod Schemas
 export const insertExamCategorySchema = createInsertSchema(examCategories);
 export const insertExamQuestionSchema = createInsertSchema(examQuestions);
