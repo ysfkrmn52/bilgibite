@@ -563,6 +563,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Chat endpoint - General purpose AI chat
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { message, model } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Message is required' 
+        });
+      }
+
+      console.log('🤖 AI Chat request:', { message, model });
+
+      // Use Anthropic Claude API for real AI responses
+      try {
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const anthropic = new Anthropic({
+          apiKey: process.env.ANTHROPIC_API_KEY,
+        });
+
+        const response = await anthropic.messages.create({
+          model: model || "claude-3-5-sonnet-20241022",
+          max_tokens: 1024,
+          messages: [{
+            role: "user",
+            content: message
+          }],
+        });
+
+        const aiMessage = response.content[0].type === 'text' 
+          ? response.content[0].text 
+          : 'AI yanıt alınamadı';
+
+        console.log('✅ AI Chat response generated');
+
+        res.json({
+          success: true,
+          message: aiMessage,
+          model: model || "claude-3-5-sonnet-20241022"
+        });
+
+      } catch (aiError) {
+        console.error('AI API Error:', aiError);
+        
+        // Fallback response if AI fails
+        res.json({
+          success: true,
+          message: 'AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
+          model: model || "claude-3-5-sonnet-20241022",
+          fallback: true
+        });
+      }
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'AI chat yanıt verilemedi',
+        message: error.message 
+      });
+    }
+  });
+
   // AI Tutor Chat endpoint
   app.post("/api/ai/tutor-chat", async (req, res) => {
     try {
